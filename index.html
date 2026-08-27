@@ -1,0 +1,1318 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>hborad — 매일의 기록 보드</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;700;800&family=Noto+Sans+KR:wght@400;500;700&display=swap');
+
+  :root{
+    --paper:#F6F5F1;
+    --paper-2:#EFEDE7;
+    --grid:#D8DEE2;
+    --ink:#1B2430;
+    --ink-soft:#5A6472;
+    --line:#C9CFD3;
+    --safety:#FF6A3D;
+    --safety-dark:#D6501F;
+    --teal:#2D6E7E;
+    --teal-soft:#DCE9EC;
+    --yellow:#FFC857;
+    --card:#FFFFFF;
+    --green:#4C8B5A;
+    --green-soft:#E1EEE3;
+    --purple:#7A6FB0;
+    --purple-soft:#E7E4F4;
+  }
+
+  *{box-sizing:border-box;}
+  html,body{margin:0;padding:0;}
+  body{
+    font-family:'Noto Sans KR', sans-serif;
+    color:var(--ink);
+    background-color:var(--paper);
+    background-image:
+      linear-gradient(var(--grid) 1px, transparent 1px),
+      linear-gradient(90deg, var(--grid) 1px, transparent 1px);
+    background-size: 24px 24px;
+    min-height:100vh;
+    font-size:13px;
+  }
+  .mono{ font-family:'JetBrains Mono', monospace; }
+
+  /* ---------- Shell / side tabs ---------- */
+  .app-shell{ max-width:1080px; margin:0 auto; display:flex; align-items:flex-start; }
+  .side-tabs{
+    display:flex; flex-direction:column; gap:6px; padding:18px 8px;
+    position:sticky; top:0; flex-shrink:0; width:76px;
+  }
+  .side-tab{
+    display:flex; flex-direction:column; align-items:center; gap:3px;
+    padding:11px 5px; border:1.5px solid var(--ink-soft); border-right:none;
+    border-radius:8px 0 0 8px; background:var(--paper-2); cursor:pointer;
+    font-family:'JetBrains Mono', monospace; font-size:10px; font-weight:700; color:var(--ink-soft);
+  }
+  .side-tab .icon{ font-size:16px; }
+  .side-tab.active{ background:var(--card); color:var(--ink); border-color:var(--ink-soft); position:relative; z-index:2; margin-right:-1.5px; box-shadow:-2px 2px 0 rgba(27,36,48,0.05); }
+  .side-tab:not(.active):hover{ background:var(--teal-soft); color:var(--teal); }
+
+  .main-content{ flex:1; min-width:0; padding:18px 14px 50px; }
+
+  @media (max-width:700px){
+    .app-shell{ flex-direction:column; }
+    .side-tabs{ flex-direction:row; width:100%; padding:10px 10px 0; position:static; overflow-x:auto; }
+    .side-tab{ flex-direction:row; border-radius:8px 8px 0 0; border:1.5px solid var(--ink-soft); border-bottom:none; }
+    .side-tab.active{ margin-right:0; margin-bottom:-1.5px; box-shadow:0 -2px 0 rgba(27,36,48,0.05); }
+  }
+
+  /* ---------- Header ---------- */
+  .header{ display:flex; justify-content:space-between; align-items:flex-start; gap:12px; margin-bottom:12px; flex-wrap:wrap; }
+  .brand{ display:flex; flex-direction:column; gap:1px; }
+  .brand .logo{ font-family:'JetBrains Mono', monospace; font-weight:800; font-size:24px; letter-spacing:-0.5px; color:var(--ink); }
+  .brand .logo span{ color:var(--safety); }
+  .brand .tagline{ font-size:11px; color:var(--ink-soft); letter-spacing:0.3px; }
+
+  .date-tag{
+    background:var(--card); border:1.5px dashed var(--ink-soft); border-radius:6px;
+    padding:7px 12px 7px 16px; transform:rotate(-2deg); position:relative;
+    box-shadow:2px 3px 0 rgba(27,36,48,0.08); min-width:130px;
+  }
+  .date-tag::before{
+    content:""; position:absolute; left:-7px; top:50%; width:11px; height:11px;
+    background:var(--paper); border:1.5px solid var(--ink-soft); border-radius:50%; transform:translateY(-50%);
+  }
+  .date-tag .d-label{ font-family:'JetBrains Mono', monospace; font-size:8.5px; color:var(--safety-dark); letter-spacing:1.5px; font-weight:700; }
+  .date-tag .d-time{ font-family:'JetBrains Mono', monospace; font-size:9.5px; color:var(--ink-soft); margin-top:2px; }
+
+  /* ---------- Date nav ---------- */
+  .date-nav{ display:flex; align-items:center; gap:6px; margin-bottom:10px; flex-wrap:wrap; }
+  .nav-btn{
+    font-family:'JetBrains Mono', monospace; font-weight:700; font-size:12px;
+    background:var(--card); border:1.5px solid var(--ink-soft); border-radius:6px;
+    padding:6px 10px; cursor:pointer; color:var(--ink);
+  }
+  .nav-btn:hover{ background:var(--paper-2); }
+  .date-nav input[type=date], .date-nav input[type=month], .date-nav input[type=number]{
+    font-family:'JetBrains Mono', monospace; padding:6px 8px; border:1.5px solid var(--line);
+    border-radius:6px; font-size:12px; background:var(--card);
+  }
+  .save-status{ font-family:'JetBrains Mono', monospace; font-size:10px; color:var(--teal); margin-left:auto; white-space:nowrap; }
+  .recent-tags{ display:flex; gap:5px; flex-wrap:wrap; margin-left:4px; }
+  .recent-tag{
+    font-family:'JetBrains Mono', monospace; font-size:10px; padding:4px 8px;
+    background:var(--teal-soft); color:var(--teal); border-radius:20px; cursor:pointer; border:1px solid transparent;
+  }
+  .recent-tag.active{ background:var(--teal); color:#fff; }
+  .recent-tag.has-content::after{ content:" •"; }
+
+  /* ---------- Category tabs (within 기록) ---------- */
+  .cat-tabs{ display:flex; gap:5px; overflow-x:auto; padding-bottom:8px; margin-bottom:10px; border-bottom:1.5px solid var(--line); }
+  .cat-tab{
+    flex-shrink:0; font-family:'JetBrains Mono', monospace; font-size:11.5px; font-weight:700;
+    padding:7px 12px; border-radius:7px; border:1.5px solid var(--line); background:var(--card);
+    color:var(--ink-soft); cursor:pointer; white-space:nowrap;
+  }
+  .cat-tab.active{ background:var(--ink); color:#fff; border-color:var(--ink); }
+  .cat-tab:hover:not(.active){ border-color:var(--teal); color:var(--teal); }
+
+  /* ---------- Section / category cards ---------- */
+  .cat-section{
+    background:var(--card); border:1.5px solid var(--ink-soft); border-radius:9px;
+    margin-bottom:10px; box-shadow:2px 3px 0 rgba(27,36,48,0.05); padding:12px 13px;
+  }
+  .cat-title{ font-family:'JetBrains Mono', monospace; font-weight:700; font-size:13px; margin-bottom:8px; display:flex; align-items:center; gap:6px; }
+  .cat-title .cnt{ font-weight:400; font-size:10px; color:var(--ink-soft); }
+
+  .field-grid{ display:grid; grid-template-columns:repeat(auto-fit,minmax(120px,1fr)); gap:8px; }
+  .field-grid.cols2{ grid-template-columns:repeat(2,1fr); }
+  .field{ display:flex; flex-direction:column; gap:3px; margin-bottom:8px; }
+  .field:last-child{ margin-bottom:0; }
+  .field label{ font-size:10px; color:var(--ink-soft); font-family:'JetBrains Mono', monospace; letter-spacing:0.2px; }
+  .field input[type=text], .field input[type=number], .field input[type=time], .field select, textarea{
+    padding:7px 9px; border:1.5px solid var(--line); border-radius:6px; font-size:13px;
+    font-family:'Noto Sans KR', sans-serif; background:var(--paper); width:100%; resize:vertical;
+  }
+  .field input:focus, .field select:focus, textarea:focus{ outline:2px solid var(--teal); outline-offset:1px; }
+
+  .toggle-row{ display:flex; gap:6px; }
+  .toggle-btn{
+    flex:1; padding:7px; border:1.5px solid var(--line); border-radius:6px; background:var(--paper);
+    font-family:'JetBrains Mono', monospace; font-size:12px; cursor:pointer; color:var(--ink-soft); font-weight:700;
+  }
+  .toggle-btn.on{ background:var(--teal); border-color:var(--teal); color:#fff; }
+
+  .score-row{ display:flex; gap:5px; }
+  .score-btn{
+    width:28px; height:28px; border-radius:6px; border:1.5px solid var(--line); background:var(--paper);
+    cursor:pointer; font-family:'JetBrains Mono', monospace; font-weight:700; font-size:12px; color:var(--ink-soft);
+  }
+  .score-btn.on{ background:var(--yellow); border-color:var(--safety-dark); color:var(--ink); }
+
+  /* ---------- Time plan table ---------- */
+  .time-scroll{ max-height:320px; overflow-y:auto; border:1px solid var(--line); border-radius:6px; }
+  table.timeplan{ width:100%; border-collapse:collapse; font-size:12px; }
+  table.timeplan thead th{
+    position:sticky; top:0; background:var(--teal); color:#fff; font-family:'JetBrains Mono', monospace;
+    font-size:10px; padding:6px; text-align:left; z-index:1;
+  }
+  table.timeplan td{ padding:3px 5px; border-bottom:1px solid var(--line); vertical-align:middle; }
+  table.timeplan tr:nth-child(even){ background:var(--paper); }
+  table.timeplan .tp-time{ font-family:'JetBrains Mono', monospace; font-size:10.5px; color:var(--ink-soft); white-space:nowrap; width:74px; }
+  table.timeplan input[type=text]{ width:100%; border:1px solid transparent; background:transparent; padding:4px 5px; font-size:12px; border-radius:4px; }
+  table.timeplan input[type=text]:focus{ border-color:var(--teal); background:#fff; outline:none; }
+  table.timeplan .tp-cat{ width:88px; }
+  table.timeplan .tp-check{ width:36px; text-align:center; }
+
+  /* ---------- Meal grid ---------- */
+  .meal-block{ margin-bottom:10px; }
+  .meal-block:last-child{ margin-bottom:0; }
+  .meal-block .meal-name{ font-family:'JetBrains Mono', monospace; font-size:11px; font-weight:700; color:var(--teal); margin-bottom:5px; }
+  .meal-fields{ display:grid; grid-template-columns:repeat(4,1fr); gap:6px; }
+  .meal-fields input{ padding:6px; border:1.5px solid var(--line); border-radius:6px; font-size:12px; background:var(--paper); width:100%; }
+  .meal-fields input:focus{ outline:2px solid var(--teal); outline-offset:1px; }
+
+  /* ---------- List rows (할일 / 습관 / 계획) ---------- */
+  .list-rows{ display:flex; flex-direction:column; gap:5px; margin-bottom:8px; }
+  .list-row{ display:flex; align-items:center; gap:5px; }
+  .row-order{
+    width:20px; height:20px; flex-shrink:0; background:var(--paper-2); border-radius:5px; display:flex;
+    align-items:center; justify-content:center; font-family:'JetBrains Mono', monospace; font-size:10px; color:var(--ink-soft); font-weight:700;
+  }
+  .list-row input[type=text]{ flex:1; padding:7px 9px; border:1.5px solid var(--line); border-radius:6px; font-size:13px; background:var(--paper); min-width:0; }
+  .list-row input.target-input{ flex:0 0 96px; }
+  .row-check{
+    width:20px; height:20px; border:2px solid var(--ink-soft); border-radius:5px; cursor:pointer; flex-shrink:0;
+    display:flex; align-items:center; justify-content:center; background:var(--paper);
+  }
+  .row-check.done{ background:var(--green-soft); border-color:var(--green); }
+  .row-check.done::after{ content:"✓"; font-size:11px; font-weight:800; color:var(--green); }
+  .row-move{ background:none; border:1.5px solid var(--line); border-radius:5px; color:var(--teal); cursor:pointer; font-size:12px; padding:3px 5px; flex-shrink:0; font-family:'JetBrains Mono',monospace; }
+  .row-move:hover{ background:var(--teal-soft); border-color:var(--teal); }
+  .row-del{ background:none; border:none; color:var(--ink-soft); cursor:pointer; font-size:14px; padding:3px 5px; flex-shrink:0; }
+  .row-del:hover{ color:var(--safety-dark); }
+  .add-row-btn{
+    font-family:'JetBrains Mono', monospace; font-size:11.5px; font-weight:700; padding:7px 12px;
+    background:var(--safety); color:#fff; border:none; border-radius:6px; cursor:pointer;
+  }
+  .add-row-btn:hover{ background:var(--safety-dark); }
+  .row-hint{ font-size:10px; color:var(--ink-soft); font-family:'JetBrains Mono', monospace; margin-bottom:5px; }
+  .empty-hint{ font-size:11px; color:var(--ink-soft); font-family:'JetBrains Mono', monospace; padding:5px 0; }
+  .sub-title{ font-family:'JetBrains Mono', monospace; font-size:11.5px; font-weight:700; color:var(--ink-soft); margin:10px 0 6px; }
+  .sub-title:first-child{ margin-top:0; }
+
+  .footer-note{ text-align:center; font-size:10px; color:var(--ink-soft); margin-top:16px; font-family:'JetBrains Mono', monospace; }
+
+  /* ---------- Calendar view ---------- */
+  .cal-header{ display:flex; align-items:center; justify-content:space-between; margin-bottom:14px; }
+  .cal-header .cal-title{ font-family:'JetBrains Mono', monospace; font-weight:800; font-size:17px; }
+  .cal-legend{ display:flex; gap:12px; margin-bottom:12px; flex-wrap:wrap; }
+  .cal-legend-item{ display:flex; align-items:center; gap:5px; font-size:11px; color:var(--ink-soft); font-family:'JetBrains Mono', monospace; }
+  .cal-swatch{ width:13px; height:13px; border-radius:4px; border:1.5px solid var(--line); }
+  .cal-swatch.filled{ background:var(--teal); border-color:var(--teal); }
+  .cal-swatch.empty{ background:var(--card); }
+  .cal-grid{ display:grid; grid-template-columns:repeat(7,1fr); gap:5px; }
+  .cal-weekday{ text-align:center; font-family:'JetBrains Mono', monospace; font-size:10px; color:var(--ink-soft); padding-bottom:4px; }
+  .cal-cell{
+    aspect-ratio:1; border-radius:8px; border:1.5px solid var(--line); background:var(--card);
+    display:flex; flex-direction:column; align-items:center; justify-content:center; cursor:pointer;
+    font-family:'JetBrains Mono', monospace; font-size:12px; color:var(--ink-soft); gap:3px; position:relative;
+  }
+  .cal-cell.blank{ visibility:hidden; cursor:default; }
+  .cal-cell:hover{ border-color:var(--teal); }
+  .cal-cell.has-content{ background:var(--teal-soft); color:var(--ink); border-color:var(--teal); font-weight:700; }
+  .cal-cell .dot{ width:5px; height:5px; border-radius:50%; background:var(--teal); }
+  .cal-cell.is-today{ box-shadow:0 0 0 2px var(--safety) inset; }
+  .cal-cell.is-selected{ outline:2px solid var(--ink); outline-offset:1px; }
+
+  /* ---------- Plan view ---------- */
+  .plan-period-tabs{ display:flex; gap:6px; margin-bottom:10px; }
+  .plan-period-tab{
+    flex:1; text-align:center; font-family:'JetBrains Mono', monospace; font-weight:700; font-size:12.5px;
+    padding:9px 6px; border-radius:8px; border:1.5px solid var(--ink-soft); background:var(--paper-2); color:var(--ink-soft); cursor:pointer;
+  }
+  .plan-period-tab.active{ background:var(--purple); border-color:var(--purple); color:#fff; }
+  .plan-nav{ display:flex; align-items:center; gap:8px; margin-bottom:12px; }
+  .plan-nav .plan-label{ font-family:'JetBrains Mono', monospace; font-weight:700; font-size:14px; flex:1; text-align:center; }
+  .plan-cat-grid{ display:grid; grid-template-columns:repeat(2,1fr); gap:8px; }
+  .plan-cat-item label{ display:flex; align-items:center; gap:5px; font-size:10.5px; color:var(--teal); font-family:'JetBrains Mono', monospace; font-weight:700; margin-bottom:3px; }
+  .plan-cat-item textarea{ width:100%; padding:7px 9px; border:1.5px solid var(--line); border-radius:6px; font-size:12.5px; font-family:'Noto Sans KR',sans-serif; background:var(--paper); resize:vertical; }
+  .plan-cat-item textarea:focus{ outline:2px solid var(--purple); outline-offset:1px; }
+
+  @media (max-width:520px){
+    .brand .logo{ font-size:20px; }
+    .meal-fields{ grid-template-columns:repeat(2,1fr); }
+    .save-status{ margin-left:0; width:100%; }
+    .cal-cell{ font-size:10px; }
+    .plan-cat-grid{ grid-template-columns:1fr; }
+    .field-grid.cols2{ grid-template-columns:1fr; }
+  }
+
+  /* ---------- Login gate ---------- */
+  #loginGate{
+    position:fixed; inset:0; z-index:999; display:none;
+    align-items:center; justify-content:center;
+    background-color:var(--paper);
+    background-image:
+      linear-gradient(var(--grid) 1px, transparent 1px),
+      linear-gradient(90deg, var(--grid) 1px, transparent 1px);
+    background-size:24px 24px;
+  }
+  .login-box{
+    background:var(--card); border:1.5px solid var(--ink-soft); border-radius:10px;
+    box-shadow:3px 4px 0 rgba(27,36,48,0.08); padding:28px 26px; width:280px;
+    display:flex; flex-direction:column; gap:10px; align-items:center;
+  }
+  .login-logo{ font-family:'JetBrains Mono', monospace; font-weight:800; font-size:26px; color:var(--ink); }
+  .login-logo span{ color:var(--safety); }
+  .login-sub{ font-size:11.5px; color:var(--ink-soft); font-family:'JetBrains Mono', monospace; margin-bottom:4px; }
+  .login-box input[type=password]{
+    width:100%; padding:10px 11px; border:1.5px solid var(--line); border-radius:6px;
+    font-size:13px; font-family:'Noto Sans KR', sans-serif; background:var(--paper); text-align:center;
+  }
+  .login-box input[type=password]:focus{ outline:2px solid var(--teal); outline-offset:1px; }
+  .login-box button[type=submit]{
+    width:100%; font-family:'JetBrains Mono', monospace; font-weight:700; font-size:12.5px;
+    padding:9px; background:var(--safety); color:#fff; border:none; border-radius:6px; cursor:pointer;
+  }
+  .login-box button[type=submit]:hover{ background:var(--safety-dark); }
+  .login-error{ font-size:10.5px; color:var(--safety-dark); font-family:'JetBrains Mono', monospace; min-height:14px; }
+</style>
+</head>
+<body>
+
+<div id="loginGate">
+  <form id="loginForm" class="login-box">
+    <div class="login-logo">hb<span>◆</span>rad</div>
+    <div class="login-sub">비밀번호를 입력하세요</div>
+    <input type="password" id="loginPassword" placeholder="Password" autocomplete="current-password" required />
+    <button type="submit">입장하기</button>
+    <div class="login-error" id="loginError"></div>
+  </form>
+</div>
+
+<div id="appRoot" style="display:none;">
+<div class="app-shell">
+
+  <nav class="side-tabs">
+    <div class="side-tab active" id="tabLogBtn"><span class="icon">📝</span>기록</div>
+    <div class="side-tab" id="tabPlanBtn"><span class="icon">🎯</span>계획</div>
+    <div class="side-tab" id="tabCalBtn"><span class="icon">🗓</span>달력</div>
+  </nav>
+
+  <div class="main-content">
+
+    <!-- ===== LOG VIEW ===== -->
+    <div id="logView">
+      <div class="header">
+        <div class="brand">
+          <div class="logo">hb<span>◆</span>rad</div>
+          <div class="tagline">매일의 기록 보드 · 일일 기록</div>
+        </div>
+        <div class="date-tag">
+          <div class="d-label">RECORD</div>
+          <div class="d-time mono" id="writeTimeLabel">작성 --:--</div>
+          <div class="d-time mono" id="editTimeLabel">수정 --:--</div>
+        </div>
+      </div>
+
+      <div class="date-nav">
+        <button class="nav-btn" id="prevDay">◀</button>
+        <input type="date" id="dateInput" />
+        <button class="nav-btn" id="nextDay">▶</button>
+        <button class="nav-btn" id="todayBtn">오늘</button>
+        <button class="nav-btn" id="exportCsvBtn">⬇ CSV</button>
+        <div class="recent-tags" id="recentTags"></div>
+        <span class="save-status" id="saveStatus"></span>
+      </div>
+
+      <div class="cat-tabs" id="catTabs"></div>
+
+      <!-- 생각 -->
+      <div class="cat-section" data-cat="thoughts">
+        <div class="cat-title">💭 생각</div>
+        <div class="field"><label>생각</label><textarea id="diaryThoughts" rows="2" placeholder="오늘 든 생각을 적어보세요"></textarea></div>
+        <div class="field"><label>질문</label><textarea id="diaryQuestions" rows="2" placeholder="스스로에게 던지는 질문"></textarea></div>
+        <div class="field"><label>감상</label><textarea id="diaryImpression" rows="2" placeholder="오늘 하루에 대한 감상"></textarea></div>
+        <div class="field"><label>키워드</label><input type="text" id="diaryKeywords" placeholder="쉼표로 구분 (예: 성장, 피로, 뿌듯함)" /></div>
+        <div class="field"><label>참고 작성</label><textarea id="referenceNote" rows="2" placeholder="메모 / 참고 링크 / 인용 등"></textarea></div>
+      </div>
+
+      <!-- 건강 -->
+      <div class="cat-section" data-cat="health">
+        <div class="cat-title">❤️ 건강</div>
+        <div class="field-grid" style="margin-bottom:8px;">
+          <div class="field"><label>기상시간</label><input type="time" id="wakeTime" /></div>
+          <div class="field"><label>취침시간</label><input type="time" id="sleepTime" /></div>
+          <div class="field"><label>전일점수</label><input type="number" id="scoreYesterday" min="0" max="100" placeholder="0-100" /></div>
+          <div class="field"><label>오늘점수</label><input type="number" id="scoreToday" min="0" max="100" placeholder="0-100" /></div>
+        </div>
+        <div class="field">
+          <label>컨디션</label>
+          <div class="score-row" id="conditionRow"></div>
+        </div>
+        <div class="field-grid" style="margin-bottom:8px;">
+          <div class="field">
+            <label>운동여부</label>
+            <div class="toggle-row">
+              <button type="button" class="toggle-btn" id="exYes">예</button>
+              <button type="button" class="toggle-btn" id="exNo">아니오</button>
+            </div>
+          </div>
+          <div class="field"><label>운동종류</label><input type="text" id="exerciseType" placeholder="예: 러닝, 웨이트" /></div>
+          <div class="field">
+            <label>운동강도</label>
+            <select id="exerciseIntensity">
+              <option value="">선택</option><option value="낮음">낮음</option><option value="보통">보통</option><option value="높음">높음</option>
+            </select>
+          </div>
+        </div>
+        <div class="sub-title">식사 / 영양</div>
+        <div id="healthMealsBody"></div>
+        <div class="field-grid" style="margin-top:6px;">
+          <div class="field"><label>합계</label><input type="text" id="healthTotal" placeholder="총평 / 요약" /></div>
+          <div class="field"><label>영양제</label><input type="text" id="healthSupplements" placeholder="복용한 영양제" /></div>
+          <div class="field"><label>부족영양</label><input type="text" id="healthDeficient" placeholder="부족한 영양소" /></div>
+        </div>
+      </div>
+
+      <!-- 인간관계 -->
+      <div class="cat-section" data-cat="relationships">
+        <div class="cat-title">🤝 인간관계</div>
+        <div class="field"><label>만난 / 연락한 사람</label><input type="text" id="relPeople" placeholder="예: 팀장님, 친구 OO" /></div>
+        <div class="field"><label>관계 메모</label><textarea id="relMemo" rows="2" placeholder="오늘 있었던 대화, 갈등, 배려 등"></textarea></div>
+        <div class="field"><label>감사 표현</label><input type="text" id="relGratitude" placeholder="고마움을 느끼거나 표현한 것" /></div>
+        <div class="field">
+          <label>관계 만족도</label>
+          <div class="score-row" id="relScoreRow"></div>
+        </div>
+      </div>
+
+      <!-- 자산·투자 -->
+      <div class="cat-section" data-cat="assets">
+        <div class="cat-title">💰 자산·투자</div>
+        <div class="field-grid">
+          <div class="field"><label>오늘 지출</label><input type="text" id="assetExpense" placeholder="예: 32,000" /></div>
+          <div class="field"><label>오늘 수입</label><input type="text" id="assetIncome" placeholder="예: 0" /></div>
+          <div class="field"><label>총자산</label><input type="text" id="assetTotal" placeholder="예: 12,000,000" /></div>
+        </div>
+        <div class="field"><label>투자 메모</label><textarea id="assetMemo" rows="2" placeholder="매매 내역, 시황 메모, 리밸런싱 등"></textarea></div>
+        <div class="field"><label>다음 액션</label><input type="text" id="assetNextAction" placeholder="다음에 해야 할 것" /></div>
+      </div>
+
+      <!-- 직업 -->
+      <div class="cat-section" data-cat="career">
+        <div class="cat-title">💼 직업</div>
+        <div class="field"><label>업무 요약</label><textarea id="careerSummary" rows="2" placeholder="오늘 한 업무 요약"></textarea></div>
+        <div class="field"><label>성과 / 이슈</label><textarea id="careerAchievements" rows="2" placeholder="잘된 점, 막힌 점"></textarea></div>
+        <div class="field"><label>배운점</label><input type="text" id="careerLearned" placeholder="오늘 배운 것" /></div>
+        <div class="field"><label>내일 우선순위</label><input type="text" id="careerPriority" placeholder="내일 가장 먼저 할 일" /></div>
+      </div>
+
+      <!-- 취미 -->
+      <div class="cat-section" data-cat="hobby">
+        <div class="cat-title">🎨 취미</div>
+        <div class="field-grid">
+          <div class="field"><label>오늘 활동</label><input type="text" id="hobbyActivity" placeholder="예: 독서, 기타 연습" /></div>
+          <div class="field"><label>소요시간</label><input type="text" id="hobbyDuration" placeholder="예: 1시간" /></div>
+        </div>
+        <div class="field">
+          <label>만족도</label>
+          <div class="score-row" id="hobbyScoreRow"></div>
+        </div>
+        <div class="field"><label>메모</label><textarea id="hobbyMemo" rows="2" placeholder="느낀 점, 다음에 해보고 싶은 것"></textarea></div>
+      </div>
+
+      <!-- 시간계획 -->
+      <div class="cat-section" data-cat="schedule">
+        <div class="cat-title">⏱ 시간계획 <span class="cnt">— 24시간 30분 단위</span></div>
+        <div class="time-scroll">
+          <table class="timeplan">
+            <thead><tr><th>시간</th><th>내용</th><th>구분</th><th>실천</th></tr></thead>
+            <tbody id="timeplanBody"></tbody>
+          </table>
+        </div>
+        <datalist id="categoryList">
+          <option value="수면"></option><option value="업무"></option><option value="이동"></option>
+          <option value="식사"></option><option value="운동"></option><option value="휴식"></option>
+          <option value="자기계발"></option><option value="기타"></option>
+        </datalist>
+      </div>
+
+      <!-- 할일 · 습관 -->
+      <div class="cat-section" data-cat="tasks">
+        <div class="cat-title">✅ 할일 · 습관</div>
+        <div class="sub-title">할일</div>
+        <div class="row-hint">⇒ 버튼으로 다음날로 이월할 수 있어요</div>
+        <div class="list-rows" id="todoRows"></div>
+        <button class="add-row-btn" id="addTodoRow">+ 할일 추가</button>
+        <div class="sub-title">습관</div>
+        <div class="row-hint">⇒ 버튼으로 다음날로 이월할 수 있어요</div>
+        <div class="list-rows" id="habitRows"></div>
+        <button class="add-row-btn" id="addHabitRow">+ 습관 추가</button>
+      </div>
+
+      <div class="footer-note">draft v0.4 · 데이터는 이 계정에 개인 저장됩니다</div>
+    </div>
+
+    <!-- ===== PLAN VIEW ===== -->
+    <div id="planView" style="display:none;">
+      <div class="header">
+        <div class="brand">
+          <div class="logo">hb<span>◆</span>rad</div>
+          <div class="tagline">계획 · 일간/주간/월간/연간 목표</div>
+        </div>
+      </div>
+
+      <div class="plan-period-tabs" id="planPeriodTabs"></div>
+      <div class="plan-nav">
+        <button class="nav-btn" id="planPrevBtn">◀</button>
+        <div class="plan-label mono" id="planLabel"></div>
+        <button class="nav-btn" id="planNextBtn">▶</button>
+      </div>
+
+      <div class="cat-section">
+        <div class="cat-title">🎯 카테고리별 목표</div>
+        <div class="plan-cat-grid" id="planCatGrid"></div>
+      </div>
+
+      <div class="cat-section">
+        <div class="cat-title">✅ 할일 계획</div>
+        <div class="row-hint">이 기간 동안 해야 할 일들을 적어보세요</div>
+        <div class="list-rows" id="planTodoRows"></div>
+        <button class="add-row-btn" id="planAddTodo">+ 할일 추가</button>
+      </div>
+
+      <div class="cat-section">
+        <div class="cat-title">🔁 습관 계획</div>
+        <div class="row-hint">목표 빈도를 함께 적어보세요 (예: 주 3회)</div>
+        <div class="list-rows" id="planHabitRows"></div>
+        <button class="add-row-btn" id="planAddHabit">+ 습관 목표 추가</button>
+      </div>
+
+      <div class="footer-note">draft v0.4 · 계획 데이터는 기록과 별도로 저장됩니다</div>
+    </div>
+
+    <!-- ===== CALENDAR VIEW ===== -->
+    <div id="calendarView" style="display:none;">
+      <div class="cal-header">
+        <button class="nav-btn" id="calPrevMonth">◀</button>
+        <div class="cal-title mono" id="calTitle">2026년 8월</div>
+        <button class="nav-btn" id="calNextMonth">▶</button>
+      </div>
+      <div class="cal-legend">
+        <div class="cal-legend-item"><span class="cal-swatch filled"></span>작성함</div>
+        <div class="cal-legend-item"><span class="cal-swatch empty"></span>작성 안함</div>
+        <div class="cal-legend-item"><span style="width:13px;height:13px;border-radius:4px;border:1.5px solid var(--safety);"></span>오늘</div>
+      </div>
+      <div class="cal-grid" id="calWeekdays"></div>
+      <div class="cal-grid" id="calDays" style="margin-top:6px;"></div>
+    </div>
+
+  </div>
+</div>
+</div>
+
+<script>
+  // ---------- 저장소 연결: 기존 window.storage 인터페이스를 서버 API(/api/data → GitHub 저장소)로 연결 ----------
+  window.storage = {
+    async get(key, shared){
+      const r = await fetch('/api/data?key=' + encodeURIComponent(key));
+      if(r.status === 401) throw new Error('unauthorized');
+      if(!r.ok) throw new Error('storage get failed: ' + r.status);
+      return r.json(); // null 또는 {key, value, shared}
+    },
+    async set(key, value, shared){
+      const r = await fetch('/api/data', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ key, value })
+      });
+      if(r.status === 401) throw new Error('unauthorized');
+      if(!r.ok) throw new Error('storage set failed: ' + r.status);
+      return r.json();
+    },
+    async delete(key, shared){
+      const r = await fetch('/api/data', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ key, value: null, _delete: true })
+      });
+      if(!r.ok) return null;
+      return r.json();
+    },
+    async list(prefix, shared){ return { keys: [] }; }
+  };
+</script>
+<script>
+(function(){
+  const MEALS = ['아침','점심','저녁','간식'];
+  const MEAL_KEYS = ['carb','protein','fat','water'];
+  const MEAL_LABELS = { carb:'탄수화물', protein:'단백질', fat:'지방', water:'물' };
+  const WEEKDAYS = ['일','월','화','수','목','금','토'];
+
+  const CAT_TABS = [
+    {key:'all', label:'전체'},
+    {key:'thoughts', label:'💭 생각'},
+    {key:'health', label:'❤️ 건강'},
+    {key:'relationships', label:'🤝 인간관계'},
+    {key:'assets', label:'💰 자산·투자'},
+    {key:'career', label:'💼 직업'},
+    {key:'hobby', label:'🎨 취미'},
+    {key:'schedule', label:'⏱ 시간계획'},
+    {key:'tasks', label:'✅ 할일·습관'}
+  ];
+
+  const PLAN_CATS = [
+    {key:'thoughts', label:'💭 생각'},
+    {key:'health', label:'❤️ 건강'},
+    {key:'relationships', label:'🤝 인간관계'},
+    {key:'assets', label:'💰 자산·투자'},
+    {key:'career', label:'💼 직업'},
+    {key:'hobby', label:'🎨 취미'}
+  ];
+
+  const PLAN_PERIODS = [
+    {key:'daily', label:'일간'},
+    {key:'weekly', label:'주간'},
+    {key:'monthly', label:'월간'},
+    {key:'yearly', label:'연간'}
+  ];
+
+  function toLocalISO(d){
+    return d.getFullYear() + '-' + String(d.getMonth()+1).padStart(2,'0') + '-' + String(d.getDate()).padStart(2,'0');
+  }
+  function todayStr(){ return toLocalISO(new Date()); }
+  function nowHM(){
+    const d = new Date();
+    return String(d.getHours()).padStart(2,'0') + ':' + String(d.getMinutes()).padStart(2,'0');
+  }
+  function fmtDateShort(iso){
+    const d = new Date(iso + 'T00:00:00');
+    return (d.getMonth()+1) + '/' + d.getDate() + '(' + WEEKDAYS[d.getDay()] + ')';
+  }
+  function fmtDateFull(iso){
+    const d = new Date(iso + 'T00:00:00');
+    return d.getFullYear() + '년 ' + (d.getMonth()+1) + '월 ' + d.getDate() + '일 (' + WEEKDAYS[d.getDay()] + ')';
+  }
+  function addDays(dateStr, delta){
+    const [y,m,d] = dateStr.split('-').map(Number);
+    const dt = new Date(y, m-1, d);
+    dt.setDate(dt.getDate() + delta);
+    return toLocalISO(dt);
+  }
+  function getWeekStart(dateStr){
+    const [y,m,d] = dateStr.split('-').map(Number);
+    const dt = new Date(y, m-1, d);
+    const day = dt.getDay();
+    const diff = (day === 0 ? -6 : 1 - day);
+    dt.setDate(dt.getDate() + diff);
+    return toLocalISO(dt);
+  }
+  function weekLabel(mondayStr){
+    const start = new Date(mondayStr + 'T00:00:00');
+    const endStr = addDays(mondayStr, 6);
+    const end = new Date(endStr + 'T00:00:00');
+    return start.getFullYear() + '년 ' + (start.getMonth()+1) + '/' + start.getDate() + ' ~ ' + (end.getMonth()+1) + '/' + end.getDate();
+  }
+  function addMonths(monthStr, delta){
+    let [y,m] = monthStr.split('-').map(Number);
+    m += delta;
+    while(m < 1){ m += 12; y--; }
+    while(m > 12){ m -= 12; y++; }
+    return y + '-' + String(m).padStart(2,'0');
+  }
+  function monthLabel(monthStr){
+    const [y,m] = monthStr.split('-').map(Number);
+    return y + '년 ' + m + '월';
+  }
+  function generateTimeSlots(){
+    const slots = [];
+    for(let h=0; h<24; h++){
+      for(let m=0; m<60; m+=30){
+        const start = String(h).padStart(2,'0') + ':' + String(m).padStart(2,'0');
+        const endH = m===30 ? (h+1)%24 : h;
+        const endM = m===30 ? 0 : 30;
+        const end = String(endH).padStart(2,'0') + ':' + String(endM).padStart(2,'0');
+        slots.push(start + '-' + end);
+      }
+    }
+    return slots;
+  }
+  const TIME_SLOTS = generateTimeSlots();
+
+  function emptyMeal(){ return { carb:'', protein:'', fat:'', water:'' }; }
+  function createEmptyEntry(date){
+    return {
+      date, writeTime:'', lastEdited:'', condition:0,
+      wakeTime:'', sleepTime:'', exerciseYN:'', exerciseType:'', exerciseIntensity:'',
+      scoreYesterday:'', scoreToday:'',
+      timePlan: TIME_SLOTS.map(t => ({ time:t, content:'', category:'', done:false })),
+      health: { meals:{ 아침:emptyMeal(), 점심:emptyMeal(), 저녁:emptyMeal(), 간식:emptyMeal() }, total:'', supplements:'', deficient:'' },
+      todos: [], habits: [],
+      diary: { thoughts:'', questions:'', impression:'', keywords:'' },
+      reference: '',
+      relationships: { people:'', memo:'', gratitude:'', score:0 },
+      assets: { expense:'', income:'', total:'', memo:'', nextAction:'' },
+      career: { summary:'', achievements:'', learned:'', priority:'' },
+      hobby: { activity:'', duration:'', satisfaction:0, memo:'' }
+    };
+  }
+  function hasContent(e){
+    if(!e) return false;
+    if(e.wakeTime || e.sleepTime || e.exerciseYN || e.exerciseType || e.scoreYesterday || e.scoreToday || e.condition) return true;
+    if(e.timePlan && e.timePlan.some(s => s.content || s.category || s.done)) return true;
+    if(e.health){
+      const meals = e.health.meals || {};
+      for(const k in meals){ const mm=meals[k]; if(mm.carb||mm.protein||mm.fat||mm.water) return true; }
+      if(e.health.total || e.health.supplements || e.health.deficient) return true;
+    }
+    if(e.todos && e.todos.length>0) return true;
+    if(e.habits && e.habits.length>0) return true;
+    if(e.diary && (e.diary.thoughts||e.diary.questions||e.diary.impression||e.diary.keywords)) return true;
+    if(e.reference) return true;
+    if(e.relationships && (e.relationships.people||e.relationships.memo||e.relationships.gratitude||e.relationships.score)) return true;
+    if(e.assets && (e.assets.expense||e.assets.income||e.assets.total||e.assets.memo||e.assets.nextAction)) return true;
+    if(e.career && (e.career.summary||e.career.achievements||e.career.learned||e.career.priority)) return true;
+    if(e.hobby && (e.hobby.activity||e.hobby.duration||e.hobby.satisfaction||e.hobby.memo)) return true;
+    return false;
+  }
+
+  let allLogs = {};
+  let currentDate = todayStr();
+  let entry = createEmptyEntry(currentDate);
+  let saveTimer = null;
+  let calYear, calMonth;
+  let currentCatTab = 'all';
+
+  const $ = id => document.getElementById(id);
+
+  async function loadAll(){
+    try{
+      const res = await window.storage.get('daily-logs', false);
+      allLogs = res ? JSON.parse(res.value) : {};
+    }catch(e){ allLogs = {}; }
+    const [y,m] = currentDate.split('-').map(Number);
+    calYear = y; calMonth = m-1;
+    setDate(currentDate);
+  }
+  async function persist(){
+    try{
+      await window.storage.set('daily-logs', JSON.stringify(allLogs), false);
+      $('saveStatus').textContent = '저장됨';
+    }catch(e){
+      $('saveStatus').textContent = '저장 실패';
+      console.error(e);
+    }
+  }
+  function queueSave(immediate){
+    entry.lastEdited = nowHM();
+    if(!entry.writeTime) entry.writeTime = nowHM();
+    allLogs[currentDate] = entry;
+    $('saveStatus').textContent = '저장 중...';
+    updateTags();
+    clearTimeout(saveTimer);
+    if(immediate){ persist(); } else { saveTimer = setTimeout(persist, 500); }
+  }
+
+  function setDate(dateStr){
+    currentDate = dateStr;
+    entry = allLogs[dateStr] ? JSON.parse(JSON.stringify(allLogs[dateStr])) : createEmptyEntry(dateStr);
+    if(!entry.timePlan || entry.timePlan.length !== TIME_SLOTS.length){
+      entry.timePlan = TIME_SLOTS.map(t => ({ time:t, content:'', category:'', done:false }));
+    }
+    if(!entry.relationships) entry.relationships = { people:'', memo:'', gratitude:'', score:0 };
+    if(!entry.assets) entry.assets = { expense:'', income:'', total:'', memo:'', nextAction:'' };
+    if(!entry.career) entry.career = { summary:'', achievements:'', learned:'', priority:'' };
+    if(!entry.hobby) entry.hobby = { activity:'', duration:'', satisfaction:0, memo:'' };
+    $('dateInput').value = dateStr;
+    renderAll();
+    updateTags();
+    $('saveStatus').textContent = '';
+
+    // ---- 날짜 연동: 계획 뷰 / 달력 뷰가 항상 같은 날짜를 기준으로 맞춰지도록 동기화 ----
+    const [sy, sm] = dateStr.split('-').map(Number);
+    calYear = sy; calMonth = sm - 1;
+    planDate = dateStr;
+    planWeekStart = getWeekStart(dateStr);
+    planMonth = dateStr.slice(0, 7);
+    planYear = sy;
+    if($('calendarView').style.display !== 'none') renderCalendar();
+    if($('planView').style.display !== 'none') renderPlanView();
+  }
+
+  function renderAll(){
+    $('writeTimeLabel').textContent = '작성 ' + (entry.writeTime || '--:--');
+    $('editTimeLabel').textContent = '수정 ' + (entry.lastEdited || '--:--');
+    $('wakeTime').value = entry.wakeTime;
+    $('sleepTime').value = entry.sleepTime;
+    $('scoreYesterday').value = entry.scoreYesterday;
+    $('scoreToday').value = entry.scoreToday;
+    $('exerciseType').value = entry.exerciseType;
+    $('exerciseIntensity').value = entry.exerciseIntensity;
+    $('exYes').classList.toggle('on', entry.exerciseYN === '예');
+    $('exNo').classList.toggle('on', entry.exerciseYN === '아니오');
+    $('diaryThoughts').value = entry.diary.thoughts;
+    $('diaryQuestions').value = entry.diary.questions;
+    $('diaryImpression').value = entry.diary.impression;
+    $('diaryKeywords').value = entry.diary.keywords;
+    $('referenceNote').value = entry.reference;
+    $('relPeople').value = entry.relationships.people;
+    $('relMemo').value = entry.relationships.memo;
+    $('relGratitude').value = entry.relationships.gratitude;
+    $('assetExpense').value = entry.assets.expense;
+    $('assetIncome').value = entry.assets.income;
+    $('assetTotal').value = entry.assets.total;
+    $('assetMemo').value = entry.assets.memo;
+    $('assetNextAction').value = entry.assets.nextAction;
+    $('careerSummary').value = entry.career.summary;
+    $('careerAchievements').value = entry.career.achievements;
+    $('careerLearned').value = entry.career.learned;
+    $('careerPriority').value = entry.career.priority;
+    $('hobbyActivity').value = entry.hobby.activity;
+    $('hobbyDuration').value = entry.hobby.duration;
+    $('hobbyMemo').value = entry.hobby.memo;
+
+    renderScoreRow('conditionRow', () => entry.condition, v => { entry.condition = v; });
+    renderScoreRow('relScoreRow', () => entry.relationships.score, v => { entry.relationships.score = v; });
+    renderScoreRow('hobbyScoreRow', () => entry.hobby.satisfaction, v => { entry.hobby.satisfaction = v; });
+
+    renderTimePlan();
+    renderHealthMeals();
+    renderListRows('todoRows', 'todos');
+    renderListRows('habitRows', 'habits');
+    applyCatTab(currentCatTab);
+  }
+
+  function renderScoreRow(elId, getVal, setVal){
+    const row = $(elId);
+    row.innerHTML = '';
+    for(let i=1;i<=5;i++){
+      const btn = document.createElement('button');
+      btn.type = 'button';
+      btn.className = 'score-btn' + (getVal() === i ? ' on' : '');
+      btn.textContent = i;
+      btn.addEventListener('click', () => {
+        setVal(getVal() === i ? 0 : i);
+        renderScoreRow(elId, getVal, setVal);
+        queueSave();
+      });
+      row.appendChild(btn);
+    }
+  }
+
+  function renderTimePlan(){
+    const body = $('timeplanBody');
+    body.innerHTML = '';
+    entry.timePlan.forEach((slot, idx) => {
+      const tr = document.createElement('tr');
+      tr.innerHTML = `
+        <td class="tp-time">${slot.time}</td>
+        <td><input type="text" data-idx="${idx}" data-f="content" value="${escapeAttr(slot.content)}" placeholder="내용" /></td>
+        <td class="tp-cat"><input type="text" data-idx="${idx}" data-f="category" value="${escapeAttr(slot.category)}" list="categoryList" placeholder="구분" /></td>
+        <td class="tp-check"><div class="row-check ${slot.done?'done':''}" data-idx="${idx}"></div></td>
+      `;
+      body.appendChild(tr);
+    });
+    body.querySelectorAll('input[data-f]').forEach(inp => {
+      inp.addEventListener('input', () => {
+        const idx = +inp.dataset.idx, f = inp.dataset.f;
+        entry.timePlan[idx][f] = inp.value;
+        queueSave();
+      });
+    });
+    body.querySelectorAll('.row-check').forEach(cb => {
+      cb.addEventListener('click', () => {
+        const idx = +cb.dataset.idx;
+        entry.timePlan[idx].done = !entry.timePlan[idx].done;
+        cb.classList.toggle('done');
+        queueSave();
+      });
+    });
+  }
+
+  function renderHealthMeals(){
+    const body = $('healthMealsBody');
+    let html = '';
+    MEALS.forEach(meal => {
+      html += `<div class="meal-block"><div class="meal-name">${meal}</div><div class="meal-fields">`;
+      MEAL_KEYS.forEach(k => {
+        html += `<input type="text" data-meal="${meal}" data-k="${k}" placeholder="${MEAL_LABELS[k]}" value="${escapeAttr(entry.health.meals[meal][k])}" />`;
+      });
+      html += `</div></div>`;
+    });
+    body.innerHTML = html;
+    body.querySelectorAll('input[data-meal]').forEach(inp => {
+      inp.addEventListener('input', () => { entry.health.meals[inp.dataset.meal][inp.dataset.k] = inp.value; queueSave(); });
+    });
+  }
+
+  function renderListRows(containerId, key){
+    const el = $(containerId);
+    const list = entry[key];
+    el.innerHTML = '';
+    if(list.length === 0){
+      el.innerHTML = '<div class="empty-hint">항목이 없습니다</div>';
+      return;
+    }
+    list.forEach((item, idx) => {
+      const row = document.createElement('div');
+      row.className = 'list-row';
+      row.innerHTML = `
+        <div class="row-order">${idx+1}</div>
+        <input type="text" value="${escapeAttr(item.content)}" data-idx="${idx}" />
+        <div class="row-check ${item.done?'done':''}" data-idx="${idx}" title="실천"></div>
+        <button class="row-move" data-idx="${idx}" title="다음날로 이월">⇒</button>
+        <button class="row-del" data-idx="${idx}">✕</button>
+      `;
+      el.appendChild(row);
+    });
+    el.querySelectorAll('input[type=text]').forEach(inp => {
+      inp.addEventListener('input', () => { entry[key][+inp.dataset.idx].content = inp.value; queueSave(); });
+    });
+    el.querySelectorAll('.row-check').forEach(cb => {
+      cb.addEventListener('click', () => {
+        const i = +cb.dataset.idx;
+        entry[key][i].done = !entry[key][i].done;
+        cb.classList.toggle('done');
+        queueSave();
+      });
+    });
+    el.querySelectorAll('.row-del').forEach(btn => {
+      btn.addEventListener('click', () => {
+        entry[key].splice(+btn.dataset.idx, 1);
+        renderListRows(containerId, key);
+        queueSave();
+      });
+    });
+    el.querySelectorAll('.row-move').forEach(btn => {
+      btn.addEventListener('click', () => {
+        const idx = +btn.dataset.idx;
+        const item = entry[key][idx];
+        const nextDateStr = addDays(currentDate, 1);
+        const nextEntry = allLogs[nextDateStr] ? JSON.parse(JSON.stringify(allLogs[nextDateStr])) : createEmptyEntry(nextDateStr);
+        nextEntry[key].push({ content:item.content, done:false });
+        allLogs[nextDateStr] = nextEntry;
+        entry[key].splice(idx, 1);
+        renderListRows(containerId, key);
+        queueSave(true);
+      });
+    });
+  }
+
+  function escapeAttr(str){
+    return String(str||'').replace(/&/g,'&amp;').replace(/"/g,'&quot;').replace(/</g,'&lt;');
+  }
+
+  function updateTags(){
+    const dates = Object.keys(allLogs).sort().reverse().slice(0, 8);
+    const wrap = $('recentTags');
+    wrap.innerHTML = '';
+    dates.forEach(d => {
+      const tag = document.createElement('div');
+      tag.className = 'recent-tag' + (d === currentDate ? ' active' : '') + (hasContent(allLogs[d]) ? ' has-content' : '');
+      tag.textContent = fmtDateShort(d);
+      tag.addEventListener('click', () => setDate(d));
+      wrap.appendChild(tag);
+    });
+  }
+
+  // ---------- Category tabs (기록 뷰) ----------
+  function renderCatTabs(){
+    const wrap = $('catTabs');
+    wrap.innerHTML = '';
+    CAT_TABS.forEach(c => {
+      const btn = document.createElement('div');
+      btn.className = 'cat-tab' + (currentCatTab === c.key ? ' active' : '');
+      btn.textContent = c.label;
+      btn.addEventListener('click', () => { currentCatTab = c.key; applyCatTab(c.key); });
+      wrap.appendChild(btn);
+    });
+  }
+  function applyCatTab(tab){
+    document.querySelectorAll('#catTabs .cat-tab').forEach((btn, i) => {
+      btn.classList.toggle('active', CAT_TABS[i].key === tab);
+    });
+    document.querySelectorAll('.cat-section').forEach(sec => {
+      sec.style.display = (tab === 'all' || sec.dataset.cat === tab) ? '' : 'none';
+    });
+  }
+
+  // ---------- Calendar view ----------
+  function renderCalendar(){
+    $('calTitle').textContent = calYear + '년 ' + (calMonth+1) + '월';
+    const wkEl = $('calWeekdays');
+    wkEl.innerHTML = WEEKDAYS.map(w => `<div class="cal-weekday">${w}</div>`).join('');
+
+    const firstWeekday = new Date(calYear, calMonth, 1).getDay();
+    const daysInMonth = new Date(calYear, calMonth+1, 0).getDate();
+    const daysEl = $('calDays');
+    daysEl.innerHTML = '';
+
+    for(let i=0;i<firstWeekday;i++){
+      const blank = document.createElement('div');
+      blank.className = 'cal-cell blank';
+      daysEl.appendChild(blank);
+    }
+    for(let day=1; day<=daysInMonth; day++){
+      const dateStr = toLocalISO(new Date(calYear, calMonth, day));
+      const filled = hasContent(allLogs[dateStr]);
+      const cell = document.createElement('div');
+      cell.className = 'cal-cell' + (filled ? ' has-content' : '') + (dateStr===todayStr() ? ' is-today' : '') + (dateStr===currentDate ? ' is-selected' : '');
+      cell.innerHTML = `<div>${day}</div>` + (filled ? '<div class="dot"></div>' : '');
+      cell.addEventListener('click', () => {
+        setDate(dateStr);
+        switchView('log');
+      });
+      daysEl.appendChild(cell);
+    }
+  }
+
+  function switchView(view){
+    $('logView').style.display = view === 'log' ? '' : 'none';
+    $('planView').style.display = view === 'plan' ? '' : 'none';
+    $('calendarView').style.display = view === 'calendar' ? '' : 'none';
+    $('tabLogBtn').classList.toggle('active', view === 'log');
+    $('tabPlanBtn').classList.toggle('active', view === 'plan');
+    $('tabCalBtn').classList.toggle('active', view === 'calendar');
+    if(view === 'calendar'){
+      const [y,m] = currentDate.split('-').map(Number);
+      calYear = y; calMonth = m-1;
+      renderCalendar();
+    }
+    if(view === 'plan'){
+      renderPlanView();
+    }
+  }
+  $('tabLogBtn').addEventListener('click', () => switchView('log'));
+  $('tabPlanBtn').addEventListener('click', () => switchView('plan'));
+  $('tabCalBtn').addEventListener('click', () => switchView('calendar'));
+  $('calPrevMonth').addEventListener('click', () => {
+    calMonth--; if(calMonth<0){ calMonth=11; calYear--; }
+    renderCalendar();
+  });
+  $('calNextMonth').addEventListener('click', () => {
+    calMonth++; if(calMonth>11){ calMonth=0; calYear++; }
+    renderCalendar();
+  });
+
+  // ---------- static field bindings (기록) ----------
+  $('wakeTime').addEventListener('change', e => { entry.wakeTime = e.target.value; queueSave(); });
+  $('sleepTime').addEventListener('change', e => { entry.sleepTime = e.target.value; queueSave(); });
+  $('scoreYesterday').addEventListener('input', e => { entry.scoreYesterday = e.target.value; queueSave(); });
+  $('scoreToday').addEventListener('input', e => { entry.scoreToday = e.target.value; queueSave(); });
+  $('exerciseType').addEventListener('input', e => { entry.exerciseType = e.target.value; queueSave(); });
+  $('exerciseIntensity').addEventListener('change', e => { entry.exerciseIntensity = e.target.value; queueSave(); });
+  $('exYes').addEventListener('click', () => { entry.exerciseYN = entry.exerciseYN==='예' ? '' : '예'; renderAll(); queueSave(); });
+  $('exNo').addEventListener('click', () => { entry.exerciseYN = entry.exerciseYN==='아니오' ? '' : '아니오'; renderAll(); queueSave(); });
+
+  $('diaryThoughts').addEventListener('input', e => { entry.diary.thoughts = e.target.value; queueSave(); });
+  $('diaryQuestions').addEventListener('input', e => { entry.diary.questions = e.target.value; queueSave(); });
+  $('diaryImpression').addEventListener('input', e => { entry.diary.impression = e.target.value; queueSave(); });
+  $('diaryKeywords').addEventListener('input', e => { entry.diary.keywords = e.target.value; queueSave(); });
+  $('referenceNote').addEventListener('input', e => { entry.reference = e.target.value; queueSave(); });
+
+  $('relPeople').addEventListener('input', e => { entry.relationships.people = e.target.value; queueSave(); });
+  $('relMemo').addEventListener('input', e => { entry.relationships.memo = e.target.value; queueSave(); });
+  $('relGratitude').addEventListener('input', e => { entry.relationships.gratitude = e.target.value; queueSave(); });
+
+  $('assetExpense').addEventListener('input', e => { entry.assets.expense = e.target.value; queueSave(); });
+  $('assetIncome').addEventListener('input', e => { entry.assets.income = e.target.value; queueSave(); });
+  $('assetTotal').addEventListener('input', e => { entry.assets.total = e.target.value; queueSave(); });
+  $('assetMemo').addEventListener('input', e => { entry.assets.memo = e.target.value; queueSave(); });
+  $('assetNextAction').addEventListener('input', e => { entry.assets.nextAction = e.target.value; queueSave(); });
+
+  $('careerSummary').addEventListener('input', e => { entry.career.summary = e.target.value; queueSave(); });
+  $('careerAchievements').addEventListener('input', e => { entry.career.achievements = e.target.value; queueSave(); });
+  $('careerLearned').addEventListener('input', e => { entry.career.learned = e.target.value; queueSave(); });
+  $('careerPriority').addEventListener('input', e => { entry.career.priority = e.target.value; queueSave(); });
+
+  $('hobbyActivity').addEventListener('input', e => { entry.hobby.activity = e.target.value; queueSave(); });
+  $('hobbyDuration').addEventListener('input', e => { entry.hobby.duration = e.target.value; queueSave(); });
+  $('hobbyMemo').addEventListener('input', e => { entry.hobby.memo = e.target.value; queueSave(); });
+
+  $('healthTotal').addEventListener('input', e => { entry.health.total = e.target.value; queueSave(); });
+  $('healthSupplements').addEventListener('input', e => { entry.health.supplements = e.target.value; queueSave(); });
+  $('healthDeficient').addEventListener('input', e => { entry.health.deficient = e.target.value; queueSave(); });
+
+  $('addTodoRow').addEventListener('click', () => { entry.todos.push({content:'', done:false}); renderListRows('todoRows','todos'); queueSave(); });
+  $('addHabitRow').addEventListener('click', () => { entry.habits.push({content:'', done:false}); renderListRows('habitRows','habits'); queueSave(); });
+
+  $('dateInput').addEventListener('change', e => setDate(e.target.value));
+  $('todayBtn').addEventListener('click', () => setDate(todayStr()));
+  $('prevDay').addEventListener('click', () => setDate(addDays(currentDate, -1)));
+  $('nextDay').addEventListener('click', () => setDate(addDays(currentDate, 1)));
+
+  renderCatTabs();
+
+  // ================= PLAN VIEW =================
+  let allPlans = { daily:{}, weekly:{}, monthly:{}, yearly:{} };
+  let planPeriod = 'daily';
+  let planDate = todayStr();
+  let planWeekStart = getWeekStart(todayStr());
+  let planMonth = todayStr().slice(0,7);
+  let planYear = new Date().getFullYear();
+  let planSaveTimer = null;
+
+  function createEmptyPlan(){
+    return {
+      categories: { thoughts:'', health:'', relationships:'', assets:'', career:'', hobby:'' },
+      todos: [], habits: []
+    };
+  }
+
+  async function loadPlans(){
+    try{
+      const res = await window.storage.get('plan-data', false);
+      allPlans = res ? JSON.parse(res.value) : { daily:{}, weekly:{}, monthly:{}, yearly:{} };
+    }catch(e){ allPlans = { daily:{}, weekly:{}, monthly:{}, yearly:{} }; }
+    ['daily','weekly','monthly','yearly'].forEach(p => { if(!allPlans[p]) allPlans[p] = {}; });
+  }
+  async function persistPlans(){
+    try{ await window.storage.set('plan-data', JSON.stringify(allPlans), false); }
+    catch(e){ console.error(e); }
+  }
+  function queuePlanSave(){
+    clearTimeout(planSaveTimer);
+    planSaveTimer = setTimeout(persistPlans, 500);
+  }
+
+  function currentPlanKey(){
+    if(planPeriod === 'daily') return planDate;
+    if(planPeriod === 'weekly') return planWeekStart;
+    if(planPeriod === 'monthly') return planMonth;
+    return String(planYear);
+  }
+  function getPlan(){
+    const store = allPlans[planPeriod];
+    const key = currentPlanKey();
+    if(!store[key]) store[key] = createEmptyPlan();
+    return store[key];
+  }
+  function currentPlanLabel(){
+    if(planPeriod === 'daily') return fmtDateFull(planDate);
+    if(planPeriod === 'weekly') return weekLabel(planWeekStart);
+    if(planPeriod === 'monthly') return monthLabel(planMonth);
+    return planYear + '년';
+  }
+
+  function renderPlanPeriodTabs(){
+    const wrap = $('planPeriodTabs');
+    wrap.innerHTML = '';
+    PLAN_PERIODS.forEach(p => {
+      const btn = document.createElement('div');
+      btn.className = 'plan-period-tab' + (planPeriod === p.key ? ' active' : '');
+      btn.textContent = p.label;
+      btn.addEventListener('click', () => { planPeriod = p.key; renderPlanView(); });
+      wrap.appendChild(btn);
+    });
+  }
+
+  // 계획 뷰에서 이전/다음으로 이동하면, 기록(로그)/달력 뷰의 기준 날짜도 함께 이동합니다 (날짜 연동).
+  function planPrev(){
+    if(planPeriod === 'daily') setDate(addDays(currentDate, -1));
+    else if(planPeriod === 'weekly') setDate(addDays(getWeekStart(currentDate), -7));
+    else if(planPeriod === 'monthly') setDate(addMonths(currentDate.slice(0,7), -1) + '-01');
+    else setDate((Number(currentDate.slice(0,4)) - 1) + currentDate.slice(4));
+  }
+  function planNext(){
+    if(planPeriod === 'daily') setDate(addDays(currentDate, 1));
+    else if(planPeriod === 'weekly') setDate(addDays(getWeekStart(currentDate), 7));
+    else if(planPeriod === 'monthly') setDate(addMonths(currentDate.slice(0,7), 1) + '-01');
+    else setDate((Number(currentDate.slice(0,4)) + 1) + currentDate.slice(4));
+  }
+  $('planPrevBtn').addEventListener('click', planPrev);
+  $('planNextBtn').addEventListener('click', planNext);
+
+  function renderPlanCatGrid(){
+    const plan = getPlan();
+    const wrap = $('planCatGrid');
+    wrap.innerHTML = '';
+    PLAN_CATS.forEach(c => {
+      const item = document.createElement('div');
+      item.className = 'plan-cat-item';
+      item.innerHTML = `<label>${c.label}</label><textarea rows="2" data-cat="${c.key}" placeholder="${c.label.replace(/^[^ ]+ /,'')} 목표">${escapeAttr(plan.categories[c.key])}</textarea>`;
+      wrap.appendChild(item);
+    });
+    wrap.querySelectorAll('textarea[data-cat]').forEach(ta => {
+      ta.addEventListener('input', () => { getPlan().categories[ta.dataset.cat] = ta.value; queuePlanSave(); });
+    });
+  }
+
+  function renderGenericRows(containerId, list, hasTarget){
+    const el = $(containerId);
+    el.innerHTML = '';
+    if(list.length === 0){
+      el.innerHTML = '<div class="empty-hint">항목이 없습니다</div>';
+      return;
+    }
+    list.forEach((item, idx) => {
+      const row = document.createElement('div');
+      row.className = 'list-row';
+      row.innerHTML = `
+        <div class="row-order">${idx+1}</div>
+        <input type="text" value="${escapeAttr(item.content)}" data-idx="${idx}" data-f="content" placeholder="내용" />
+        ${hasTarget ? `<input type="text" class="target-input" value="${escapeAttr(item.target||'')}" data-idx="${idx}" data-f="target" placeholder="목표 (예: 주3회)" />` : ''}
+        <div class="row-check ${item.done?'done':''}" data-idx="${idx}" title="달성"></div>
+        <button class="row-del" data-idx="${idx}">✕</button>
+      `;
+      el.appendChild(row);
+    });
+    el.querySelectorAll('input[data-f]').forEach(inp => {
+      inp.addEventListener('input', () => { list[+inp.dataset.idx][inp.dataset.f] = inp.value; queuePlanSave(); });
+    });
+    el.querySelectorAll('.row-check').forEach(cb => {
+      cb.addEventListener('click', () => {
+        const i = +cb.dataset.idx;
+        list[i].done = !list[i].done;
+        cb.classList.toggle('done');
+        queuePlanSave();
+      });
+    });
+    el.querySelectorAll('.row-del').forEach(btn => {
+      btn.addEventListener('click', () => {
+        list.splice(+btn.dataset.idx, 1);
+        renderGenericRows(containerId, list, hasTarget);
+        queuePlanSave();
+      });
+    });
+  }
+
+  $('planAddTodo').addEventListener('click', () => {
+    const plan = getPlan();
+    plan.todos.push({ content:'', done:false });
+    renderGenericRows('planTodoRows', plan.todos, false);
+    queuePlanSave();
+  });
+  $('planAddHabit').addEventListener('click', () => {
+    const plan = getPlan();
+    plan.habits.push({ content:'', target:'', done:false });
+    renderGenericRows('planHabitRows', plan.habits, true);
+    queuePlanSave();
+  });
+
+  function renderPlanView(){
+    renderPlanPeriodTabs();
+    $('planLabel').textContent = currentPlanLabel();
+    const plan = getPlan();
+    renderPlanCatGrid();
+    renderGenericRows('planTodoRows', plan.todos, false);
+    renderGenericRows('planHabitRows', plan.habits, true);
+  }
+
+  // ---------- CSV 내보내기 ----------
+  function csvEscape(v){
+    const s = String(v === undefined || v === null ? '' : v);
+    if(/[",\n]/.test(s)) return '"' + s.replace(/"/g, '""') + '"';
+    return s;
+  }
+  function downloadCsv(filename, csvBody){
+    const csv = '\uFEFF' + csvBody; // BOM: 엑셀에서 한글 깨짐 방지
+    const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = filename;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(url);
+  }
+  function exportLogsCsv(){
+    const dates = Object.keys(allLogs).sort();
+    if(dates.length === 0){ alert('내보낼 기록이 없습니다.'); return; }
+    const headers = ['날짜','작성시간','수정시간','기상시간','취침시간','컨디션','운동여부','운동종류','운동강도','전일점수','오늘점수',
+      '아침_탄수화물','아침_단백질','아침_지방','아침_물',
+      '점심_탄수화물','점심_단백질','점심_지방','점심_물',
+      '저녁_탄수화물','저녁_단백질','저녁_지방','저녁_물',
+      '간식_탄수화물','간식_단백질','간식_지방','간식_물',
+      '건강합계','영양제','부족영양',
+      '생각','질문','감상','키워드','참고',
+      '관계_사람','관계_메모','관계_감사','관계_만족도',
+      '지출','수입','총자산','투자메모','다음액션',
+      '업무요약','성과이슈','배운점','내일우선순위',
+      '취미활동','취미시간','취미만족도','취미메모',
+      '할일','습관'];
+    const rows = [headers.join(',')];
+    dates.forEach(d => {
+      const e = allLogs[d];
+      const meals = (e.health && e.health.meals) || {};
+      const m = name => meals[name] || {};
+      const todosStr = (e.todos || []).map(t => t.content + (t.done ? '(완료)' : '')).join('; ');
+      const habitsStr = (e.habits || []).map(t => t.content + (t.done ? '(완료)' : '')).join('; ');
+      const row = [
+        d, e.writeTime, e.lastEdited, e.wakeTime, e.sleepTime, e.condition, e.exerciseYN, e.exerciseType, e.exerciseIntensity, e.scoreYesterday, e.scoreToday,
+        m('아침').carb, m('아침').protein, m('아침').fat, m('아침').water,
+        m('점심').carb, m('점심').protein, m('점심').fat, m('점심').water,
+        m('저녁').carb, m('저녁').protein, m('저녁').fat, m('저녁').water,
+        m('간식').carb, m('간식').protein, m('간식').fat, m('간식').water,
+        (e.health && e.health.total) || '', (e.health && e.health.supplements) || '', (e.health && e.health.deficient) || '',
+        (e.diary && e.diary.thoughts) || '', (e.diary && e.diary.questions) || '', (e.diary && e.diary.impression) || '', (e.diary && e.diary.keywords) || '', e.reference || '',
+        (e.relationships && e.relationships.people) || '', (e.relationships && e.relationships.memo) || '', (e.relationships && e.relationships.gratitude) || '', (e.relationships && e.relationships.score) || '',
+        (e.assets && e.assets.expense) || '', (e.assets && e.assets.income) || '', (e.assets && e.assets.total) || '', (e.assets && e.assets.memo) || '', (e.assets && e.assets.nextAction) || '',
+        (e.career && e.career.summary) || '', (e.career && e.career.achievements) || '', (e.career && e.career.learned) || '', (e.career && e.career.priority) || '',
+        (e.hobby && e.hobby.activity) || '', (e.hobby && e.hobby.duration) || '', (e.hobby && e.hobby.satisfaction) || '', (e.hobby && e.hobby.memo) || '',
+        todosStr, habitsStr
+      ];
+      rows.push(row.map(csvEscape).join(','));
+    });
+    downloadCsv('hborad-기록-' + todayStr() + '.csv', rows.join('\n'));
+  }
+  $('exportCsvBtn').addEventListener('click', exportLogsCsv);
+
+  // ---------- init (로그인 성공 후 외부에서 호출) ----------
+  window.hbInit = async function(){
+    await loadPlans();
+    await loadAll();
+  };
+})();
+</script>
+
+<script>
+  // ---------- 로그인 게이트 ----------
+  (async function(){
+    const gate = document.getElementById('loginGate');
+    const appRoot = document.getElementById('appRoot');
+    const form = document.getElementById('loginForm');
+    const pwInput = document.getElementById('loginPassword');
+    const errEl = document.getElementById('loginError');
+
+    async function enterApp(){
+      gate.style.display = 'none';
+      appRoot.style.display = '';
+      await window.hbInit();
+    }
+
+    try{
+      const r = await fetch('/api/check');
+      const j = await r.json();
+      if(j && j.authed){ await enterApp(); return; }
+    }catch(e){ /* 로그인 화면 표시로 진행 */ }
+
+    gate.style.display = 'flex';
+
+    form.addEventListener('submit', async function(e){
+      e.preventDefault();
+      errEl.textContent = '';
+      const password = pwInput.value;
+      try{
+        const r = await fetch('/api/auth', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ password })
+        });
+        const j = await r.json();
+        if(j && j.ok){
+          pwInput.value = '';
+          await enterApp();
+        } else {
+          errEl.textContent = '비밀번호가 올바르지 않습니다.';
+        }
+      }catch(err){
+        errEl.textContent = '로그인 중 오류가 발생했습니다.';
+      }
+    });
+  })();
+</script>
+</body>
+</html>

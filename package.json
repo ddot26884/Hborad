@@ -1,0 +1,9 @@
+{
+  "name": "hborad",
+  "version": "1.0.0",
+  "private": true,
+  "description": "hborad - 매일의 기록 보드 (정적 프론트엔드 + Vercel Functions + GitHub 저장)",
+  "engines": {
+    "node": ">=18"
+  }
+}
