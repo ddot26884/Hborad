@@ -8,22 +8,24 @@
   @import url('https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;700;800&family=Noto+Sans+KR:wght@400;500;700&display=swap');
 
   :root{
-    --paper:#F6F5F1;
-    --paper-2:#EFEDE7;
-    --grid:#D8DEE2;
-    --ink:#1B2430;
-    --ink-soft:#5A6472;
-    --line:#C9CFD3;
-    --safety:#FF6A3D;
-    --safety-dark:#D6501F;
-    --teal:#2D6E7E;
-    --teal-soft:#DCE9EC;
+    --paper:#FDF8F2;
+    --paper-2:#F5EDE1;
+    --grid:#E9DED0;
+    --ink:#2B2118;
+    --ink-soft:#7A6C5C;
+    --line:#DCD0BF;
+    --safety:#FF7A4A;
+    --safety-dark:#E2591F;
+    --teal:#2A8577;
+    --teal-soft:#DCEEE9;
     --yellow:#FFC857;
     --card:#FFFFFF;
-    --green:#4C8B5A;
-    --green-soft:#E1EEE3;
-    --purple:#7A6FB0;
-    --purple-soft:#E7E4F4;
+    --green:#469A63;
+    --green-soft:#E0F2E5;
+    --purple:#8A6FC9;
+    --purple-soft:#EFE7FA;
+    --pink:#FF6FA0;
+    --pink-soft:#FFE3ED;
   }
 
   *{box-sizing:border-box;}
@@ -239,6 +241,78 @@
   .plan-cat-item textarea{ width:100%; padding:7px 9px; border:1.5px solid var(--line); border-radius:6px; font-size:12.5px; font-family:'Noto Sans KR',sans-serif; background:var(--paper); resize:vertical; }
   .plan-cat-item textarea:focus{ outline:2px solid var(--purple); outline-offset:1px; }
 
+  /* ---------- Upload / template row ---------- */
+  .upload-input{ display:none; }
+  .nav-btn.ghost{ background:var(--paper-2); }
+
+  /* ---------- Toast ---------- */
+  #toastWrap{ position:fixed; left:50%; bottom:18px; transform:translateX(-50%); z-index:1200; display:flex; flex-direction:column; gap:6px; align-items:center; pointer-events:none; }
+  .toast{
+    font-family:'JetBrains Mono', monospace; font-size:12px; font-weight:700; color:#fff;
+    background:var(--ink); padding:9px 16px; border-radius:20px; box-shadow:2px 3px 0 rgba(0,0,0,0.15);
+    opacity:0; transform:translateY(8px); transition:opacity .2s, transform .2s;
+  }
+  .toast.show{ opacity:1; transform:translateY(0); }
+  .toast.err{ background:var(--safety-dark); }
+
+  /* ---------- 오늘의 계획 (메인페이지 위젯) ---------- */
+  .mission-widget{
+    background:linear-gradient(135deg, var(--purple-soft), var(--pink-soft));
+    border:1.5px solid var(--purple); border-radius:12px; padding:13px 14px; margin-bottom:10px;
+    box-shadow:2px 3px 0 rgba(122,111,176,0.15);
+  }
+  .mission-widget .mw-head{ display:flex; align-items:center; justify-content:space-between; margin-bottom:8px; }
+  .mission-widget .mw-title{ font-family:'JetBrains Mono', monospace; font-weight:800; font-size:12.5px; color:var(--purple); display:flex; align-items:center; gap:5px; }
+  .mission-widget .mw-link{ font-family:'JetBrains Mono', monospace; font-size:10px; color:var(--purple); cursor:pointer; text-decoration:underline; background:none; border:none; padding:0; }
+  .mission-widget .mw-goals{ font-size:11.5px; color:var(--ink); line-height:1.5; margin-bottom:8px; }
+  .mission-widget .mw-goals .g-item{ display:inline; }
+  .mission-widget .mw-goals .g-item:not(:last-child)::after{ content:" · "; color:var(--ink-soft); }
+  .mission-widget .mw-empty{ font-size:11px; color:var(--ink-soft); font-family:'JetBrains Mono', monospace; }
+  .mw-rows{ display:flex; flex-direction:column; gap:4px; }
+  .mw-row{ display:flex; align-items:center; gap:6px; }
+  .mw-row .row-check{ width:18px; height:18px; }
+  .mw-row .mw-text{ font-size:12px; flex:1; }
+  .mw-row .mw-text.done{ text-decoration:line-through; color:var(--ink-soft); }
+
+  /* ---------- 체크리스트 / 도파민 패널 ---------- */
+  .dopa-panel{
+    background:linear-gradient(135deg, var(--card), var(--yellow) 250%);
+    border:1.5px solid var(--safety); border-radius:12px; padding:13px 14px; margin-top:10px;
+    box-shadow:2px 3px 0 rgba(255,122,74,0.15); position:relative; overflow:hidden;
+  }
+  .dopa-head{ display:flex; align-items:center; gap:10px; margin-bottom:10px; }
+  .dopa-mascot{ width:46px; height:46px; flex-shrink:0; }
+  .dopa-msg{ flex:1; }
+  .dopa-msg .dm-title{ font-family:'JetBrains Mono', monospace; font-weight:800; font-size:13px; color:var(--safety-dark); }
+  .dopa-msg .dm-sub{ font-size:11px; color:var(--ink-soft); margin-top:2px; }
+  .progress-track{ width:100%; height:12px; background:var(--paper-2); border-radius:20px; overflow:hidden; border:1.5px solid var(--line); }
+  .progress-fill{ height:100%; border-radius:20px; background:linear-gradient(90deg, var(--yellow), var(--safety)); transition:width .4s ease; }
+  .progress-pct{ font-family:'JetBrains Mono', monospace; font-size:10px; color:var(--ink-soft); margin-top:4px; text-align:right; }
+  .week-chart{ display:flex; align-items:flex-end; gap:6px; height:64px; margin-top:12px; }
+  .wc-col{ flex:1; display:flex; flex-direction:column; align-items:center; justify-content:flex-end; height:100%; gap:3px; }
+  .wc-bar{ width:100%; border-radius:5px 5px 3px 3px; background:var(--teal-soft); position:relative; min-height:3px; }
+  .wc-bar .fill{ position:absolute; bottom:0; left:0; right:0; border-radius:5px 5px 3px 3px; background:linear-gradient(180deg, var(--pink), var(--purple)); transition:height .4s ease; }
+  .wc-label{ font-family:'JetBrains Mono', monospace; font-size:8.5px; color:var(--ink-soft); }
+
+  /* ---------- Plan: 단기/장기 차트 ---------- */
+  .plan-chart-wrap{ display:flex; gap:10px; margin-bottom:12px; }
+  .plan-chart-card{
+    flex:1; background:var(--card); border:1.5px solid var(--line); border-radius:10px; padding:10px 12px;
+    box-shadow:1px 2px 0 rgba(27,36,48,0.05);
+  }
+  .plan-chart-card .pc-label{ font-family:'JetBrains Mono', monospace; font-size:10.5px; font-weight:700; color:var(--ink-soft); display:flex; align-items:center; gap:5px; margin-bottom:6px; }
+  .plan-chart-card .pc-pct{ font-family:'JetBrains Mono', monospace; font-weight:800; font-size:19px; }
+  .plan-chart-card.short .pc-pct{ color:var(--teal); }
+  .plan-chart-card.long .pc-pct{ color:var(--purple); }
+  .plan-chart-card .progress-track{ height:9px; margin-top:6px; }
+  .plan-chart-card.short .progress-fill{ background:linear-gradient(90deg, var(--teal-soft), var(--teal)); }
+  .plan-chart-card.long .progress-fill{ background:linear-gradient(90deg, var(--purple-soft), var(--purple)); }
+  .plan-group-label{ font-family:'JetBrains Mono', monospace; font-size:10px; font-weight:700; color:var(--ink-soft); margin:2px 0 4px; }
+  .plan-period-tabs{ margin-bottom:4px; }
+  .plan-group-row{ display:flex; gap:10px; margin-bottom:8px; }
+  .plan-group-row .grp{ flex:1; }
+  .plan-group-row .plan-period-tabs{ display:flex; gap:6px; }
+
   @media (max-width:520px){
     .brand .logo{ font-size:20px; }
     .meal-fields{ grid-template-columns:repeat(2,1fr); }
@@ -246,6 +320,8 @@
     .cal-cell{ font-size:10px; }
     .plan-cat-grid{ grid-template-columns:1fr; }
     .field-grid.cols2{ grid-template-columns:1fr; }
+    .plan-chart-wrap{ flex-direction:column; }
+    .date-nav{ gap:5px; }
   }
 
   /* ---------- Login gate ---------- */
@@ -280,6 +356,8 @@
 </style>
 </head>
 <body>
+
+<div id="toastWrap"></div>
 
 <div id="loginGate">
   <form id="loginForm" class="login-box">
@@ -322,9 +400,14 @@
         <button class="nav-btn" id="nextDay">▶</button>
         <button class="nav-btn" id="todayBtn">오늘</button>
         <button class="nav-btn" id="exportCsvBtn">⬇ CSV</button>
+        <button class="nav-btn ghost" id="templateCsvBtn">📄 양식</button>
+        <button class="nav-btn ghost" id="uploadCsvBtn">⬆ 업로드</button>
+        <input type="file" id="uploadCsvInput" class="upload-input" accept=".csv,text/csv" />
         <div class="recent-tags" id="recentTags"></div>
         <span class="save-status" id="saveStatus"></span>
       </div>
+
+      <div class="mission-widget" id="missionWidget"></div>
 
       <div class="cat-tabs" id="catTabs"></div>
 
@@ -450,6 +533,19 @@
         <div class="row-hint">⇒ 버튼으로 다음날로 이월할 수 있어요</div>
         <div class="list-rows" id="habitRows"></div>
         <button class="add-row-btn" id="addHabitRow">+ 습관 추가</button>
+
+        <div class="dopa-panel" id="dopaPanel">
+          <div class="dopa-head">
+            <div class="dopa-mascot" id="dopaMascot"></div>
+            <div class="dopa-msg">
+              <div class="dm-title" id="dopaTitle">오늘의 체크리스트</div>
+              <div class="dm-sub" id="dopaSub">할일 · 습관을 체크하면 여기서 응원해줄게요</div>
+            </div>
+          </div>
+          <div class="progress-track"><div class="progress-fill" id="dopaFill" style="width:0%"></div></div>
+          <div class="progress-pct" id="dopaPct">0 / 0 완료</div>
+          <div class="week-chart" id="weekChart"></div>
+        </div>
       </div>
 
       <div class="footer-note">draft v0.4 · 데이터는 이 계정에 개인 저장됩니다</div>
@@ -461,6 +557,19 @@
         <div class="brand">
           <div class="logo">hb<span>◆</span>rad</div>
           <div class="tagline">계획 · 일간/주간/월간/연간 목표</div>
+        </div>
+      </div>
+
+      <div class="plan-chart-wrap">
+        <div class="plan-chart-card short">
+          <div class="pc-label">🌱 단기 진행률 <span style="font-weight:400;">(일간·주간)</span></div>
+          <div class="pc-pct" id="shortPlanPct">0%</div>
+          <div class="progress-track"><div class="progress-fill" id="shortPlanFill" style="width:0%"></div></div>
+        </div>
+        <div class="plan-chart-card long">
+          <div class="pc-label">🏔 장기 진행률 <span style="font-weight:400;">(월간·연간)</span></div>
+          <div class="pc-pct" id="longPlanPct">0%</div>
+          <div class="progress-track"><div class="progress-fill" id="longPlanFill" style="width:0%"></div></div>
         </div>
       </div>
 
@@ -515,33 +624,88 @@
 
 <script>
   // ---------- 저장소 연결: 기존 window.storage 인터페이스를 서버 API(/api/data → GitHub 저장소)로 연결 ----------
-  window.storage = {
-    async get(key, shared){
+  // 기록(logs)과 계획(plans)이 같은 데이터 파일(같은 GitHub 커밋 대상)을 공유하기 때문에,
+  // 두 화면을 오가며 거의 동시에 저장을 시도하면 GitHub의 파일 버전(sha)이 어긋나
+  // "저장 실패"가 뜰 수 있습니다. 아래 큐는 모든 저장 요청을 한 번에 하나씩만 실행해
+  // 이 충돌을 막고, 그래도 충돌(409/412)이 나면 자동으로 재시도합니다.
+  (function(){
+    let queue = Promise.resolve();
+    function sleep(ms){ return new Promise(res => setTimeout(res, ms)); }
+
+    async function rawGet(key){
       const r = await fetch('/api/data?key=' + encodeURIComponent(key));
       if(r.status === 401) throw new Error('unauthorized');
       if(!r.ok) throw new Error('storage get failed: ' + r.status);
-      return r.json(); // null 또는 {key, value, shared}
-    },
-    async set(key, value, shared){
+      return r.json();
+    }
+    async function rawSet(key, value){
       const r = await fetch('/api/data', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ key, value })
       });
       if(r.status === 401) throw new Error('unauthorized');
-      if(!r.ok) throw new Error('storage set failed: ' + r.status);
+      if(!r.ok){
+        const err = new Error('storage set failed: ' + r.status);
+        err.status = r.status;
+        throw err;
+      }
       return r.json();
-    },
-    async delete(key, shared){
-      const r = await fetch('/api/data', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ key, value: null, _delete: true })
-      });
-      if(!r.ok) return null;
-      return r.json();
-    },
-    async list(prefix, shared){ return { keys: [] }; }
+    }
+    async function setWithRetry(key, value, attempts){
+      attempts = attempts || 4;
+      let lastErr;
+      for(let i=0;i<attempts;i++){
+        try{ return await rawSet(key, value); }
+        catch(e){
+          lastErr = e;
+          // 409/412 = 다른 저장 요청과 충돌(파일 버전 어긋남). 잠깐 기다렸다가 재시도.
+          if(e.status === 409 || e.status === 412){ await sleep(250 * (i+1)); continue; }
+          throw e;
+        }
+      }
+      throw lastErr;
+    }
+
+    window.storage = {
+      async get(key, shared){ return rawGet(key); },
+      async set(key, value, shared){
+        const task = queue.then(() => setWithRetry(key, value));
+        // 이후 요청이 이전 요청의 실패로 영구히 막히지 않도록, 큐 자체는 항상 이어감
+        queue = task.catch(() => {});
+        return task;
+      },
+      async delete(key, shared){
+        const task = queue.then(async () => {
+          const r = await fetch('/api/data', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ key, value: null, _delete: true })
+          });
+          if(!r.ok) return null;
+          return r.json();
+        });
+        queue = task.catch(() => {});
+        return task;
+      },
+      async list(prefix, shared){ return { keys: [] }; }
+    };
+  })();
+</script>
+<script>
+  // ---------- 토스트 알림 ----------
+  window.hbToast = function(msg, isErr){
+    const wrap = document.getElementById('toastWrap');
+    if(!wrap) return;
+    const t = document.createElement('div');
+    t.className = 'toast' + (isErr ? ' err' : '');
+    t.textContent = msg;
+    wrap.appendChild(t);
+    requestAnimationFrame(() => t.classList.add('show'));
+    setTimeout(() => {
+      t.classList.remove('show');
+      setTimeout(() => t.remove(), 250);
+    }, 2600);
   };
 </script>
 <script>
@@ -703,6 +867,7 @@
     }catch(e){
       $('saveStatus').textContent = '저장 실패';
       console.error(e);
+      hbToast('저장에 실패했어요. 네트워크를 확인하고 다시 시도해주세요.', true);
     }
   }
   function queueSave(immediate){
@@ -782,6 +947,8 @@
     renderListRows('todoRows', 'todos');
     renderListRows('habitRows', 'habits');
     applyCatTab(currentCatTab);
+    renderDopaPanel();
+    renderMissionWidget();
   }
 
   function renderScoreRow(elId, getVal, setVal){
@@ -873,8 +1040,17 @@
     el.querySelectorAll('.row-check').forEach(cb => {
       cb.addEventListener('click', () => {
         const i = +cb.dataset.idx;
+        const wasComplete = checklistStats(entry).total > 0 && checklistStats(entry).done === checklistStats(entry).total;
         entry[key][i].done = !entry[key][i].done;
         cb.classList.toggle('done');
+        if(entry[key][i].done){
+          confettiBurst(false);
+          const stats = checklistStats(entry);
+          if(stats.total > 0 && stats.done === stats.total && !wasComplete){
+            setTimeout(() => confettiBurst(true), 150);
+          }
+        }
+        renderDopaPanel();
         queueSave();
       });
     });
@@ -882,6 +1058,7 @@
       btn.addEventListener('click', () => {
         entry[key].splice(+btn.dataset.idx, 1);
         renderListRows(containerId, key);
+        renderDopaPanel();
         queueSave();
       });
     });
@@ -902,6 +1079,158 @@
 
   function escapeAttr(str){
     return String(str||'').replace(/&/g,'&amp;').replace(/"/g,'&quot;').replace(/</g,'&lt;');
+  }
+
+  // ---------- 체크리스트 / 도파민 패널 ----------
+  function checklistStats(e){
+    const todos = (e && e.todos) || [];
+    const habits = (e && e.habits) || [];
+    const total = todos.length + habits.length;
+    const done = todos.filter(t=>t.done).length + habits.filter(t=>t.done).length;
+    return { total, done };
+  }
+
+  // 아주 단순하고 귀여운 캐릭터 마스코트. 외부 이미지 없이 순수 SVG로 그립니다.
+  function mascotSVG(state){
+    const bodyColor = state === 'ecstatic' ? 'var(--safety)' : (state === 'happy' ? 'var(--yellow)' : 'var(--teal-soft)');
+    let eyes, mouth, extra = '';
+    if(state === 'ecstatic'){
+      eyes = `<path d="M16 21 L20 25 L24 19" stroke="#2B2118" stroke-width="2.4" fill="none" stroke-linecap="round" stroke-linejoin="round"/>
+              <path d="M36 21 L40 25 L44 19" stroke="#2B2118" stroke-width="2.4" fill="none" stroke-linecap="round" stroke-linejoin="round"/>`;
+      mouth = `<path d="M18 34 Q30 46 42 34" stroke="#2B2118" stroke-width="2.6" fill="none" stroke-linecap="round"/>`;
+      extra = `<circle cx="6" cy="14" r="2" style="fill:var(--pink)"/><circle cx="54" cy="18" r="2.5" style="fill:var(--yellow)"/><circle cx="10" cy="46" r="1.8" style="fill:var(--purple)"/><circle cx="52" cy="44" r="2" style="fill:var(--pink)"/>`;
+    } else if(state === 'happy'){
+      eyes = `<path d="M15 22 Q19 18 23 22" stroke="#2B2118" stroke-width="2.4" fill="none" stroke-linecap="round"/>
+              <path d="M37 22 Q41 18 45 22" stroke="#2B2118" stroke-width="2.4" fill="none" stroke-linecap="round"/>`;
+      mouth = `<path d="M20 33 Q30 41 40 33" stroke="#2B2118" stroke-width="2.4" fill="none" stroke-linecap="round"/>`;
+    } else {
+      eyes = `<circle cx="19" cy="21" r="2.6" fill="#2B2118"/><circle cx="41" cy="21" r="2.6" fill="#2B2118"/>`;
+      mouth = `<path d="M23 34 Q30 37 37 34" stroke="#2B2118" stroke-width="2.2" fill="none" stroke-linecap="round"/>`;
+    }
+    return `<svg viewBox="0 0 60 60" xmlns="http://www.w3.org/2000/svg" width="100%" height="100%">
+      ${extra}
+      <circle cx="30" cy="30" r="22" style="fill:${bodyColor}" stroke="#2B2118" stroke-width="1.6"/>
+      <circle cx="14" cy="33" r="4" style="fill:var(--pink)" opacity="0.7"/>
+      <circle cx="46" cy="33" r="4" style="fill:var(--pink)" opacity="0.7"/>
+      ${eyes}
+      ${mouth}
+    </svg>`;
+  }
+
+  // 가벼운 순수 JS 컨페티 (외부 라이브러리 없이). small=체크할 때마다, big=오늘 목록을 다 완료했을 때.
+  function confettiBurst(big){
+    const colors = ['#FF7A4A','#FFC857','#2A8577','#8A6FC9','#FF6FA0'];
+    const count = big ? 60 : 14;
+    for(let i=0;i<count;i++){
+      const el = document.createElement('div');
+      const size = big ? (6 + Math.random()*6) : (4 + Math.random()*4);
+      el.style.position = 'fixed';
+      el.style.zIndex = '1300';
+      el.style.left = (big ? (40 + Math.random()*20) : (50 + (Math.random()*20-10))) + 'vw';
+      el.style.top = (big ? '-10px' : '30vh');
+      el.style.width = size + 'px';
+      el.style.height = size + 'px';
+      el.style.background = colors[i % colors.length];
+      el.style.borderRadius = Math.random() > 0.5 ? '50%' : '2px';
+      el.style.pointerEvents = 'none';
+      el.style.opacity = '1';
+      const rot = Math.random()*360;
+      el.style.transform = 'rotate(' + rot + 'deg)';
+      document.body.appendChild(el);
+      const dx = (Math.random()*2-1) * (big ? 220 : 90);
+      const dy = big ? (window.innerHeight*0.6 + Math.random()*200) : (120 + Math.random()*80);
+      const duration = big ? 1400 + Math.random()*500 : 700 + Math.random()*300;
+      const anim = el.animate([
+        { transform: `translate(0,0) rotate(${rot}deg)`, opacity: 1 },
+        { transform: `translate(${dx}px, ${dy}px) rotate(${rot+180}deg)`, opacity: 0 }
+      ], { duration, easing: 'cubic-bezier(.2,.6,.3,1)' });
+      anim.onfinish = () => el.remove();
+    }
+  }
+
+  function renderDopaPanel(){
+    if(!$('dopaPanel')) return;
+    const { total, done } = checklistStats(entry);
+    const pct = total > 0 ? Math.round(done/total*100) : 0;
+    $('dopaFill').style.width = pct + '%';
+    $('dopaPct').textContent = done + ' / ' + total + ' 완료 (' + pct + '%)';
+    let state = 'idle', title = '오늘의 체크리스트', sub = '할일 · 습관을 체크하면 여기서 응원해줄게요';
+    if(total > 0 && done === total){
+      state = 'ecstatic'; title = '올클리어! 🎉'; sub = '오늘 목록을 모두 해냈어요, 최고예요!';
+    } else if(done > 0){
+      state = 'happy'; title = '좋아요, 계속 가봐요!'; sub = (total-done) + '개 남았어요';
+    } else if(total > 0){
+      sub = total + '개 중 아직 시작 전이에요';
+    }
+    $('dopaMascot').innerHTML = mascotSVG(state);
+    $('dopaTitle').textContent = title;
+    $('dopaSub').textContent = sub;
+    renderWeekChart();
+  }
+
+  function renderWeekChart(){
+    const wrap = $('weekChart');
+    if(!wrap) return;
+    wrap.innerHTML = '';
+    const days = [];
+    for(let i=6;i>=0;i--) days.push(addDays(currentDate, -i));
+    days.forEach(d => {
+      const stats = checklistStats(allLogs[d]);
+      const pct = stats.total > 0 ? Math.round(stats.done/stats.total*100) : 0;
+      const col = document.createElement('div');
+      col.className = 'wc-col';
+      col.innerHTML = `<div class="wc-bar" style="height:44px;"><div class="fill" style="height:${pct}%;"></div></div><div class="wc-label">${d===currentDate?'오늘':fmtDateShort(d).split('(')[0]}</div>`;
+      wrap.appendChild(col);
+    });
+  }
+
+  // ---------- 오늘의 계획 위젯 (메인/기록 페이지) ----------
+  function renderMissionWidget(){
+    const wrap = $('missionWidget');
+    if(!wrap) return;
+    const plan = (allPlans.daily && allPlans.daily[currentDate]) || null;
+    const goals = plan ? Object.entries(plan.categories||{}).filter(([,v]) => v && v.trim()) : [];
+    const todos = plan ? plan.todos || [] : [];
+    const habits = plan ? plan.habits || [] : [];
+
+    let html = `<div class="mw-head"><div class="mw-title">🎯 오늘의 계획</div><button type="button" class="mw-link" id="mwGoToPlan">계획 전체보기 →</button></div>`;
+
+    if(!plan || (goals.length === 0 && todos.length === 0 && habits.length === 0)){
+      html += `<div class="mw-empty">아직 오늘의 계획이 없어요. '계획 전체보기'에서 오늘의 목표를 적어보세요.</div>`;
+    } else {
+      if(goals.length){
+        html += `<div class="mw-goals">` + goals.map(([k,v]) => {
+          const cat = PLAN_CATS.find(c => c.key === k);
+          return `<span class="g-item">${cat?cat.label:k}: ${escapeAttr(v).slice(0,40)}</span>`;
+        }).join('') + `</div>`;
+      }
+      if(todos.length || habits.length){
+        html += `<div class="mw-rows">`;
+        todos.forEach((t,i) => {
+          html += `<div class="mw-row"><div class="row-check ${t.done?'done':''}" data-list="todos" data-idx="${i}"></div><div class="mw-text ${t.done?'done':''}">${escapeAttr(t.content)||'(내용 없음)'}</div></div>`;
+        });
+        habits.forEach((t,i) => {
+          html += `<div class="mw-row"><div class="row-check ${t.done?'done':''}" data-list="habits" data-idx="${i}"></div><div class="mw-text ${t.done?'done':''}">${escapeAttr(t.content)||'(내용 없음)'}</div></div>`;
+        });
+        html += `</div>`;
+      }
+    }
+    wrap.innerHTML = html;
+
+    const goBtn = $('mwGoToPlan');
+    if(goBtn) goBtn.addEventListener('click', () => switchView('plan'));
+
+    wrap.querySelectorAll('.mw-row .row-check').forEach(cb => {
+      cb.addEventListener('click', () => {
+        const list = cb.dataset.list, i = +cb.dataset.idx;
+        const p = allPlans.daily[currentDate];
+        if(!p) return;
+        p[list][i].done = !p[list][i].done;
+        if(p[list][i].done) confettiBurst(false);
+        queuePlanSave();
+        renderMissionWidget();
+      });
+    });
   }
 
   function updateTags(){
@@ -925,7 +1254,12 @@
       const btn = document.createElement('div');
       btn.className = 'cat-tab' + (currentCatTab === c.key ? ' active' : '');
       btn.textContent = c.label;
-      btn.addEventListener('click', () => { currentCatTab = c.key; applyCatTab(c.key); });
+      btn.addEventListener('click', () => {
+        if(document.activeElement && typeof document.activeElement.blur === 'function') document.activeElement.blur();
+        currentCatTab = c.key;
+        applyCatTab(c.key);
+        window.scrollTo(0, 0);
+      });
       wrap.appendChild(btn);
     });
   }
@@ -969,6 +1303,11 @@
   }
 
   function switchView(view){
+    // 탭을 바꾸기 전에: 입력 중이던 필드가 있으면 포커스를 풀어 저장을 확정하고(모바일 키보드도 닫아),
+    // 화면을 맨 위로 되돌려서 "탭마다 스크롤 위치가 튀는" 현상과 "입력창이 안 보이는" 현상을 방지합니다.
+    if(document.activeElement && typeof document.activeElement.blur === 'function'){
+      document.activeElement.blur();
+    }
     $('logView').style.display = view === 'log' ? '' : 'none';
     $('planView').style.display = view === 'plan' ? '' : 'none';
     $('calendarView').style.display = view === 'calendar' ? '' : 'none';
@@ -983,6 +1322,12 @@
     if(view === 'plan'){
       renderPlanView();
     }
+    if(view === 'log'){
+      renderMissionWidget();
+      renderDopaPanel();
+    }
+    window.scrollTo(0, 0);
+    document.querySelector('.main-content').scrollTop = 0;
   }
   $('tabLogBtn').addEventListener('click', () => switchView('log'));
   $('tabPlanBtn').addEventListener('click', () => switchView('plan'));
@@ -1035,8 +1380,8 @@
   $('healthSupplements').addEventListener('input', e => { entry.health.supplements = e.target.value; queueSave(); });
   $('healthDeficient').addEventListener('input', e => { entry.health.deficient = e.target.value; queueSave(); });
 
-  $('addTodoRow').addEventListener('click', () => { entry.todos.push({content:'', done:false}); renderListRows('todoRows','todos'); queueSave(); });
-  $('addHabitRow').addEventListener('click', () => { entry.habits.push({content:'', done:false}); renderListRows('habitRows','habits'); queueSave(); });
+  $('addTodoRow').addEventListener('click', () => { entry.todos.push({content:'', done:false}); renderListRows('todoRows','todos'); renderDopaPanel(); queueSave(); });
+  $('addHabitRow').addEventListener('click', () => { entry.habits.push({content:'', done:false}); renderListRows('habitRows','habits'); renderDopaPanel(); queueSave(); });
 
   $('dateInput').addEventListener('change', e => setDate(e.target.value));
   $('todayBtn').addEventListener('click', () => setDate(todayStr()));
@@ -1070,7 +1415,7 @@
   }
   async function persistPlans(){
     try{ await window.storage.set('plan-data', JSON.stringify(allPlans), false); }
-    catch(e){ console.error(e); }
+    catch(e){ console.error(e); hbToast('계획 저장에 실패했어요. 다시 시도해주세요.', true); }
   }
   function queuePlanSave(){
     clearTimeout(planSaveTimer);
@@ -1103,7 +1448,7 @@
       const btn = document.createElement('div');
       btn.className = 'plan-period-tab' + (planPeriod === p.key ? ' active' : '');
       btn.textContent = p.label;
-      btn.addEventListener('click', () => { planPeriod = p.key; renderPlanView(); });
+      btn.addEventListener('click', () => { planPeriod = p.key; renderPlanView(); window.scrollTo(0,0); });
       wrap.appendChild(btn);
     });
   }
@@ -1166,6 +1511,8 @@
         const i = +cb.dataset.idx;
         list[i].done = !list[i].done;
         cb.classList.toggle('done');
+        if(list[i].done) confettiBurst(false);
+        renderPlanChart();
         queuePlanSave();
       });
     });
@@ -1173,6 +1520,7 @@
       btn.addEventListener('click', () => {
         list.splice(+btn.dataset.idx, 1);
         renderGenericRows(containerId, list, hasTarget);
+        renderPlanChart();
         queuePlanSave();
       });
     });
@@ -1182,14 +1530,39 @@
     const plan = getPlan();
     plan.todos.push({ content:'', done:false });
     renderGenericRows('planTodoRows', plan.todos, false);
+    renderPlanChart();
     queuePlanSave();
   });
   $('planAddHabit').addEventListener('click', () => {
     const plan = getPlan();
     plan.habits.push({ content:'', target:'', done:false });
     renderGenericRows('planHabitRows', plan.habits, true);
+    renderPlanChart();
     queuePlanSave();
   });
+
+  // 단기(일간·주간) / 장기(월간·연간) 계획 진행률 집계
+  function computePlanGroupStats(periods){
+    let total = 0, done = 0;
+    periods.forEach(p => {
+      const store = allPlans[p] || {};
+      Object.values(store).forEach(pl => {
+        (pl.todos || []).forEach(t => { total++; if(t.done) done++; });
+        (pl.habits || []).forEach(t => { total++; if(t.done) done++; });
+      });
+    });
+    return { total, done };
+  }
+  function renderPlanChart(){
+    const s = computePlanGroupStats(['daily','weekly']);
+    const l = computePlanGroupStats(['monthly','yearly']);
+    const sPct = s.total > 0 ? Math.round(s.done/s.total*100) : 0;
+    const lPct = l.total > 0 ? Math.round(l.done/l.total*100) : 0;
+    $('shortPlanPct').textContent = sPct + '%';
+    $('shortPlanFill').style.width = sPct + '%';
+    $('longPlanPct').textContent = lPct + '%';
+    $('longPlanFill').style.width = lPct + '%';
+  }
 
   function renderPlanView(){
     renderPlanPeriodTabs();
@@ -1198,6 +1571,7 @@
     renderPlanCatGrid();
     renderGenericRows('planTodoRows', plan.todos, false);
     renderGenericRows('planHabitRows', plan.habits, true);
+    renderPlanChart();
   }
 
   // ---------- CSV 내보내기 ----------
@@ -1260,6 +1634,166 @@
   }
   $('exportCsvBtn').addEventListener('click', exportLogsCsv);
 
+  // ---------- CSV 업로드 (일괄 등록) ----------
+  // 내보내기(exportLogsCsv)와 같은 순서/이름의 열을 사용합니다. 열 이름으로 매칭하므로
+  // 열 순서가 바뀌어도, 일부 열이 빠져도 괜찮습니다. '날짜' 열만 필수입니다.
+  const CSV_COLUMNS = [
+    {h:'날짜'},
+    {h:'작성시간', apply:(e,v)=>{ e.writeTime = v; }},
+    {h:'수정시간', apply:(e,v)=>{ e.lastEdited = v; }},
+    {h:'기상시간', apply:(e,v)=>{ e.wakeTime = v; }},
+    {h:'취침시간', apply:(e,v)=>{ e.sleepTime = v; }},
+    {h:'컨디션', apply:(e,v)=>{ e.condition = v ? Number(v) : 0; }},
+    {h:'운동여부', apply:(e,v)=>{ e.exerciseYN = v; }},
+    {h:'운동종류', apply:(e,v)=>{ e.exerciseType = v; }},
+    {h:'운동강도', apply:(e,v)=>{ e.exerciseIntensity = v; }},
+    {h:'전일점수', apply:(e,v)=>{ e.scoreYesterday = v; }},
+    {h:'오늘점수', apply:(e,v)=>{ e.scoreToday = v; }},
+    {h:'아침_탄수화물', apply:(e,v)=>{ e.health.meals['아침'].carb = v; }},
+    {h:'아침_단백질', apply:(e,v)=>{ e.health.meals['아침'].protein = v; }},
+    {h:'아침_지방', apply:(e,v)=>{ e.health.meals['아침'].fat = v; }},
+    {h:'아침_물', apply:(e,v)=>{ e.health.meals['아침'].water = v; }},
+    {h:'점심_탄수화물', apply:(e,v)=>{ e.health.meals['점심'].carb = v; }},
+    {h:'점심_단백질', apply:(e,v)=>{ e.health.meals['점심'].protein = v; }},
+    {h:'점심_지방', apply:(e,v)=>{ e.health.meals['점심'].fat = v; }},
+    {h:'점심_물', apply:(e,v)=>{ e.health.meals['점심'].water = v; }},
+    {h:'저녁_탄수화물', apply:(e,v)=>{ e.health.meals['저녁'].carb = v; }},
+    {h:'저녁_단백질', apply:(e,v)=>{ e.health.meals['저녁'].protein = v; }},
+    {h:'저녁_지방', apply:(e,v)=>{ e.health.meals['저녁'].fat = v; }},
+    {h:'저녁_물', apply:(e,v)=>{ e.health.meals['저녁'].water = v; }},
+    {h:'간식_탄수화물', apply:(e,v)=>{ e.health.meals['간식'].carb = v; }},
+    {h:'간식_단백질', apply:(e,v)=>{ e.health.meals['간식'].protein = v; }},
+    {h:'간식_지방', apply:(e,v)=>{ e.health.meals['간식'].fat = v; }},
+    {h:'간식_물', apply:(e,v)=>{ e.health.meals['간식'].water = v; }},
+    {h:'건강합계', apply:(e,v)=>{ e.health.total = v; }},
+    {h:'영양제', apply:(e,v)=>{ e.health.supplements = v; }},
+    {h:'부족영양', apply:(e,v)=>{ e.health.deficient = v; }},
+    {h:'생각', apply:(e,v)=>{ e.diary.thoughts = v; }},
+    {h:'질문', apply:(e,v)=>{ e.diary.questions = v; }},
+    {h:'감상', apply:(e,v)=>{ e.diary.impression = v; }},
+    {h:'키워드', apply:(e,v)=>{ e.diary.keywords = v; }},
+    {h:'참고', apply:(e,v)=>{ e.reference = v; }},
+    {h:'관계_사람', apply:(e,v)=>{ e.relationships.people = v; }},
+    {h:'관계_메모', apply:(e,v)=>{ e.relationships.memo = v; }},
+    {h:'관계_감사', apply:(e,v)=>{ e.relationships.gratitude = v; }},
+    {h:'관계_만족도', apply:(e,v)=>{ e.relationships.score = v ? Number(v) : 0; }},
+    {h:'지출', apply:(e,v)=>{ e.assets.expense = v; }},
+    {h:'수입', apply:(e,v)=>{ e.assets.income = v; }},
+    {h:'총자산', apply:(e,v)=>{ e.assets.total = v; }},
+    {h:'투자메모', apply:(e,v)=>{ e.assets.memo = v; }},
+    {h:'다음액션', apply:(e,v)=>{ e.assets.nextAction = v; }},
+    {h:'업무요약', apply:(e,v)=>{ e.career.summary = v; }},
+    {h:'성과이슈', apply:(e,v)=>{ e.career.achievements = v; }},
+    {h:'배운점', apply:(e,v)=>{ e.career.learned = v; }},
+    {h:'내일우선순위', apply:(e,v)=>{ e.career.priority = v; }},
+    {h:'취미활동', apply:(e,v)=>{ e.hobby.activity = v; }},
+    {h:'취미시간', apply:(e,v)=>{ e.hobby.duration = v; }},
+    {h:'취미만족도', apply:(e,v)=>{ e.hobby.satisfaction = v ? Number(v) : 0; }},
+    {h:'취미메모', apply:(e,v)=>{ e.hobby.memo = v; }},
+    {h:'할일', apply:(e,v)=>{ e.todos = parseListStr(v); }},
+    {h:'습관', apply:(e,v)=>{ e.habits = parseListStr(v); }}
+  ];
+
+  function parseListStr(v){
+    if(!v) return [];
+    return v.split(';').map(s => s.trim()).filter(Boolean).map(s => {
+      const done = /\(완료\)\s*$/.test(s);
+      const content = s.replace(/\(완료\)\s*$/,'').trim();
+      return { content, done };
+    });
+  }
+
+  // 아주 단순한 CSV 파서 (따옴표로 감싼 콤마/줄바꿈 지원)
+  function parseCsv(text){
+    text = text.replace(/^\uFEFF/, '');
+    const rows = [];
+    let row = [], field = '', inQuotes = false;
+    for(let i=0;i<text.length;i++){
+      const c = text[i];
+      if(inQuotes){
+        if(c === '"'){
+          if(text[i+1] === '"'){ field += '"'; i++; }
+          else inQuotes = false;
+        } else field += c;
+      } else {
+        if(c === '"') inQuotes = true;
+        else if(c === ',' ){ row.push(field); field=''; }
+        else if(c === '\n'){ row.push(field); rows.push(row); row=[]; field=''; }
+        else if(c === '\r'){ /* 무시 */ }
+        else field += c;
+      }
+    }
+    if(field.length > 0 || row.length > 0){ row.push(field); rows.push(row); }
+    return rows.filter(r => !(r.length === 1 && r[0].trim() === ''));
+  }
+
+  function downloadCsvTemplate(){
+    const headers = CSV_COLUMNS.map(c => c.h);
+    const example = CSV_COLUMNS.map(c => {
+      switch(c.h){
+        case '날짜': return todayStr();
+        case '운동여부': return '예';
+        case '운동강도': return '보통';
+        case '컨디션': case '관계_만족도': case '취미만족도': return '3';
+        case '할일': return '보고서 작성(완료); 운동하기';
+        case '습관': return '물 마시기(완료); 스트레칭';
+        default: return '';
+      }
+    });
+    const rows = [headers.join(','), example.map(csvEscape).join(',')];
+    downloadCsv('hborad-업로드양식.csv', rows.join('\n'));
+  }
+  $('templateCsvBtn').addEventListener('click', downloadCsvTemplate);
+
+  async function importCsvFile(file){
+    let text;
+    try{ text = await file.text(); }
+    catch(e){ hbToast('파일을 읽을 수 없습니다.', true); return; }
+    const rows = parseCsv(text);
+    if(rows.length < 2){ hbToast('가져올 데이터가 없습니다.', true); return; }
+    const header = rows[0].map(h => h.trim());
+    const idxByHeader = {};
+    header.forEach((h,i) => { idxByHeader[h] = i; });
+    const dateIdx = idxByHeader['날짜'];
+    if(dateIdx === undefined){ hbToast('CSV에 "날짜" 열이 없습니다. 양식을 다운로드해서 확인해주세요.', true); return; }
+
+    let count = 0, skipped = 0;
+    for(let r=1; r<rows.length; r++){
+      const cols = rows[r];
+      if(!cols || cols.every(c => c.trim() === '')) continue;
+      const dateVal = (cols[dateIdx] || '').trim();
+      if(!/^\d{4}-\d{2}-\d{2}$/.test(dateVal)){ skipped++; continue; }
+      const e = createEmptyEntry(dateVal);
+      CSV_COLUMNS.forEach(col => {
+        if(!col.apply) return;
+        const idx = idxByHeader[col.h];
+        if(idx === undefined) return;
+        col.apply(e, (cols[idx] || '').trim());
+      });
+      if(!e.writeTime) e.writeTime = nowHM();
+      e.lastEdited = nowHM();
+      allLogs[dateVal] = e;
+      count++;
+    }
+    if(count === 0){ hbToast('등록된 항목이 없습니다. 날짜 형식(YYYY-MM-DD)을 확인해주세요.', true); return; }
+    try{
+      await window.storage.set('daily-logs', JSON.stringify(allLogs), false);
+      hbToast(count + '개 날짜가 등록되었습니다' + (skipped ? ` (형식 오류 ${skipped}건 제외)` : ''));
+      setDate(currentDate);
+      if($('calendarView').style.display !== 'none') renderCalendar();
+    } catch(e){
+      console.error(e);
+      hbToast('업로드 데이터 저장에 실패했습니다. 다시 시도해주세요.', true);
+    }
+  }
+  $('uploadCsvBtn').addEventListener('click', () => $('uploadCsvInput').click());
+  $('uploadCsvInput').addEventListener('change', async (e) => {
+    const file = e.target.files && e.target.files[0];
+    if(!file) return;
+    await importCsvFile(file);
+    e.target.value = '';
+  });
+
   // ---------- init (로그인 성공 후 외부에서 호출) ----------
   window.hbInit = async function(){
     await loadPlans();
@@ -1305,6 +1839,8 @@
         if(j && j.ok){
           pwInput.value = '';
           await enterApp();
+        } else if(r.status === 500){
+          errEl.textContent = '서버 설정 오류: ' + (j && j.error ? j.error : 'SITE_PASSWORD 환경변수를 확인하세요.');
         } else {
           errEl.textContent = '비밀번호가 올바르지 않습니다.';
         }
