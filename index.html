@@ -155,14 +155,86 @@
   .log-col{ display:flex; flex-direction:column; gap:10px; min-width:0; }
   .log-col .cat-section{ margin-bottom:0; }
   .log-dashed-group{
-    border:2px dashed var(--ink-soft); border-radius:10px; padding:9px;
     display:flex; flex-direction:column; gap:10px; position:relative;
   }
-  .log-dashed-group::before{
-    content:"생각 묶음"; position:absolute; top:-9px; left:10px; background:var(--paper);
-    padding:0 6px; font-family:'JetBrains Mono', monospace; font-size:9.5px; color:var(--ink-soft); letter-spacing:0.5px;
-  }
   @media (max-width:700px){ .log-banner-grid{ grid-template-columns:1fr; } }
+
+  /* ---------- 배너 끌어서 이동 (드래그 정렬) ---------- */
+  .cat-section{ cursor:grab; }
+  .cat-section:active{ cursor:grabbing; }
+  .cat-section.dragging{ opacity:0.45; }
+  .cat-section.drag-over{ box-shadow:0 -3px 0 var(--accent) inset; }
+  .cat-title .drag-handle{ margin-left:auto; cursor:grab; color:var(--ink-soft); font-size:12px; letter-spacing:1px; user-select:none; }
+
+  /* ---------- 검색 ---------- */
+  .cat-search-wrap{ display:flex; align-items:center; gap:6px; margin-bottom:8px; }
+  .cat-search-wrap input[type=text]{
+    flex:1; padding:7px 10px; border:1.5px solid var(--line); border-radius:20px; font-size:12.5px;
+    background:var(--card); font-family:'Noto Sans KR', sans-serif;
+  }
+  .cat-search-wrap input[type=text]:focus{ outline:2px solid var(--teal); outline-offset:1px; }
+  .cat-search-hint{ font-family:'JetBrains Mono', monospace; font-size:9.5px; color:var(--ink-soft); white-space:nowrap; }
+  .cat-section.search-match{ box-shadow:0 0 0 2px var(--accent) inset; }
+
+  /* ---------- 기상/취침 강조 표시 ---------- */
+  .wake-sleep-row{ display:flex; gap:8px; margin-bottom:10px; }
+  .ws-box{
+    flex:1; display:flex; align-items:center; gap:8px; padding:9px 11px; border-radius:10px;
+    border:1.5px solid var(--ink-soft); background:linear-gradient(135deg, var(--accent-soft), var(--card) 80%);
+  }
+  .ws-box .ws-icon{ font-size:19px; }
+  .ws-box .ws-label{ font-family:'JetBrains Mono', monospace; font-size:9px; color:var(--ink-soft); letter-spacing:0.5px; }
+  .ws-box input[type=time]{
+    border:none; background:transparent; font-family:'JetBrains Mono', monospace; font-weight:800; font-size:16px;
+    color:var(--accent-dark); padding:0; width:100%;
+  }
+  .ws-box input[type=time]:focus{ outline:none; }
+
+  /* ---------- 다중 필드 리스트 로우 (섭식/영양제/운동루틴) ---------- */
+  .field-rows{ display:flex; flex-direction:column; gap:6px; margin-bottom:8px; }
+  .field-row{
+    display:grid; gap:5px; align-items:center; background:var(--paper); border:1px solid var(--line);
+    border-radius:7px; padding:6px 7px;
+  }
+  .field-row input, .field-row select{
+    padding:5px 6px; border:1.5px solid var(--line); border-radius:5px; font-size:11.5px;
+    font-family:'Noto Sans KR', sans-serif; background:var(--card); min-width:0; width:100%;
+  }
+  .field-row input:focus, .field-row select:focus{ outline:2px solid var(--teal); outline-offset:1px; }
+  .field-row .row-del{ justify-self:end; }
+  .field-row-labels{ display:grid; gap:5px; padding:0 7px; margin-bottom:-2px; }
+  .field-row-labels span{ font-family:'JetBrains Mono', monospace; font-size:9px; color:var(--ink-soft); }
+
+  /* ---------- 계획: D-day 배지 / 일정(구글 캘린더 스타일) ---------- */
+  .dday-badge{
+    font-family:'JetBrains Mono', monospace; font-size:9.5px; font-weight:800; color:var(--accent-dark);
+    background:var(--accent-soft); border-radius:20px; padding:2px 8px; margin-left:6px; white-space:nowrap;
+  }
+  .plan-cat-item label{ display:flex; align-items:center; }
+  .plan-target-row{ display:flex; align-items:center; gap:6px; margin:3px 0 5px; }
+  .plan-target-row input[type=date]{
+    font-family:'JetBrains Mono', monospace; font-size:10.5px; padding:4px 6px; border:1.5px solid var(--line);
+    border-radius:5px; background:var(--card);
+  }
+  .plan-target-row .pt-label{ font-family:'JetBrains Mono', monospace; font-size:9.5px; color:var(--ink-soft); }
+
+  .cal-cell .ev-dot{ width:5px; height:5px; border-radius:50%; background:var(--pink); position:absolute; bottom:4px; }
+  .day-events{ margin-top:12px; }
+  .day-events .de-title{ font-family:'JetBrains Mono', monospace; font-weight:700; font-size:11.5px; margin-bottom:7px; display:flex; align-items:center; gap:6px; }
+  .de-row{
+    display:flex; align-items:center; gap:6px; background:var(--paper); border:1px solid var(--line);
+    border-radius:7px; padding:5px 7px; margin-bottom:5px;
+  }
+  .de-row input[type=time]{ width:66px; flex-shrink:0; font-family:'JetBrains Mono',monospace; font-size:11px; padding:4px 5px; border:1.5px solid var(--line); border-radius:5px; background:var(--card); }
+  .de-row input[type=text]{ flex:1; min-width:0; font-size:12px; padding:5px 7px; border:1.5px solid var(--line); border-radius:5px; background:var(--card); }
+  .de-add-row{ display:flex; gap:6px; }
+  .de-empty{ font-size:11px; color:var(--ink-soft); font-family:'JetBrains Mono', monospace; padding:3px 0 6px; }
+
+  .report-dday-list{ display:flex; flex-direction:column; gap:5px; }
+  .report-dday-row{ display:flex; align-items:center; gap:8px; font-size:12px; }
+  .report-dday-row .rd-cat{ font-family:'JetBrains Mono', monospace; font-size:9.5px; color:var(--teal); background:var(--teal-soft); border-radius:5px; padding:1px 6px; flex-shrink:0; }
+  .report-dday-row .rd-text{ flex:1; }
+  .report-dday-row .rd-date{ font-family:'JetBrains Mono', monospace; font-size:9.5px; color:var(--ink-soft); flex-shrink:0; }
 
   .banner-date-nav{ display:flex; align-items:center; gap:6px; margin-left:auto; }
   .banner-date-nav .nav-btn{ padding:3px 8px; font-size:11px; }
@@ -212,6 +284,20 @@
   table.timeplan input[type=text]:focus{ border-color:var(--teal); background:#fff; outline:none; }
   table.timeplan .tp-cat{ width:88px; }
   table.timeplan .tp-check{ width:36px; text-align:center; }
+  table.timeplan .tp-del{ width:26px; text-align:center; }
+  table.timeplan select.tp-time-select{
+    font-family:'JetBrains Mono', monospace; font-size:10.5px; color:var(--ink-soft); border:1px solid transparent;
+    background:transparent; padding:4px 2px; border-radius:4px; width:100%;
+  }
+  table.timeplan select.tp-time-select:focus{ border-color:var(--teal); background:#fff; outline:none; }
+  .timeplan-add-row{ display:flex; gap:6px; margin-bottom:8px; align-items:center; }
+  .timeplan-add-row select{
+    font-family:'JetBrains Mono', monospace; font-size:11.5px; padding:6px 7px; border:1.5px solid var(--line);
+    border-radius:6px; background:var(--card);
+  }
+  .tp-del-btn{ background:none; border:none; color:var(--ink-soft); cursor:pointer; font-size:13px; }
+  .tp-del-btn:hover{ color:var(--safety-dark); }
+  .timeplan-empty{ font-size:11px; color:var(--ink-soft); font-family:'JetBrains Mono', monospace; padding:8px 4px; }
 
   /* ---------- Meal grid ---------- */
   .meal-block{ margin-bottom:10px; }
@@ -626,15 +712,19 @@
 
       <div class="mission-widget" id="missionWidget"></div>
 
+      <div class="cat-search-wrap">
+        <input type="text" id="catSearchInput" placeholder="🔍 기록 내용 검색 (예: 러닝, 팀장님, 예산)" />
+        <span class="cat-search-hint" id="catSearchHint"></span>
+      </div>
       <div class="cat-tabs" id="catTabs"></div>
 
       <div class="log-banner-grid">
         <!-- 왼쪽 컬럼 -->
-        <div class="log-col">
-          <div class="log-dashed-group">
+        <div class="log-col" id="logColLeft">
+          <div class="log-dashed-group" data-cat="thoughts" draggable="true">
             <!-- 시간계획 -->
             <div class="cat-section" data-cat="schedule">
-              <div class="cat-title">⏱ 시간계획 <span class="cnt">— 24시간 30분 단위</span></div>
+              <div class="cat-title">⏱ 시간계획 <span class="cnt">— 목록에서 시간을 골라 추가</span><span class="drag-handle" title="끌어서 이동">⠿</span></div>
               <div class="bulk-edit-wrap">
                 <div class="be-row">
                   <span class="be-hint">한 번에 여러 줄 입력 후 적용 — 줄마다 "HH:MM 내용" (구분은 |구분)</span>
@@ -644,9 +734,13 @@
                   <button type="button" class="add-row-btn" id="timeplanBulkApply">⇩ 일괄 적용</button>
                 </div>
               </div>
+              <div class="timeplan-add-row">
+                <select id="timeplanNewTime"></select>
+                <button type="button" class="add-row-btn" id="timeplanAddRow">+ 시간 추가</button>
+              </div>
               <div class="time-scroll">
                 <table class="timeplan">
-                  <thead><tr><th>시간</th><th>내용</th><th>구분</th><th>실천</th></tr></thead>
+                  <thead><tr><th>시간</th><th>구분</th><th>내용</th><th>실천</th><th></th></tr></thead>
                   <tbody id="timeplanBody"></tbody>
                 </table>
               </div>
@@ -681,8 +775,8 @@
           </div>
 
           <!-- 인간관계 -->
-          <div class="cat-section" data-cat="relationships">
-            <div class="cat-title">🤝 인간관계</div>
+          <div class="cat-section" data-cat="relationships" draggable="true">
+            <div class="cat-title">🤝 인간관계<span class="drag-handle" title="끌어서 이동">⠿</span></div>
             <div class="field"><label>만난 / 연락한 사람</label><input type="text" id="relPeople" placeholder="예: 팀장님, 친구 OO" /></div>
             <div class="field"><label>관계 메모</label><textarea id="relMemo" rows="2" placeholder="오늘 있었던 대화, 갈등, 배려 등"></textarea></div>
             <div class="field"><label>감사 표현</label><input type="text" id="relGratitude" placeholder="고마움을 느끼거나 표현한 것" /></div>
@@ -693,8 +787,8 @@
           </div>
 
           <!-- 직업 -->
-          <div class="cat-section" data-cat="career">
-            <div class="cat-title">💼 직업</div>
+          <div class="cat-section" data-cat="career" draggable="true">
+            <div class="cat-title">💼 직업<span class="drag-handle" title="끌어서 이동">⠿</span></div>
             <div class="field"><label>업무 요약</label><textarea id="careerSummary" rows="2" placeholder="오늘 한 업무 요약"></textarea></div>
             <div class="field"><label>성과 / 이슈</label><textarea id="careerAchievements" rows="2" placeholder="잘된 점, 막힌 점"></textarea></div>
             <div class="field"><label>배운점</label><input type="text" id="careerLearned" placeholder="오늘 배운 것" /></div>
@@ -703,13 +797,17 @@
         </div>
 
         <!-- 오른쪽 컬럼 -->
-        <div class="log-col">
+        <div class="log-col" id="logColRight">
           <!-- 건강 -->
-          <div class="cat-section" data-cat="health">
-            <div class="cat-title">❤️ 건강</div>
+          <div class="cat-section" data-cat="health" draggable="true">
+            <div class="cat-title">❤️ 건강<span class="drag-handle" title="끌어서 이동">⠿</span></div>
+
+            <div class="wake-sleep-row">
+              <div class="ws-box"><span class="ws-icon">🌅</span><div style="flex:1;"><div class="ws-label">기상시간</div><input type="time" id="wakeTime" /></div></div>
+              <div class="ws-box"><span class="ws-icon">🌙</span><div style="flex:1;"><div class="ws-label">취침시간</div><input type="time" id="sleepTime" /></div></div>
+            </div>
+
             <div class="field-grid" style="margin-bottom:8px;">
-              <div class="field"><label>기상시간</label><input type="time" id="wakeTime" /></div>
-              <div class="field"><label>취침시간</label><input type="time" id="sleepTime" /></div>
               <div class="field"><label>전일점수</label><input type="number" id="scoreYesterday" min="0" max="100" placeholder="0-100" /></div>
               <div class="field"><label>오늘점수</label><input type="number" id="scoreToday" min="0" max="100" placeholder="0-100" /></div>
             </div>
@@ -733,18 +831,38 @@
                 </select>
               </div>
             </div>
-            <div class="sub-title">식사 / 영양</div>
-            <div id="healthMealsBody"></div>
+
+            <div class="sub-title">🍽 섭식 · 식사루틴</div>
+            <div class="row-hint">식사루틴 / 내용 / 탄수화물 / 단백질 / 지방 / 당 을 한 줄씩 기록</div>
+            <div class="field-rows" id="healthMealRows"></div>
+            <button type="button" class="add-row-btn" id="healthMealAdd">+ 식사 추가</button>
+
+            <div class="sub-title">💊 섭식 · 영양제</div>
+            <div class="row-hint">조제 날짜 / 영양성분 / 브랜드 / 영양제 명칭</div>
+            <div class="field-rows" id="healthSuppRows"></div>
+            <button type="button" class="add-row-btn" id="healthSuppAdd">+ 영양제 추가</button>
+
+            <div class="sub-title">📏 관리 · 체지방 / 골격근량 / 체중</div>
+            <div class="field-grid" style="margin-bottom:8px;">
+              <div class="field"><label>체지방(%)</label><input type="text" id="bodyFat" placeholder="예: 18.5" /></div>
+              <div class="field"><label>골격근량(kg)</label><input type="text" id="bodyMuscle" placeholder="예: 31.2" /></div>
+              <div class="field"><label>체중(kg)</label><input type="text" id="bodyWeight" placeholder="예: 68.4" /></div>
+            </div>
+
+            <div class="sub-title">🏋️ 관리 · 운동루틴</div>
+            <div class="row-hint">루틴 / 자극부위 / 방법 / 중량 / 회수 / 비고(추가 기입)</div>
+            <div class="field-rows" id="healthExerciseRows"></div>
+            <button type="button" class="add-row-btn" id="healthExerciseAdd">+ 운동루틴 추가</button>
+
             <div class="field-grid" style="margin-top:6px;">
-              <div class="field"><label>합계</label><input type="text" id="healthTotal" placeholder="총평 / 요약" /></div>
-              <div class="field"><label>영양제</label><input type="text" id="healthSupplements" placeholder="복용한 영양제" /></div>
+              <div class="field"><label>총평</label><input type="text" id="healthTotal" placeholder="오늘 건강 총평 / 요약" /></div>
               <div class="field"><label>부족영양</label><input type="text" id="healthDeficient" placeholder="부족한 영양소" /></div>
             </div>
           </div>
 
           <!-- 자산·투자 -->
-          <div class="cat-section" data-cat="assets">
-            <div class="cat-title">💰 자산·투자</div>
+          <div class="cat-section" data-cat="assets" draggable="true">
+            <div class="cat-title">💰 자산·투자<span class="drag-handle" title="끌어서 이동">⠿</span></div>
             <div class="field-grid">
               <div class="field"><label>오늘 지출</label><input type="text" id="assetExpense" placeholder="예: 32,000" /></div>
               <div class="field"><label>오늘 수입</label><input type="text" id="assetIncome" placeholder="예: 0" /></div>
@@ -755,8 +873,8 @@
           </div>
 
           <!-- 취미 -->
-          <div class="cat-section" data-cat="hobby">
-            <div class="cat-title">🎨 취미</div>
+          <div class="cat-section" data-cat="hobby" draggable="true">
+            <div class="cat-title">🎨 취미<span class="drag-handle" title="끌어서 이동">⠿</span></div>
             <div class="field-grid">
               <div class="field"><label>오늘 활동</label><input type="text" id="hobbyActivity" placeholder="예: 독서, 기타 연습" /></div>
               <div class="field"><label>소요시간</label><input type="text" id="hobbyDuration" placeholder="예: 1시간" /></div>
@@ -865,6 +983,15 @@
             </div>
             <div class="cal-grid" id="calWeekdays"></div>
             <div class="cal-grid" id="calDays" style="margin-top:6px;"></div>
+
+            <!-- 구글 캘린더처럼: 선택한 날짜의 일정을 아래에서 바로 추가/수정 -->
+            <div class="day-events">
+              <div class="de-title" id="dayEventsTitle">일정</div>
+              <div id="dayEventsList"></div>
+              <div class="de-add-row">
+                <button type="button" class="add-row-btn" id="dayEventAdd">+ 일정 추가</button>
+              </div>
+            </div>
           </div>
         </div>
       </div>
@@ -978,21 +1105,18 @@
 </script>
 <script>
 (function(){
-  const MEALS = ['아침','점심','저녁','간식'];
-  const MEAL_KEYS = ['carb','protein','fat','water'];
-  const MEAL_LABELS = { carb:'탄수화물', protein:'단백질', fat:'지방', water:'물' };
+  const MEAL_TYPES = ['아침','점심','저녁','간식','기타'];
   const WEEKDAYS = ['일','월','화','수','목','금','토'];
 
+  // 상단 기록탭: 💭생각(시간계획·할일·습관 포함) / ❤️건강 / 🤝인간관계 / 💰자산투자 / 💼직업 / 🎨취미
   const CAT_TABS = [
     {key:'all', label:'전체'},
-    {key:'thoughts', label:'💭 생각'},
-    {key:'health', label:'❤️ 건강'},
-    {key:'relationships', label:'🤝 인간관계'},
-    {key:'assets', label:'💰 자산·투자'},
-    {key:'career', label:'💼 직업'},
-    {key:'hobby', label:'🎨 취미'},
-    {key:'schedule', label:'⏱ 시간계획'},
-    {key:'tasks', label:'✅ 할일·습관'}
+    {key:'thoughts', label:'💭 생각', cats:['thoughts','schedule','tasks']},
+    {key:'health', label:'❤️ 건강', cats:['health']},
+    {key:'relationships', label:'🤝 인간관계', cats:['relationships']},
+    {key:'assets', label:'💰 자산·투자', cats:['assets']},
+    {key:'career', label:'💼 직업', cats:['career']},
+    {key:'hobby', label:'🎨 취미', cats:['hobby']}
   ];
 
   const PLAN_CATS = [
@@ -1029,9 +1153,10 @@
         return !!(e.diary && (e.diary.thoughts||e.diary.questions||e.diary.impression||e.diary.keywords)) || !!e.reference;
       case 'health': {
         if(e.wakeTime || e.sleepTime || e.exerciseYN || e.exerciseType || e.condition) return true;
-        const meals = (e.health && e.health.meals) || {};
-        for(const k in meals){ const mm=meals[k]; if(mm && (mm.carb||mm.protein||mm.fat||mm.water)) return true; }
-        return !!(e.health && (e.health.total||e.health.supplements||e.health.deficient));
+        const h = e.health || {};
+        if((h.meals&&h.meals.length) || (h.supplements&&h.supplements.length) || (h.exercises&&h.exercises.length)) return true;
+        if(h.body && (h.body.fat||h.body.muscle||h.body.weight)) return true;
+        return !!(h.total||h.deficient);
       }
       case 'relationships':
         return !!(e.relationships && (e.relationships.people||e.relationships.memo||e.relationships.gratitude||e.relationships.score));
@@ -1102,29 +1227,33 @@
     const [y,m] = monthStr.split('-').map(Number);
     return y + '년 ' + m + '월';
   }
+  // 시간 선택 목록(30분 단위) — 시간계획에 새 항목을 추가할 때 목록에서 골라 기입합니다.
   function generateTimeSlots(){
     const slots = [];
     for(let h=0; h<24; h++){
       for(let m=0; m<60; m+=30){
-        const start = String(h).padStart(2,'0') + ':' + String(m).padStart(2,'0');
-        const endH = m===30 ? (h+1)%24 : h;
-        const endM = m===30 ? 0 : 30;
-        const end = String(endH).padStart(2,'0') + ':' + String(endM).padStart(2,'0');
-        slots.push(start + '-' + end);
+        slots.push(String(h).padStart(2,'0') + ':' + String(m).padStart(2,'0'));
       }
     }
     return slots;
   }
   const TIME_SLOTS = generateTimeSlots();
 
-  function emptyMeal(){ return { carb:'', protein:'', fat:'', water:'' }; }
+  function emptyMealRow(){ return { type:'', content:'', carb:'', protein:'', fat:'', sugar:'' }; }
+  function emptySuppRow(){ return { date:'', nutrient:'', brand:'', name:'' }; }
+  function emptyExerciseRow(){ return { routine:'', part:'', method:'', weight:'', reps:'', memo:'' }; }
   function createEmptyEntry(date){
     return {
       date, writeTime:'', lastEdited:'', condition:0,
       wakeTime:'', sleepTime:'', exerciseYN:'', exerciseType:'', exerciseIntensity:'',
       scoreYesterday:'', scoreToday:'',
-      timePlan: TIME_SLOTS.map(t => ({ time:t, content:'', category:'', done:false })),
-      health: { meals:{ 아침:emptyMeal(), 점심:emptyMeal(), 저녁:emptyMeal(), 간식:emptyMeal() }, total:'', supplements:'', deficient:'' },
+      timePlan: [],
+      health: {
+        meals: [], supplements: [],
+        body: { fat:'', muscle:'', weight:'' },
+        exercises: [],
+        total:'', deficient:''
+      },
       todos: [], habits: [],
       diary: { thoughts:'', questions:'', impression:'', keywords:'' },
       reference: '',
@@ -1134,14 +1263,44 @@
       hobby: { activity:'', duration:'', satisfaction:0, memo:'' }
     };
   }
+  // 예전 형식(고정 48칸 시간표 / 고정 4끼 객체형 건강기록)으로 저장된 데이터를
+  // 새 형식(추가형 목록)으로 옮겨줍니다. 이미 새 형식이면 그대로 둡니다.
+  function migrateEntry(e){
+    if(!e) return e;
+    if(Array.isArray(e.timePlan) && e.timePlan.length > 60){
+      e.timePlan = e.timePlan.filter(s => s && (s.content || s.category || s.done))
+        .map(s => ({ time:(s.time||'').split('-')[0], content:s.content||'', category:s.category||'', done:!!s.done }));
+    }
+    if(!Array.isArray(e.timePlan)) e.timePlan = [];
+    if(!e.health) e.health = { meals:[], supplements:[], body:{fat:'',muscle:'',weight:''}, exercises:[], total:'', deficient:'' };
+    if(!Array.isArray(e.health.meals)){
+      const oldMeals = e.health.meals || {};
+      const converted = [];
+      Object.keys(oldMeals).forEach(mealName => {
+        const mm = oldMeals[mealName] || {};
+        if(mm.carb||mm.protein||mm.fat||mm.water){
+          converted.push({ type:mealName, content:'', carb:mm.carb||'', protein:mm.protein||'', fat:mm.fat||'', sugar:'' });
+        }
+      });
+      e.health.meals = converted;
+    }
+    if(!Array.isArray(e.health.supplements)){
+      const oldSupp = e.health.supplements;
+      e.health.supplements = oldSupp ? [{ date:'', nutrient:'', brand:'', name:String(oldSupp) }] : [];
+    }
+    if(!Array.isArray(e.health.exercises)) e.health.exercises = [];
+    if(!e.health.body) e.health.body = { fat:'', muscle:'', weight:'' };
+    return e;
+  }
   function hasContent(e){
     if(!e) return false;
     if(e.wakeTime || e.sleepTime || e.exerciseYN || e.exerciseType || e.scoreYesterday || e.scoreToday || e.condition) return true;
     if(e.timePlan && e.timePlan.some(s => s.content || s.category || s.done)) return true;
     if(e.health){
-      const meals = e.health.meals || {};
-      for(const k in meals){ const mm=meals[k]; if(mm.carb||mm.protein||mm.fat||mm.water) return true; }
-      if(e.health.total || e.health.supplements || e.health.deficient) return true;
+      const h = e.health;
+      if((h.meals&&h.meals.length) || (h.supplements&&h.supplements.length) || (h.exercises&&h.exercises.length)) return true;
+      if(h.body && (h.body.fat||h.body.muscle||h.body.weight)) return true;
+      if(h.total || h.deficient) return true;
     }
     if(e.todos && e.todos.length>0) return true;
     if(e.habits && e.habits.length>0) return true;
@@ -1200,9 +1359,7 @@
   function setDate(dateStr){
     currentDate = dateStr;
     entry = allLogs[dateStr] ? JSON.parse(JSON.stringify(allLogs[dateStr])) : createEmptyEntry(dateStr);
-    if(!entry.timePlan || entry.timePlan.length !== TIME_SLOTS.length){
-      entry.timePlan = TIME_SLOTS.map(t => ({ time:t, content:'', category:'', done:false }));
-    }
+    entry = migrateEntry(entry);
     if(!entry.relationships) entry.relationships = { people:'', memo:'', gratitude:'', score:0 };
     if(!entry.assets) entry.assets = { expense:'', income:'', total:'', memo:'', nextAction:'' };
     if(!entry.career) entry.career = { summary:'', achievements:'', learned:'', priority:'' };
@@ -1287,23 +1444,42 @@
   }
 
   function renderTimePlan(){
+    // 시간을 고를 수 있는 목록(추가 버튼 옆 select)을 채워둡니다 — 24시간 전체를 항상 나열하지 않고,
+    // 필요한 시간만 목록에서 골라 추가하는 방식입니다.
+    const timeSel = $('timeplanNewTime');
+    if(timeSel && timeSel.options.length === 0){
+      timeSel.innerHTML = TIME_SLOTS.map(t => `<option value="${t}">${t}</option>`).join('');
+      const nowSlot = TIME_SLOTS.find(t => t >= nowHM()) || TIME_SLOTS[0];
+      timeSel.value = nowSlot;
+    }
     const body = $('timeplanBody');
     body.innerHTML = '';
-    entry.timePlan.forEach((slot, idx) => {
+    const sorted = entry.timePlan.map((slot, origIdx) => ({slot, origIdx})).sort((a,b) => a.slot.time.localeCompare(b.slot.time));
+    if(sorted.length === 0){
+      body.innerHTML = `<tr><td colspan="5" class="timeplan-empty">위 목록에서 시간을 골라 "+ 시간 추가"로 일정을 채워보세요</td></tr>`;
+    }
+    sorted.forEach(({slot, origIdx}) => {
+      const idx = origIdx;
       const tr = document.createElement('tr');
       tr.innerHTML = `
-        <td class="tp-time">${slot.time}</td>
-        <td><input type="text" data-idx="${idx}" data-f="content" value="${escapeAttr(slot.content)}" placeholder="내용" /></td>
+        <td class="tp-time">
+          <select class="tp-time-select" data-idx="${idx}" data-f="time">
+            ${TIME_SLOTS.map(t => `<option value="${t}" ${t===slot.time?'selected':''}>${t}</option>`).join('')}
+          </select>
+        </td>
         <td class="tp-cat"><input type="text" data-idx="${idx}" data-f="category" value="${escapeAttr(slot.category)}" list="categoryList" placeholder="구분" /></td>
+        <td><input type="text" data-idx="${idx}" data-f="content" value="${escapeAttr(slot.content)}" placeholder="내용" /></td>
         <td class="tp-check"><div class="row-check ${slot.done?'done':''}" data-idx="${idx}"></div></td>
+        <td class="tp-del"><button type="button" class="tp-del-btn" data-idx="${idx}" title="삭제">✕</button></td>
       `;
       body.appendChild(tr);
     });
-    body.querySelectorAll('input[data-f]').forEach(inp => {
+    body.querySelectorAll('input[data-f], select[data-f]').forEach(inp => {
       inp.addEventListener('input', () => {
         const idx = +inp.dataset.idx, f = inp.dataset.f;
         entry.timePlan[idx][f] = inp.value;
         queueSave();
+        if(f === 'time') renderTimePlan();
       });
     });
     body.querySelectorAll('.row-check').forEach(cb => {
@@ -1314,22 +1490,88 @@
         queueSave();
       });
     });
+    body.querySelectorAll('.tp-del-btn').forEach(btn => {
+      btn.addEventListener('click', () => {
+        entry.timePlan.splice(+btn.dataset.idx, 1);
+        renderTimePlan();
+        queueSave();
+      });
+    });
   }
 
-  function renderHealthMeals(){
-    const body = $('healthMealsBody');
-    let html = '';
-    MEALS.forEach(meal => {
-      html += `<div class="meal-block"><div class="meal-name">${meal}</div><div class="meal-fields">`;
-      MEAL_KEYS.forEach(k => {
-        html += `<input type="text" data-meal="${meal}" data-k="${k}" placeholder="${MEAL_LABELS[k]}" value="${escapeAttr(entry.health.meals[meal][k])}" />`;
+  // ---------- 다중 필드 리스트(섭식/영양제/운동루틴 등) 공용 렌더러 ----------
+  // fields: [{key, label, placeholder, type}]
+  function renderFieldRows(containerId, list, fields, onChange){
+    const el = $(containerId);
+    el.innerHTML = '';
+    if(list.length === 0){
+      el.innerHTML = '<div class="empty-hint">항목이 없습니다 — 아래 버튼으로 추가해보세요</div>';
+      return;
+    }
+    const gridCols = fields.map(f => f.width || '1fr').join(' ') + ' 22px';
+    list.forEach((item, idx) => {
+      const row = document.createElement('div');
+      row.className = 'field-row';
+      row.style.gridTemplateColumns = gridCols;
+      row.innerHTML = fields.map(f => {
+        if(f.type === 'select'){
+          return `<select data-idx="${idx}" data-f="${f.key}">` +
+            `<option value="">${f.label}</option>` +
+            f.options.map(o => `<option value="${o}" ${item[f.key]===o?'selected':''}>${o}</option>`).join('') +
+            `</select>`;
+        }
+        const type = f.type || 'text';
+        return `<input type="${type}" data-idx="${idx}" data-f="${f.key}" value="${escapeAttr(item[f.key])}" placeholder="${f.placeholder||f.label}" />`;
+      }).join('') + `<button type="button" class="row-del" data-idx="${idx}">✕</button>`;
+      el.appendChild(row);
+    });
+    el.querySelectorAll('input[data-f], select[data-f]').forEach(inp => {
+      inp.addEventListener('input', () => {
+        list[+inp.dataset.idx][inp.dataset.f] = inp.value;
+        queueSave();
+        if(onChange) onChange();
       });
-      html += `</div></div>`;
     });
-    body.innerHTML = html;
-    body.querySelectorAll('input[data-meal]').forEach(inp => {
-      inp.addEventListener('input', () => { entry.health.meals[inp.dataset.meal][inp.dataset.k] = inp.value; queueSave(); });
+    el.querySelectorAll('.row-del').forEach(btn => {
+      btn.addEventListener('click', () => {
+        list.splice(+btn.dataset.idx, 1);
+        renderFieldRows(containerId, list, fields, onChange);
+        queueSave();
+        if(onChange) onChange();
+      });
     });
+  }
+
+  const MEAL_FIELDS = [
+    { key:'type', label:'구분', type:'select', options: MEAL_TYPES, width:'70px' },
+    { key:'content', label:'내용', placeholder:'예: 현미밥, 닭가슴살', width:'1.6fr' },
+    { key:'carb', label:'탄수화물', placeholder:'탄수화물(g)', width:'0.8fr' },
+    { key:'protein', label:'단백질', placeholder:'단백질(g)', width:'0.8fr' },
+    { key:'fat', label:'지방', placeholder:'지방(g)', width:'0.8fr' },
+    { key:'sugar', label:'당', placeholder:'당(g)', width:'0.7fr' }
+  ];
+  const SUPP_FIELDS = [
+    { key:'date', label:'조제 날짜', type:'date', width:'1fr' },
+    { key:'name', label:'영양제 명칭', width:'1.3fr' },
+    { key:'nutrient', label:'영양성분', width:'1.2fr' },
+    { key:'brand', label:'브랜드', width:'1fr' }
+  ];
+  const EXERCISE_FIELDS = [
+    { key:'routine', label:'루틴', placeholder:'예: 벤치프레스', width:'1.1fr' },
+    { key:'part', label:'자극부위', placeholder:'예: 가슴', width:'0.9fr' },
+    { key:'method', label:'방법', placeholder:'예: 3세트 x 10회', width:'1fr' },
+    { key:'weight', label:'중량', placeholder:'kg', width:'0.6fr' },
+    { key:'reps', label:'회수', placeholder:'회', width:'0.6fr' },
+    { key:'memo', label:'비고', placeholder:'추가 메모', width:'1.1fr' }
+  ];
+
+  function renderHealthMeals(){
+    renderFieldRows('healthMealRows', entry.health.meals, MEAL_FIELDS);
+    renderFieldRows('healthSuppRows', entry.health.supplements, SUPP_FIELDS);
+    renderFieldRows('healthExerciseRows', entry.health.exercises, EXERCISE_FIELDS);
+    $('bodyFat').value = entry.health.body.fat;
+    $('bodyMuscle').value = entry.health.body.muscle;
+    $('bodyWeight').value = entry.health.body.weight;
   }
 
   function renderListRows(containerId, key){
@@ -1581,13 +1823,76 @@
       wrap.appendChild(btn);
     });
   }
+  // ---------- 배너 끌어서 이동 ----------
+  function initBannerDrag(){
+    ['logColLeft','logColRight'].forEach(colId => {
+      const col = $(colId);
+      if(!col) return;
+      // 저장된 순서가 있으면 적용
+      let order = [];
+      try{ order = JSON.parse(localStorage.getItem('hb-banner-order-'+colId) || '[]'); }catch(e){ order = []; }
+      if(order.length){
+        order.forEach(key => {
+          const node = col.querySelector(`:scope > [data-cat="${key}"]`);
+          if(node) col.appendChild(node);
+        });
+      }
+      let dragEl = null;
+      col.querySelectorAll(':scope > [draggable="true"]').forEach(node => {
+        node.addEventListener('dragstart', () => { dragEl = node; node.classList.add('dragging'); });
+        node.addEventListener('dragend', () => {
+          node.classList.remove('dragging');
+          col.querySelectorAll(':scope > [draggable="true"]').forEach(n => n.classList.remove('drag-over'));
+          const newOrder = Array.from(col.querySelectorAll(':scope > [draggable="true"]')).map(n => n.dataset.cat);
+          try{ localStorage.setItem('hb-banner-order-'+colId, JSON.stringify(newOrder)); }catch(e){}
+        });
+        node.addEventListener('dragover', (e) => {
+          e.preventDefault();
+          if(!dragEl || dragEl === node) return;
+          const rect = node.getBoundingClientRect();
+          const before = (e.clientY - rect.top) < rect.height / 2;
+          col.insertBefore(dragEl, before ? node : node.nextSibling);
+        });
+        node.addEventListener('drop', (e) => e.preventDefault());
+      });
+    });
+  }
+
   function applyCatTab(tab){
     document.querySelectorAll('#catTabs .cat-tab').forEach((btn, i) => {
       btn.classList.toggle('active', CAT_TABS[i].key === tab);
     });
+    const tabDef = CAT_TABS.find(c => c.key === tab);
+    const cats = tabDef && tabDef.cats;
     document.querySelectorAll('.cat-section').forEach(sec => {
-      sec.style.display = (tab === 'all' || sec.dataset.cat === tab) ? '' : 'none';
+      sec.style.display = (tab === 'all' || (cats && cats.includes(sec.dataset.cat))) ? '' : 'none';
     });
+    applyCatSearch();
+  }
+
+  // ---------- 기록 검색: 현재 탭에서 보이는 배너 안의 입력값/문구를 검색해 강조합니다 ----------
+  function applyCatSearch(){
+    const q = ($('catSearchInput') && $('catSearchInput').value.trim().toLowerCase()) || '';
+    const hint = $('catSearchHint');
+    if(!q){
+      if(hint) hint.textContent = '';
+      document.querySelectorAll('.cat-section.search-match').forEach(s => s.classList.remove('search-match'));
+      return;
+    }
+    let matchCount = 0;
+    document.querySelectorAll('.cat-section').forEach(sec => {
+      if(sec.style.display === 'none'){ sec.classList.remove('search-match'); return; }
+      const texts = [];
+      sec.querySelectorAll('input, textarea, select, label').forEach(el => {
+        if('value' in el && el.value) texts.push(el.value);
+        if(el.tagName === 'LABEL') texts.push(el.textContent);
+      });
+      texts.push(sec.querySelector('.cat-title') ? sec.querySelector('.cat-title').textContent : '');
+      const matched = texts.join(' ').toLowerCase().includes(q);
+      sec.classList.toggle('search-match', matched);
+      if(matched) matchCount++;
+    });
+    if(hint) hint.textContent = matchCount > 0 ? matchCount + '개 배너에서 일치' : '일치하는 내용 없음';
   }
 
   // ---------- Calendar view ----------
@@ -1611,13 +1916,21 @@
       const filled = hasContent(allLogs[dateStr]);
       const cell = document.createElement('div');
       cell.className = 'cal-cell' + (filled ? ' has-content' : '') + (dateStr===todayStr() ? ' is-today' : '') + (dateStr===currentDate ? ' is-selected' : '');
-      cell.innerHTML = `<div>${day}</div>` + (filled ? '<div class="dot"></div>' : '');
+      cell.innerHTML = `<div>${day}</div>` + (filled ? '<div class="dot"></div>' : '') + (eventsFor(dateStr).length ? '<div class="ev-dot"></div>' : '');
       cell.addEventListener('click', () => {
         setDate(dateStr);
       });
       daysEl.appendChild(cell);
     }
+    renderDayEvents();
   }
+  $('dayEventAdd').addEventListener('click', () => {
+    if(!allEvents[currentDate]) allEvents[currentDate] = [];
+    allEvents[currentDate].push({ id: 'ev' + Date.now() + Math.random().toString(36).slice(2,6), time:'', title:'' });
+    renderDayEvents();
+    queueEventSave();
+    renderCalendar();
+  });
 
   function switchView(view){
     // 탭을 바꾸기 전에: 입력 중이던 필드가 있으면 포커스를 풀어 저장을 확정하고(모바일 키보드도 닫아),
@@ -1696,8 +2009,19 @@
   $('hobbyMemo').addEventListener('input', e => { entry.hobby.memo = e.target.value; queueSave(); });
 
   $('healthTotal').addEventListener('input', e => { entry.health.total = e.target.value; queueSave(); });
-  $('healthSupplements').addEventListener('input', e => { entry.health.supplements = e.target.value; queueSave(); });
   $('healthDeficient').addEventListener('input', e => { entry.health.deficient = e.target.value; queueSave(); });
+  $('bodyFat').addEventListener('input', e => { entry.health.body.fat = e.target.value; queueSave(); });
+  $('bodyMuscle').addEventListener('input', e => { entry.health.body.muscle = e.target.value; queueSave(); });
+  $('bodyWeight').addEventListener('input', e => { entry.health.body.weight = e.target.value; queueSave(); });
+  $('healthMealAdd').addEventListener('click', () => { entry.health.meals.push(emptyMealRow()); renderHealthMeals(); queueSave(); });
+  $('healthSuppAdd').addEventListener('click', () => { entry.health.supplements.push(emptySuppRow()); renderHealthMeals(); queueSave(); });
+  $('healthExerciseAdd').addEventListener('click', () => { entry.health.exercises.push(emptyExerciseRow()); renderHealthMeals(); queueSave(); });
+  $('timeplanAddRow').addEventListener('click', () => {
+    const t = $('timeplanNewTime').value || '09:00';
+    entry.timePlan.push({ time:t, content:'', category:'', done:false });
+    renderTimePlan();
+    queueSave();
+  });
 
   $('addTodoRow').addEventListener('click', () => { entry.todos.push({content:'', done:false}); renderListRows('todoRows','todos'); renderDopaPanel(); queueSave(); });
   $('addHabitRow').addEventListener('click', () => { entry.habits.push({content:'', done:false}); renderListRows('habitRows','habits'); renderDopaPanel(); queueSave(); });
@@ -1726,12 +2050,14 @@
       let cat = '';
       const bar = rest.indexOf('|');
       if(bar >= 0){ cat = rest.slice(bar+1).trim(); rest = rest.slice(0, bar).trim(); }
-      const idx = entry.timePlan.findIndex(s => s.time.startsWith(hm));
+      const idx = entry.timePlan.findIndex(s => s.time === hm);
       if(idx >= 0){
         entry.timePlan[idx].content = rest;
         if(cat) entry.timePlan[idx].category = cat;
-        applied++;
+      } else {
+        entry.timePlan.push({ time:hm, content:rest, category:cat, done:false });
       }
+      applied++;
     });
     if(applied > 0){
       renderTimePlan();
@@ -1744,6 +2070,8 @@
   });
 
   renderCatTabs();
+  $('catSearchInput').addEventListener('input', applyCatSearch);
+  initBannerDrag();
 
   // ================= PLAN VIEW =================
   let allPlans = { daily:{}, weekly:{}, monthly:{}, yearly:{} };
@@ -1757,8 +2085,93 @@
   function createEmptyPlan(){
     return {
       categories: { thoughts:'', health:'', relationships:'', assets:'', career:'', hobby:'' },
+      targets: { thoughts:'', health:'', relationships:'', assets:'', career:'', hobby:'' },
       todos: [], habits: []
     };
+  }
+  function ddayLabel(dateStr){
+    if(!dateStr) return '';
+    const diff = Math.round((new Date(dateStr+'T00:00:00') - new Date(todayStr()+'T00:00:00')) / 86400000);
+    if(diff === 0) return 'D-DAY';
+    return diff > 0 ? ('D-'+diff) : ('D+'+Math.abs(diff));
+  }
+
+  // ---------- 일정(구글 캘린더 스타일): 날짜별로 자유롭게 추가/수정/삭제 ----------
+  let allEvents = {};
+  let eventSaveTimer = null;
+  async function loadEvents(){
+    try{
+      const res = await window.storage.get('calendar-events', false);
+      allEvents = res ? JSON.parse(res.value) : {};
+    }catch(e){ allEvents = {}; }
+  }
+  async function persistEvents(){
+    try{ await window.storage.set('calendar-events', JSON.stringify(allEvents), false); }
+    catch(e){ console.error(e); hbToast('일정 저장 실패: ' + ((e && e.message) || '알 수 없는 오류'), true); }
+  }
+  function queueEventSave(){
+    clearTimeout(eventSaveTimer);
+    eventSaveTimer = setTimeout(persistEvents, 400);
+  }
+  function eventsFor(dateStr){ return allEvents[dateStr] || []; }
+  function renderDayEvents(){
+    const wrap = $('dayEventsList');
+    if(!wrap) return;
+    const list = eventsFor(currentDate).slice().sort((a,b) => (a.time||'').localeCompare(b.time||''));
+    const titleEl = $('dayEventsTitle');
+    if(titleEl) titleEl.textContent = '🗓 ' + fmtDateShort(currentDate) + ' 일정 · ' + ddayLabel(currentDate);
+    wrap.innerHTML = '';
+    if(list.length === 0){ wrap.innerHTML = '<div class="de-empty">등록된 일정이 없습니다</div>'; }
+    list.forEach(ev => {
+      const row = document.createElement('div');
+      row.className = 'de-row';
+      row.innerHTML = `
+        <input type="time" value="${escapeAttr(ev.time)}" data-id="${ev.id}" data-f="time" />
+        <input type="text" value="${escapeAttr(ev.title)}" data-id="${ev.id}" data-f="title" placeholder="일정 제목" />
+        <button type="button" class="row-del" data-id="${ev.id}">✕</button>
+      `;
+      wrap.appendChild(row);
+    });
+    wrap.querySelectorAll('input[data-f]').forEach(inp => {
+      inp.addEventListener('input', () => {
+        const ev = eventsFor(currentDate).find(x => x.id === inp.dataset.id);
+        if(ev){ ev[inp.dataset.f] = inp.value; queueEventSave(); renderCalendar(); }
+      });
+    });
+    wrap.querySelectorAll('.row-del').forEach(btn => {
+      btn.addEventListener('click', () => {
+        allEvents[currentDate] = eventsFor(currentDate).filter(x => x.id !== btn.dataset.id);
+        renderDayEvents();
+        queueEventSave();
+        renderCalendar();
+      });
+    });
+  }
+  function collectUpcomingDdays(){
+    const todayS = todayStr();
+    const items = [];
+    ['daily','weekly','monthly','yearly'].forEach(period => {
+      const store = allPlans[period] || {};
+      Object.keys(store).forEach(key => {
+        const pl = store[key];
+        if(pl && pl.targets){
+          PLAN_CATS.forEach(c => {
+            const t = pl.targets[c.key];
+            if(t && t >= todayS){
+              const firstLine = (pl.categories[c.key]||'').split('\n')[0].trim();
+              items.push({ cat: c.label, text: firstLine || (c.label + ' 목표'), date: t });
+            }
+          });
+        }
+      });
+    });
+    Object.keys(allEvents).forEach(d => {
+      if(d >= todayS){
+        eventsFor(d).forEach(ev => { if(ev.title) items.push({ cat:'🗓 일정', text: ev.title, date: d }); });
+      }
+    });
+    items.sort((a,b) => a.date.localeCompare(b.date));
+    return items.slice(0, 12);
   }
 
   async function loadPlans(){
@@ -1827,16 +2240,30 @@
 
   function renderPlanCatGrid(){
     const plan = getPlan();
+    if(!plan.targets) plan.targets = { thoughts:'', health:'', relationships:'', assets:'', career:'', hobby:'' };
     const wrap = $('planCatGrid');
     wrap.innerHTML = '';
     PLAN_CATS.forEach(c => {
       const item = document.createElement('div');
       item.className = 'plan-cat-item';
-      item.innerHTML = `<label>${c.label}</label><textarea rows="2" data-cat="${c.key}" placeholder="${c.label.replace(/^[^ ]+ /,'')} 목표">${escapeAttr(plan.categories[c.key])}</textarea>`;
+      const target = plan.targets[c.key] || '';
+      const badge = target ? `<span class="dday-badge">${ddayLabel(target)}</span>` : '';
+      item.innerHTML = `<label>${c.label}${badge}</label>
+        <div class="plan-target-row"><span class="pt-label">목표일</span><input type="date" class="pt-date" data-cat="${c.key}" value="${target}" /></div>
+        <textarea rows="2" data-cat="${c.key}" placeholder="${c.label.replace(/^[^ ]+ /,'')} 목표">${escapeAttr(plan.categories[c.key])}</textarea>`;
       wrap.appendChild(item);
     });
     wrap.querySelectorAll('textarea[data-cat]').forEach(ta => {
       ta.addEventListener('input', () => { getPlan().categories[ta.dataset.cat] = ta.value; queuePlanSave(); });
+    });
+    wrap.querySelectorAll('input.pt-date').forEach(inp => {
+      inp.addEventListener('change', () => {
+        const plan2 = getPlan();
+        if(!plan2.targets) plan2.targets = {};
+        plan2.targets[inp.dataset.cat] = inp.value;
+        queuePlanSave();
+        renderPlanCatGrid();
+      });
     });
   }
 
@@ -2007,15 +2434,28 @@
     document.body.removeChild(a);
     URL.revokeObjectURL(url);
   }
+  // ---------- 건강 리스트형 데이터 ⇄ CSV 한 칸 문자열 변환 ----------
+  function encodeRows(list, keys){ return (list||[]).map(item => keys.map(k => (item[k]||'').toString().replace(/[:|]/g,'/')).join(':')).join(' | '); }
+  function decodeRows(v, keys, factory){
+    if(!v) return [];
+    return v.split('|').map(s => s.trim()).filter(Boolean).map(s => {
+      const parts = s.split(':');
+      const row = factory();
+      keys.forEach((k,i) => { row[k] = parts[i] || ''; });
+      return row;
+    });
+  }
+  const MEAL_CSV_KEYS = ['type','content','carb','protein','fat','sugar'];
+  const SUPP_CSV_KEYS = ['date','name','nutrient','brand'];
+  const EXERCISE_CSV_KEYS = ['routine','part','method','weight','reps','memo'];
+
   function exportLogsCsv(){
     const dates = Object.keys(allLogs).sort();
     if(dates.length === 0){ alert('내보낼 기록이 없습니다.'); return; }
     const headers = ['날짜','작성시간','수정시간','기상시간','취침시간','컨디션','운동여부','운동종류','운동강도','전일점수','오늘점수',
-      '아침_탄수화물','아침_단백질','아침_지방','아침_물',
-      '점심_탄수화물','점심_단백질','점심_지방','점심_물',
-      '저녁_탄수화물','저녁_단백질','저녁_지방','저녁_물',
-      '간식_탄수화물','간식_단백질','간식_지방','간식_물',
-      '건강합계','영양제','부족영양',
+      '식사기록(구분:내용:탄수화물:단백질:지방:당)','영양제기록(날짜:명칭:성분:브랜드)',
+      '체지방','골격근량','체중','운동루틴기록(루틴:부위:방법:중량:회수:비고)',
+      '건강합계','부족영양',
       '생각','질문','감상','키워드','참고',
       '관계_사람','관계_메모','관계_감사','관계_만족도',
       '지출','수입','총자산','투자메모','다음액션',
@@ -2024,18 +2464,15 @@
       '할일','습관'];
     const rows = [headers.join(',')];
     dates.forEach(d => {
-      const e = allLogs[d];
-      const meals = (e.health && e.health.meals) || {};
-      const m = name => meals[name] || {};
+      const e = migrateEntry(allLogs[d]);
+      const h = e.health || {};
       const todosStr = (e.todos || []).map(t => t.content + (t.done ? '(완료)' : '')).join('; ');
       const habitsStr = (e.habits || []).map(t => t.content + (t.done ? '(완료)' : '')).join('; ');
       const row = [
         d, e.writeTime, e.lastEdited, e.wakeTime, e.sleepTime, e.condition, e.exerciseYN, e.exerciseType, e.exerciseIntensity, e.scoreYesterday, e.scoreToday,
-        m('아침').carb, m('아침').protein, m('아침').fat, m('아침').water,
-        m('점심').carb, m('점심').protein, m('점심').fat, m('점심').water,
-        m('저녁').carb, m('저녁').protein, m('저녁').fat, m('저녁').water,
-        m('간식').carb, m('간식').protein, m('간식').fat, m('간식').water,
-        (e.health && e.health.total) || '', (e.health && e.health.supplements) || '', (e.health && e.health.deficient) || '',
+        encodeRows(h.meals, MEAL_CSV_KEYS), encodeRows(h.supplements, SUPP_CSV_KEYS),
+        (h.body&&h.body.fat)||'', (h.body&&h.body.muscle)||'', (h.body&&h.body.weight)||'', encodeRows(h.exercises, EXERCISE_CSV_KEYS),
+        h.total || '', h.deficient || '',
         (e.diary && e.diary.thoughts) || '', (e.diary && e.diary.questions) || '', (e.diary && e.diary.impression) || '', (e.diary && e.diary.keywords) || '', e.reference || '',
         (e.relationships && e.relationships.people) || '', (e.relationships && e.relationships.memo) || '', (e.relationships && e.relationships.gratitude) || '', (e.relationships && e.relationships.score) || '',
         (e.assets && e.assets.expense) || '', (e.assets && e.assets.income) || '', (e.assets && e.assets.total) || '', (e.assets && e.assets.memo) || '', (e.assets && e.assets.nextAction) || '',
@@ -2064,24 +2501,13 @@
     {h:'운동강도', apply:(e,v)=>{ e.exerciseIntensity = v; }},
     {h:'전일점수', apply:(e,v)=>{ e.scoreYesterday = v; }},
     {h:'오늘점수', apply:(e,v)=>{ e.scoreToday = v; }},
-    {h:'아침_탄수화물', apply:(e,v)=>{ e.health.meals['아침'].carb = v; }},
-    {h:'아침_단백질', apply:(e,v)=>{ e.health.meals['아침'].protein = v; }},
-    {h:'아침_지방', apply:(e,v)=>{ e.health.meals['아침'].fat = v; }},
-    {h:'아침_물', apply:(e,v)=>{ e.health.meals['아침'].water = v; }},
-    {h:'점심_탄수화물', apply:(e,v)=>{ e.health.meals['점심'].carb = v; }},
-    {h:'점심_단백질', apply:(e,v)=>{ e.health.meals['점심'].protein = v; }},
-    {h:'점심_지방', apply:(e,v)=>{ e.health.meals['점심'].fat = v; }},
-    {h:'점심_물', apply:(e,v)=>{ e.health.meals['점심'].water = v; }},
-    {h:'저녁_탄수화물', apply:(e,v)=>{ e.health.meals['저녁'].carb = v; }},
-    {h:'저녁_단백질', apply:(e,v)=>{ e.health.meals['저녁'].protein = v; }},
-    {h:'저녁_지방', apply:(e,v)=>{ e.health.meals['저녁'].fat = v; }},
-    {h:'저녁_물', apply:(e,v)=>{ e.health.meals['저녁'].water = v; }},
-    {h:'간식_탄수화물', apply:(e,v)=>{ e.health.meals['간식'].carb = v; }},
-    {h:'간식_단백질', apply:(e,v)=>{ e.health.meals['간식'].protein = v; }},
-    {h:'간식_지방', apply:(e,v)=>{ e.health.meals['간식'].fat = v; }},
-    {h:'간식_물', apply:(e,v)=>{ e.health.meals['간식'].water = v; }},
+    {h:'식사기록(구분:내용:탄수화물:단백질:지방:당)', apply:(e,v)=>{ e.health.meals = decodeRows(v, MEAL_CSV_KEYS, emptyMealRow); }},
+    {h:'영양제기록(날짜:명칭:성분:브랜드)', apply:(e,v)=>{ e.health.supplements = decodeRows(v, SUPP_CSV_KEYS, emptySuppRow); }},
+    {h:'체지방', apply:(e,v)=>{ e.health.body.fat = v; }},
+    {h:'골격근량', apply:(e,v)=>{ e.health.body.muscle = v; }},
+    {h:'체중', apply:(e,v)=>{ e.health.body.weight = v; }},
+    {h:'운동루틴기록(루틴:부위:방법:중량:회수:비고)', apply:(e,v)=>{ e.health.exercises = decodeRows(v, EXERCISE_CSV_KEYS, emptyExerciseRow); }},
     {h:'건강합계', apply:(e,v)=>{ e.health.total = v; }},
-    {h:'영양제', apply:(e,v)=>{ e.health.supplements = v; }},
     {h:'부족영양', apply:(e,v)=>{ e.health.deficient = v; }},
     {h:'생각', apply:(e,v)=>{ e.diary.thoughts = v; }},
     {h:'질문', apply:(e,v)=>{ e.diary.questions = v; }},
@@ -2289,6 +2715,17 @@
   }
 
   // ---------- 인쇄창: 오늘 기록(기록 탭에 입력한 전체 내용) 요약 ----------
+  function renderDdayList(items){
+    if(!items || !items.length){
+      return `<div class="report-empty">등록된 목표일이나 일정이 없어요. 계획 탭에서 목표일을 정하거나, 달력에 일정을 추가해보세요.</div>`;
+    }
+    return `<div class="report-dday-list">` + items.map(it => `
+      <div class="report-dday-row">
+        <span class="rd-cat">${escapeAttr(it.cat)}</span>
+        <span class="rd-text">${escapeAttr(it.text)}</span>
+        <span class="rd-date">${escapeAttr(it.date)} · ${escapeAttr(ddayLabel(it.date))}</span>
+      </div>`).join('') + `</div>`;
+  }
   function lsItem(label, value){
     if(value === undefined || value === null || value === '') return '';
     return `<div class="ls-item"><span class="li-label">${escapeAttr(label)}</span><span class="li-value">${escapeAttr(value)}</span></div>`;
@@ -2308,8 +2745,8 @@
     ].join('');
     if(basics){ html += `<div><div class="ls-group-title">🌤 오늘의 컨디션</div><div class="ls-items">${basics}</div></div>`; }
 
-    // 시간 계획표 (내용이 있는 슬롯만)
-    const filledSlots = (e.timePlan||[]).filter(s => s.content || s.category);
+    // 시간 계획표 (내용이 있는 슬롯만, 시간 순 정렬)
+    const filledSlots = (e.timePlan||[]).filter(s => s.content || s.category).slice().sort((a,b) => a.time.localeCompare(b.time));
     if(filledSlots.length){
       html += `<div><div class="ls-group-title">⏰ 시간 계획표</div><div class="ls-items">` +
         filledSlots.map(s => `<div class="ls-timeplan-row${s.done?' done':''}">
@@ -2321,14 +2758,20 @@
 
     // 건강 / 식단
     if(e.health){
-      const mealLines = Object.keys(e.health.meals||{}).map(meal => {
-        const mm = e.health.meals[meal];
-        const parts = ['carb','protein','fat','water'].map(k => mm[k] ? `${MEAL_LABELS[k]} ${mm[k]}` : '').filter(Boolean).join(', ');
-        return parts ? lsItem(meal, parts) : '';
+      const h = e.health;
+      const mealLines = (h.meals||[]).map(mm => {
+        const parts = ['carb:탄수화물','protein:단백질','fat:지방','sugar:당'].map(kv => {
+          const [k,label] = kv.split(':'); return mm[k] ? `${label} ${mm[k]}` : '';
+        }).filter(Boolean).join(', ');
+        const name = [mm.type, mm.content].filter(Boolean).join(' · ') || '식사';
+        return parts ? lsItem(name, parts) : '';
       }).join('');
-      const healthExtra = [lsItem('총평', e.health.total), lsItem('보충제', e.health.supplements), lsItem('부족한 것', e.health.deficient)].join('');
-      if(mealLines || healthExtra){
-        html += `<div><div class="ls-group-title">🍽 건강·식단</div><div class="ls-items">${mealLines}${healthExtra}</div></div>`;
+      const suppLines = (h.supplements||[]).map(s => lsItem('영양제', [s.name, s.brand, s.nutrient, s.date].filter(Boolean).join(' · '))).join('');
+      const exLines = (h.exercises||[]).map(x => lsItem('운동루틴', [x.routine, x.part, x.method, x.weight&&(x.weight+'kg'), x.reps&&(x.reps+'회'), x.memo].filter(Boolean).join(' · '))).join('');
+      const bodyLine = (h.body && (h.body.fat||h.body.muscle||h.body.weight)) ? lsItem('체성분', [h.body.fat&&('체지방 '+h.body.fat+'%'), h.body.muscle&&('골격근량 '+h.body.muscle+'kg'), h.body.weight&&('체중 '+h.body.weight+'kg')].filter(Boolean).join(', ')) : '';
+      const healthExtra = [lsItem('총평', h.total), lsItem('부족한 것', h.deficient)].join('');
+      if(mealLines || suppLines || exLines || bodyLine || healthExtra){
+        html += `<div><div class="ls-group-title">🍽 건강·식단</div><div class="ls-items">${mealLines}${suppLines}${bodyLine}${exLines}${healthExtra}</div></div>`;
       }
     }
 
@@ -2457,6 +2900,14 @@
       <div class="report-panel">
         ${reportPanelShape(0)}
         <div class="rp-head">
+          <div class="rp-title">🎯 다가오는 D-day</div>
+        </div>
+        ${renderDdayList(collectUpcomingDdays())}
+      </div>
+
+      <div class="report-panel">
+        ${reportPanelShape(1)}
+        <div class="rp-head">
           <div class="rp-title">📅 오늘의 계획 체크리스트</div>
           <span class="rp-pct-pill">${dStats.pct}%</span>
         </div>
@@ -2464,7 +2915,7 @@
       </div>
 
       <div class="report-panel">
-        ${reportPanelShape(1)}
+        ${reportPanelShape(2)}
         <div class="rp-head">
           <div class="rp-title">🗂 오늘의 전체 기록 <span style="font-weight:400;color:var(--ink-soft);font-size:10.5px;">— 기록 탭에 입력한 내용</span></div>
         </div>
@@ -2603,6 +3054,7 @@
   // ---------- init (로그인 성공 후 외부에서 호출) ----------
   window.hbInit = async function(){
     await loadPlans();
+    await loadEvents();
     await loadAll();
     switchView('report');
   };
