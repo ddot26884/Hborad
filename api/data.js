@@ -52,9 +52,36 @@ async function saveFile(data, sha, message) {
   });
   if (!r.ok) {
     const t = await r.text();
-    throw new Error('GitHub 저장 실패: ' + r.status + ' ' + t);
+    const err = new Error('GitHub 저장 실패: ' + r.status + ' ' + t);
+    err.status = r.status;
+    throw err;
   }
   return r.json();
+}
+
+function sleep(ms) { return new Promise(res => setTimeout(res, ms)); }
+
+// key 하나를 읽기→수정→저장합니다. 다른 요청과 거의 동시에 저장해서
+// GitHub 파일 버전(sha)이 어긋나 409/422가 나면, 최신 파일을 다시 읽어
+// 같은 수정을 재적용한 뒤 재시도합니다 (최대 4회).
+async function applyKeyUpdate(mutate) {
+  let lastErr;
+  for (let i = 0; i < 4; i++) {
+    const { sha, data } = await fetchFile();
+    mutate(data);
+    try {
+      await saveFile(data, sha, undefined);
+      return;
+    } catch (e) {
+      lastErr = e;
+      if (e.status === 409 || e.status === 422 || e.status === 412) {
+        await sleep(200 * (i + 1));
+        continue;
+      }
+      throw e;
+    }
+  }
+  throw lastErr;
 }
 
 module.exports = async (req, res) => {
@@ -89,13 +116,10 @@ module.exports = async (req, res) => {
         res.status(400).json({ error: 'key가 필요합니다.' });
         return;
       }
-      const { sha, data } = await fetchFile();
-      if (_delete) {
-        delete data[key];
-      } else {
-        data[key] = value;
-      }
-      await saveFile(data, sha, `hborad: update ${key}`);
+      await applyKeyUpdate((data) => {
+        if (_delete) { delete data[key]; }
+        else { data[key] = value; }
+      });
       res.status(200).json({ key, value, shared: false });
       return;
     }

@@ -246,11 +246,12 @@
   .nav-btn.ghost{ background:var(--paper-2); }
 
   /* ---------- Toast ---------- */
-  #toastWrap{ position:fixed; left:50%; bottom:18px; transform:translateX(-50%); z-index:1200; display:flex; flex-direction:column; gap:6px; align-items:center; pointer-events:none; }
+  #toastWrap{ position:fixed; left:50%; bottom:18px; transform:translateX(-50%); z-index:1200; display:flex; flex-direction:column; gap:6px; align-items:center; pointer-events:none; max-width:92vw; }
   .toast{
     font-family:'JetBrains Mono', monospace; font-size:12px; font-weight:700; color:#fff;
-    background:var(--ink); padding:9px 16px; border-radius:20px; box-shadow:2px 3px 0 rgba(0,0,0,0.15);
+    background:var(--ink); padding:9px 16px; border-radius:14px; box-shadow:2px 3px 0 rgba(0,0,0,0.15);
     opacity:0; transform:translateY(8px); transition:opacity .2s, transform .2s;
+    max-width:92vw; word-break:break-word; text-align:center;
   }
   .toast.show{ opacity:1; transform:translateY(0); }
   .toast.err{ background:var(--safety-dark); }
@@ -632,10 +633,21 @@
     let queue = Promise.resolve();
     function sleep(ms){ return new Promise(res => setTimeout(res, ms)); }
 
+    async function readErrMsg(r){
+      try{
+        const j = await r.clone().json();
+        if(j && j.error) return j.error;
+      }catch(e){ /* JSON이 아니면 무시 */ }
+      try{
+        const t = await r.text();
+        if(t) return t.slice(0,200);
+      }catch(e){}
+      return String(r.status);
+    }
     async function rawGet(key){
       const r = await fetch('/api/data?key=' + encodeURIComponent(key));
-      if(r.status === 401) throw new Error('unauthorized');
-      if(!r.ok) throw new Error('storage get failed: ' + r.status);
+      if(r.status === 401) throw new Error('로그인이 만료되었습니다. 다시 로그인해주세요.');
+      if(!r.ok) throw new Error(await readErrMsg(r));
       return r.json();
     }
     async function rawSet(key, value){
@@ -644,9 +656,13 @@
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ key, value })
       });
-      if(r.status === 401) throw new Error('unauthorized');
+      if(r.status === 401){
+        const err = new Error('로그인이 만료되었습니다. 다시 로그인해주세요.');
+        err.status = 401;
+        throw err;
+      }
       if(!r.ok){
-        const err = new Error('storage set failed: ' + r.status);
+        const err = new Error(await readErrMsg(r));
         err.status = r.status;
         throw err;
       }
@@ -702,10 +718,11 @@
     t.textContent = msg;
     wrap.appendChild(t);
     requestAnimationFrame(() => t.classList.add('show'));
+    const dur = isErr ? 5500 : 2600;
     setTimeout(() => {
       t.classList.remove('show');
       setTimeout(() => t.remove(), 250);
-    }, 2600);
+    }, dur);
   };
 </script>
 <script>
@@ -865,9 +882,14 @@
       await window.storage.set('daily-logs', JSON.stringify(allLogs), false);
       $('saveStatus').textContent = '저장됨';
     }catch(e){
-      $('saveStatus').textContent = '저장 실패';
       console.error(e);
-      hbToast('저장에 실패했어요. 네트워크를 확인하고 다시 시도해주세요.', true);
+      const msg = (e && e.message) || '알 수 없는 오류';
+      $('saveStatus').textContent = '저장 실패: ' + msg;
+      if(e && e.status === 401){
+        hbToast('로그인이 만료되었습니다. 새로고침 후 다시 로그인해주세요.', true);
+      } else {
+        hbToast('저장 실패: ' + msg, true);
+      }
     }
   }
   function queueSave(immediate){
@@ -1415,7 +1437,7 @@
   }
   async function persistPlans(){
     try{ await window.storage.set('plan-data', JSON.stringify(allPlans), false); }
-    catch(e){ console.error(e); hbToast('계획 저장에 실패했어요. 다시 시도해주세요.', true); }
+    catch(e){ console.error(e); hbToast('계획 저장 실패: ' + ((e && e.message) || '알 수 없는 오류'), true); }
   }
   function queuePlanSave(){
     clearTimeout(planSaveTimer);
