@@ -34,6 +34,10 @@
   }
 
   *{box-sizing:border-box;}
+  /* 뷰(인쇄/기록/계획/달력)마다 콘텐츠 높이가 달라 스크롤바가 생겼다 없어졌다 하면
+     가운데 정렬된 .app-shell 전체가 좌우로 살짝 튀어 보입니다.
+     스크롤바 영역을 항상 고정 확보해서 탭을 눌러도 화면이 움직이지 않게 합니다. */
+  html{ overflow-y:scroll; scrollbar-gutter:stable; }
   html,body{margin:0;padding:0;}
   body{
     font-family:'Noto Sans KR', sans-serif;
@@ -426,9 +430,43 @@
 
   .report-empty{ font-size:11px; color:var(--ink-soft); font-family:'JetBrains Mono', monospace; padding:6px 0; }
 
+  /* 리포트 통계 카드에 들어가는 작은 장식 도형 */
+  .report-stat{ position:relative; overflow:hidden; }
+  .report-stat .rs-shape{ position:absolute; right:-10px; bottom:-12px; width:46px; height:46px; opacity:0.5; pointer-events:none; }
+  .report-panel{ position:relative; overflow:hidden; }
+  .report-panel .rp-shape{ position:absolute; right:-14px; top:-16px; width:60px; height:60px; opacity:0.5; pointer-events:none; z-index:0; }
+  .report-panel > *{ position:relative; z-index:1; }
+
+  /* ---------- 인쇄창: 오늘 기록 전체 요약 ---------- */
+  .log-summary{ display:flex; flex-direction:column; gap:12px; }
+  .ls-group-title{
+    font-family:'JetBrains Mono', monospace; font-weight:700; font-size:11px; color:var(--accent-dark);
+    background:var(--accent-soft); display:inline-block; padding:2px 8px; border-radius:5px; margin-bottom:6px;
+  }
+  .ls-items{ display:flex; flex-direction:column; gap:4px; }
+  .ls-item{ display:flex; gap:8px; font-size:12px; align-items:baseline; }
+  .ls-item .li-label{ font-family:'JetBrains Mono', monospace; font-size:10px; color:var(--ink-soft); flex-shrink:0; min-width:56px; }
+  .ls-item .li-value{ color:var(--ink); word-break:break-word; white-space:pre-wrap; }
+  .ls-timeplan-row{ display:flex; gap:8px; font-size:12px; padding:2px 0; border-bottom:1px dashed var(--line); }
+  .ls-timeplan-row:last-child{ border-bottom:none; }
+  .ls-timeplan-row .tp-time{ font-family:'JetBrains Mono', monospace; font-size:10.5px; color:var(--ink-soft); flex-shrink:0; width:44px; }
+  .ls-timeplan-row .tp-cat-badge{ font-family:'JetBrains Mono', monospace; font-size:9px; color:var(--teal); background:var(--teal-soft); border-radius:4px; padding:1px 5px; flex-shrink:0; }
+  .ls-timeplan-row.done .tp-content{ text-decoration:line-through; color:var(--ink-soft); }
+
   @media (max-width:520px){
     .report-grid{ grid-template-columns:1fr 1fr; }
     .report-hero .rh-sub{ max-width:100%; }
+  }
+
+  /* ---------- 인쇄(브라우저 프린트) ---------- */
+  @media print{
+    body{ background:#fff !important; }
+    .side-tabs, .theme-picker, .report-cta-row, .nav-btn, .rp-nav, .save-status{ display:none !important; }
+    .app-shell{ display:block !important; max-width:100% !important; }
+    .main-content{ padding:0 !important; }
+    .report-panel, .report-hero{ box-shadow:none !important; break-inside:avoid; page-break-inside:avoid; border-color:#999 !important; }
+    .time-scroll{ max-height:none !important; overflow:visible !important; }
+    .report-grid{ grid-template-columns:repeat(4,1fr) !important; }
   }
 
   /* ---------- Login gate ---------- */
@@ -1996,6 +2034,108 @@
       </svg>`;
   }
 
+  // 통계 카드/패널마다 조금씩 다른 장식 도형을 붙여 밋밋한 느낌을 줄입니다 (순수 SVG).
+  const REPORT_STAT_SHAPE_COLORS = ['var(--accent)','var(--teal)','var(--purple)','var(--pink)'];
+  function reportStatShape(i){
+    const c = REPORT_STAT_SHAPE_COLORS[i % REPORT_STAT_SHAPE_COLORS.length];
+    return `<svg class="rs-shape" viewBox="0 0 60 60" xmlns="http://www.w3.org/2000/svg">
+      <circle cx="30" cy="30" r="28" fill="${c}" opacity="0.18"/>
+      <circle cx="42" cy="18" r="8" fill="${c}" opacity="0.3"/>
+    </svg>`;
+  }
+  const REPORT_PANEL_SHAPES = [
+    `<path d="M4 40 Q20 10 40 26 T76 14" stroke="var(--teal)" stroke-width="3" fill="none" opacity="0.3" stroke-linecap="round"/><circle cx="70" cy="16" r="7" fill="var(--teal)" opacity="0.28"/>`,
+    `<rect x="6" y="6" width="34" height="34" rx="9" fill="var(--purple)" opacity="0.16" transform="rotate(14 23 23)"/><circle cx="52" cy="40" r="9" fill="var(--pink)" opacity="0.24"/>`,
+    `<circle cx="46" cy="24" r="22" fill="var(--yellow)" opacity="0.2"/><circle cx="20" cy="42" r="8" fill="var(--accent)" opacity="0.24"/>`
+  ];
+  function reportPanelShape(i){
+    return `<svg class="rp-shape" viewBox="0 0 80 60" xmlns="http://www.w3.org/2000/svg">${REPORT_PANEL_SHAPES[i % REPORT_PANEL_SHAPES.length]}</svg>`;
+  }
+
+  // ---------- 인쇄창: 오늘 기록(기록 탭에 입력한 전체 내용) 요약 ----------
+  function lsItem(label, value){
+    if(value === undefined || value === null || value === '') return '';
+    return `<div class="ls-item"><span class="li-label">${escapeAttr(label)}</span><span class="li-value">${escapeAttr(value)}</span></div>`;
+  }
+  function renderReportLogSummary(e){
+    if(!e || !hasContent(e)){
+      return `<div class="report-empty">오늘 기록 탭에 입력된 내용이 아직 없어요.</div>`;
+    }
+    let html = `<div class="log-summary">`;
+
+    // 컨디션 / 기상·취침 / 운동 / 다짐 점수
+    const basics = [
+      lsItem('컨디션', e.condition ? e.condition + ' / 5' : ''),
+      lsItem('기상', e.wakeTime), lsItem('취침', e.sleepTime),
+      lsItem('운동', [e.exerciseYN, e.exerciseType, e.exerciseIntensity].filter(Boolean).join(' · ')),
+      lsItem('어제 다짐', e.scoreYesterday), lsItem('오늘 다짐', e.scoreToday)
+    ].join('');
+    if(basics){ html += `<div><div class="ls-group-title">🌤 오늘의 컨디션</div><div class="ls-items">${basics}</div></div>`; }
+
+    // 시간 계획표 (내용이 있는 슬롯만)
+    const filledSlots = (e.timePlan||[]).filter(s => s.content || s.category);
+    if(filledSlots.length){
+      html += `<div><div class="ls-group-title">⏰ 시간 계획표</div><div class="ls-items">` +
+        filledSlots.map(s => `<div class="ls-timeplan-row${s.done?' done':''}">
+            <span class="tp-time">${escapeAttr(s.time)}</span>
+            <span class="tp-content">${escapeAttr(s.content)||'(내용 없음)'}</span>
+            ${s.category ? `<span class="tp-cat-badge">${escapeAttr(s.category)}</span>` : ''}
+          </div>`).join('') + `</div></div>`;
+    }
+
+    // 건강 / 식단
+    if(e.health){
+      const mealLines = Object.keys(e.health.meals||{}).map(meal => {
+        const mm = e.health.meals[meal];
+        const parts = ['carb','protein','fat','water'].map(k => mm[k] ? `${MEAL_LABELS[k]} ${mm[k]}` : '').filter(Boolean).join(', ');
+        return parts ? lsItem(meal, parts) : '';
+      }).join('');
+      const healthExtra = [lsItem('총평', e.health.total), lsItem('보충제', e.health.supplements), lsItem('부족한 것', e.health.deficient)].join('');
+      if(mealLines || healthExtra){
+        html += `<div><div class="ls-group-title">🍽 건강·식단</div><div class="ls-items">${mealLines}${healthExtra}</div></div>`;
+      }
+    }
+
+    // 하루 정리 / 일기
+    if(e.diary){
+      const diaryLines = [
+        lsItem('생각', e.diary.thoughts), lsItem('질문', e.diary.questions),
+        lsItem('소감', e.diary.impression), lsItem('키워드', e.diary.keywords)
+      ].join('');
+      if(diaryLines) html += `<div><div class="ls-group-title">📔 하루 정리</div><div class="ls-items">${diaryLines}</div></div>`;
+    }
+    if(e.reference){ html += `<div><div class="ls-group-title">🔖 참고</div><div class="ls-items">${lsItem('메모', e.reference)}</div></div>`; }
+
+    // 인간관계 / 자산 / 커리어 / 취미
+    if(e.relationships && (e.relationships.people||e.relationships.memo||e.relationships.gratitude||e.relationships.score)){
+      const r = e.relationships;
+      html += `<div><div class="ls-group-title">🤝 인간관계</div><div class="ls-items">${
+        [lsItem('만난 사람', r.people), lsItem('메모', r.memo), lsItem('감사', r.gratitude), lsItem('점수', r.score?(r.score+' / 5'):'')].join('')
+      }</div></div>`;
+    }
+    if(e.assets && (e.assets.expense||e.assets.income||e.assets.total||e.assets.memo||e.assets.nextAction)){
+      const a = e.assets;
+      html += `<div><div class="ls-group-title">💰 자산·투자</div><div class="ls-items">${
+        [lsItem('지출', a.expense), lsItem('수입', a.income), lsItem('총자산', a.total), lsItem('메모', a.memo), lsItem('다음 행동', a.nextAction)].join('')
+      }</div></div>`;
+    }
+    if(e.career && (e.career.summary||e.career.achievements||e.career.learned||e.career.priority)){
+      const c = e.career;
+      html += `<div><div class="ls-group-title">💼 직업</div><div class="ls-items">${
+        [lsItem('요약', c.summary), lsItem('성과', c.achievements), lsItem('배운 점', c.learned), lsItem('우선순위', c.priority)].join('')
+      }</div></div>`;
+    }
+    if(e.hobby && (e.hobby.activity||e.hobby.duration||e.hobby.satisfaction||e.hobby.memo)){
+      const h = e.hobby;
+      html += `<div><div class="ls-group-title">🎨 취미</div><div class="ls-items">${
+        [lsItem('활동', h.activity), lsItem('시간', h.duration), lsItem('만족도', h.satisfaction?(h.satisfaction+' / 5'):''), lsItem('메모', h.memo)].join('')
+      }</div></div>`;
+    }
+
+    html += `</div>`;
+    return html;
+  }
+
   function renderReportView(){
     const wrap = $('reportView');
     const todayPct = dayCompletionPct(todayStr());
@@ -2008,7 +2148,8 @@
     // ---- 주간: 최근 7일 실천율 막대 ----
     const weekDays = []; for(let i=6;i>=0;i--) weekDays.push(addDays(reportWeekAnchor, -i));
     const weekCols = weekDays.map(d => ({
-      label: d===todayStr() ? '오늘' : fmtDateShort(d).split('(')[0],
+      // "오늘"만 표시하면 정작 몇 월 며칠인지 알 수 없어서, 오늘도 날짜를 함께 표기합니다.
+      label: (d===todayStr() ? '오늘·' : '') + fmtDateShort(d).split('(')[0],
       pct: dayCompletionPct(d),
       today: d===todayStr()
     }));
@@ -2052,21 +2193,25 @@
 
       <div class="report-grid">
         <div class="report-stat">
+          ${reportStatShape(0)}
           <div class="rs-label">📝 오늘 계획</div>
           <div class="rs-value">${dStats.done}/${dStats.total}</div>
           <div class="rs-sub">일간 할일·습관 달성</div>
         </div>
         <div class="report-stat">
+          ${reportStatShape(1)}
           <div class="rs-label">🌱 이번 주 계획</div>
           <div class="rs-value">${wStats.pct}%</div>
           <div class="rs-sub">${wStats.done}/${wStats.total} 항목 완료</div>
         </div>
         <div class="report-stat">
+          ${reportStatShape(2)}
           <div class="rs-label">🗓 이번 달 계획</div>
           <div class="rs-value">${mStats.pct}%</div>
           <div class="rs-sub">${mStats.done}/${mStats.total} 항목 완료</div>
         </div>
         <div class="report-stat">
+          ${reportStatShape(3)}
           <div class="rs-label">🏔 올해 계획</div>
           <div class="rs-value">${yStats.pct}%</div>
           <div class="rs-sub">${yStats.done}/${yStats.total} 항목 완료</div>
@@ -2074,6 +2219,7 @@
       </div>
 
       <div class="report-panel">
+        ${reportPanelShape(0)}
         <div class="rp-head">
           <div class="rp-title">📅 오늘의 계획 체크리스트</div>
           <span class="rp-pct-pill">${dStats.pct}%</span>
@@ -2082,8 +2228,17 @@
       </div>
 
       <div class="report-panel">
+        ${reportPanelShape(1)}
         <div class="rp-head">
-          <div class="rp-title">📈 주간 차트 <span style="font-weight:400;color:var(--ink-soft);font-size:10.5px;">— 최근 7일 실천율</span></div>
+          <div class="rp-title">🗂 오늘의 전체 기록 <span style="font-weight:400;color:var(--ink-soft);font-size:10.5px;">— 기록 탭에 입력한 내용</span></div>
+        </div>
+        ${renderReportLogSummary(allLogs[todayStr()])}
+      </div>
+
+      <div class="report-panel">
+        ${reportPanelShape(2)}
+        <div class="rp-head">
+          <div class="rp-title">📈 주간 차트 <span style="font-weight:400;color:var(--ink-soft);font-size:10.5px;">— 최근 7일 실천율 (날짜 표기)</span></div>
           <div class="rp-nav">
             <button class="nav-btn" id="rWeekPrev">◀</button>
             <button class="nav-btn" id="rWeekToday">오늘</button>
@@ -2094,6 +2249,7 @@
       </div>
 
       <div class="report-panel">
+        ${reportPanelShape(0)}
         <div class="rp-head">
           <div class="rp-title">📈 월간 차트 <span style="font-weight:400;color:var(--ink-soft);font-size:10.5px;">— 주차별 평균 실천율</span></div>
           <div class="rp-nav">
@@ -2106,6 +2262,7 @@
       </div>
 
       <div class="report-panel">
+        ${reportPanelShape(1)}
         <div class="rp-head">
           <div class="rp-title">📈 연간 차트 <span style="font-weight:400;color:var(--ink-soft);font-size:10.5px;">— 월별 평균 실천율</span></div>
           <div class="rp-nav">
@@ -2122,7 +2279,7 @@
         <button class="report-cta ghost" id="rGoPlan">🎯 계획 기입하기</button>
         <button class="report-cta ghost" id="rGoCal">🗓 달력에서 보기</button>
       </div>
-      <div class="footer-note">draft v0.5 · 인쇄창은 읽기 전용 요약이며, 실제 입력은 기록·계획 탭에서 합니다</div>
+      <div class="footer-note">draft v0.6 · 인쇄창은 읽기 전용 요약이며, 실제 입력은 기록·계획 탭에서 합니다 · 브라우저 인쇄(Ctrl/Cmd+P) 시 이 화면 전체가 인쇄됩니다</div>
     `;
 
     renderThemePicker();
@@ -2175,11 +2332,20 @@
     root.setProperty('--accent', t.accent);
     root.setProperty('--accent-dark', t.dark);
     root.setProperty('--accent-soft', t.soft);
+    // --safety 계열은 원래 기본 테마와 같은 주황색이 하드코딩되어 있어서,
+    // 테마를 바꿔도 배너(리포트 히어로)만 바뀌고 캘린더 오늘 표시/토스트/진행바 등은
+    // 그대로 주황색으로 남아있는 것처럼 보였습니다. 테마의 accent를 함께 반영해
+    // 화면 전체가 일관되게 바뀌도록 합니다.
+    root.setProperty('--safety', t.accent);
+    root.setProperty('--safety-dark', t.dark);
     try{ localStorage.setItem('hb-theme', t.key); }catch(e){}
   }
   function renderThemePicker(){
     const wrap = $('themePicker');
     if(!wrap) return;
+    // 매번 클릭할 때마다 새 스와치를 append만 하면 같은 목록이 계속 쌓여서
+    // "색상표가 계속 추가되는" 현상이 생겼습니다. 항상 비우고 다시 그립니다.
+    wrap.querySelectorAll('.theme-swatch').forEach(el => el.remove());
     THEMES.forEach(t => {
       const dot = document.createElement('div');
       dot.className = 'theme-swatch' + (currentThemeKey === t.key ? ' active' : '');
