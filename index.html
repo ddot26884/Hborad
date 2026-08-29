@@ -344,6 +344,9 @@
   }
   .list-row input[type=text]{ flex:1; padding:7px 9px; border:1.5px solid var(--line); border-radius:6px; font-size:13px; background:var(--paper); min-width:0; }
   .list-row input.target-input{ flex:0 0 96px; }
+  .list-row input.due-input{ flex:0 0 128px; font-family:'JetBrains Mono', monospace; font-size:11.5px; padding:6px 7px; border:1.5px solid var(--line); border-radius:6px; background:var(--paper); }
+  .list-row .row-dday{ flex-shrink:0; margin-left:0; }
+  .ongoing-plan-section .report-empty{ padding:2px 0; }
   .row-check{
     width:20px; height:20px; border:2px solid var(--ink-soft); border-radius:5px; cursor:pointer; flex-shrink:0;
     display:flex; align-items:center; justify-content:center; background:var(--paper);
@@ -517,14 +520,15 @@
 
   /* ---------- 인쇄창 (리포트 / 완료 현황) ---------- */
   /* 각 배너(현황판/오늘계획/차트/시간계획/체크리스트/기록요약/달력)를
-     자유롭게 드래그로 순서를 바꾸고, 모서리를 끌어 크기를 조절할 수 있게 합니다. */
-  .report-panels{ display:flex; flex-wrap:wrap; align-items:flex-start; gap:10px; margin-bottom:12px; }
+     자유 위치(픽셀 좌표)로 어디로든 이동하고, 모서리를 끌어 크기를 조절할 수 있게 합니다.
+     기존 배너가 있던 자리로만 옮길 수 있던 "순서 바꾸기" 방식이 아니라,
+     빈 공간을 포함해 원하는 위치 어디로든 자유롭게 배치할 수 있습니다. */
+  .report-panels{ position:relative; margin-bottom:12px; }
   .report-block{
-    position:relative; box-sizing:border-box; resize:both; overflow:auto;
-    min-width:220px; min-height:90px; border-radius:14px;
+    position:absolute; box-sizing:border-box; resize:both; overflow:auto;
+    min-width:200px; min-height:90px; border-radius:14px;
   }
-  .report-block.dragging{ opacity:0.4; }
-  .report-block.drag-over{ outline:2px dashed var(--accent); outline-offset:3px; }
+  .report-block.rb-dragging{ opacity:0.55; z-index:50; box-shadow:0 10px 22px rgba(27,36,48,0.22); }
   .report-block .rb-handle{
     position:absolute; top:6px; right:8px; z-index:5; cursor:grab; user-select:none;
     font-size:13px; line-height:1; color:var(--ink-soft); background:var(--card);
@@ -536,8 +540,12 @@
   .report-block > .report-hero, .report-block > .report-stat, .report-block > .report-panel{
     margin-bottom:0; height:100%; box-sizing:border-box;
   }
+  .report-layout-toolbar{ display:flex; align-items:center; gap:8px; margin-bottom:10px; flex-wrap:wrap; }
+  .report-layout-toolbar .rlt-status{ font-family:'JetBrains Mono', monospace; font-size:10px; color:var(--teal); }
   @media (max-width:560px){
-    .report-block{ width:100% !important; resize:vertical; }
+    /* 모바일에서는 자유 배치가 다루기 어려우므로, 저장된 좌표와 무관하게 세로로 쌓아서 보여줍니다. */
+    .report-panels{ display:flex; flex-direction:column; gap:10px; height:auto !important; }
+    .report-block{ position:static !important; width:100% !important; height:auto !important; resize:vertical; }
   }
   .report-hero{
     position:relative; overflow:hidden; border-radius:14px; border:1.5px solid var(--ink-soft);
@@ -784,6 +792,12 @@
 
       <div class="mission-widget" id="missionWidget"></div>
 
+      <!-- 계획창에서 목표일(D-day)을 지정한 할일/습관은, 그 날짜가 지나기 전까지 여기에서도 계속 보입니다 -->
+      <div class="cat-section ongoing-plan-section" id="logOngoingPlanSection">
+        <div class="cat-title">🎯 진행 중인 계획·습관 <span class="cnt">— 계획창에서 목표일을 지정하면 그 날까지 표시</span></div>
+        <div id="logOngoingPlanList"></div>
+      </div>
+
       <div class="cat-search-wrap">
         <input type="text" id="catSearchInput" placeholder="🔍 기록 내용 검색 (예: 러닝, 팀장님, 예산)" />
         <span class="cat-search-hint" id="catSearchHint"></span>
@@ -1023,6 +1037,12 @@
 
       <div class="plan-layout">
         <div class="plan-main">
+
+          <!-- 목표일(D-day)을 지정한 할일/습관은 그 날짜가 지나기 전까지 매일 여기서도 계속 보입니다 -->
+          <div class="cat-section ongoing-plan-section" id="planOngoingSection">
+            <div class="cat-title">📌 진행 중인 목표일(D-day) 항목 <span class="cnt">— 아래 목록에서 목표일을 지정해보세요</span></div>
+            <div id="planOngoingList"></div>
+          </div>
 
           <!-- 타임라인: 오늘이 어느 시점인지, 각 카테고리별 기록 여부 확인 및 날짜 이동 -->
           <div class="cat-section">
@@ -2054,6 +2074,7 @@
       renderMissionWidget();
       renderDopaPanel();
       renderAllCalendars();
+      renderOngoingPlanList('logOngoingPlanList');
     }
     window.scrollTo(0, 0);
     document.querySelector('.main-content').scrollTop = 0;
@@ -2433,13 +2454,23 @@
         <div class="row-order">${idx+1}</div>
         <input type="text" value="${escapeAttr(item.content)}" data-idx="${idx}" data-f="content" placeholder="내용" />
         ${hasTarget ? `<input type="text" class="target-input" value="${escapeAttr(item.target||'')}" data-idx="${idx}" data-f="target" placeholder="목표 (예: 주3회)" />` : ''}
+        <input type="date" class="due-input" value="${item.due||''}" data-idx="${idx}" data-f="due" title="목표일 — 지정하면 그 날짜가 지나기 전까지 계획창·기록창에 D-day로 계속 표시됩니다" />
+        ${item.due ? `<span class="dday-badge row-dday">${ddayLabel(item.due)}</span>` : ''}
         <div class="row-check ${item.done?'done':''}" data-idx="${idx}" title="달성"></div>
         <button class="row-del" data-idx="${idx}">✕</button>
       `;
       el.appendChild(row);
     });
     el.querySelectorAll('input[data-f]').forEach(inp => {
-      inp.addEventListener('input', () => { list[+inp.dataset.idx][inp.dataset.f] = inp.value; queuePlanSave(); });
+      inp.addEventListener(inp.type === 'date' ? 'change' : 'input', () => {
+        list[+inp.dataset.idx][inp.dataset.f] = inp.value;
+        queuePlanSave();
+        if(inp.dataset.f === 'due'){
+          renderGenericRows(containerId, list, hasTarget);
+          renderOngoingPlanList('planOngoingList');
+          renderOngoingPlanList('logOngoingPlanList');
+        }
+      });
     });
     el.querySelectorAll('.row-check').forEach(cb => {
       cb.addEventListener('click', () => {
@@ -2448,6 +2479,8 @@
         cb.classList.toggle('done');
         if(list[i].done) confettiBurst(false);
         renderPlanChart();
+        renderOngoingPlanList('planOngoingList');
+        renderOngoingPlanList('logOngoingPlanList');
         queuePlanSave();
       });
     });
@@ -2456,6 +2489,8 @@
         list.splice(+btn.dataset.idx, 1);
         renderGenericRows(containerId, list, hasTarget);
         renderPlanChart();
+        renderOngoingPlanList('planOngoingList');
+        renderOngoingPlanList('logOngoingPlanList');
         queuePlanSave();
       });
     });
@@ -2463,14 +2498,14 @@
 
   $('planAddTodo').addEventListener('click', () => {
     const plan = getPlan();
-    plan.todos.push({ content:'', done:false });
+    plan.todos.push({ content:'', done:false, due:'' });
     renderGenericRows('planTodoRows', plan.todos, false);
     renderPlanChart();
     queuePlanSave();
   });
   $('planAddHabit').addEventListener('click', () => {
     const plan = getPlan();
-    plan.habits.push({ content:'', target:'', done:false });
+    plan.habits.push({ content:'', target:'', done:false, due:'' });
     renderGenericRows('planHabitRows', plan.habits, true);
     renderPlanChart();
     queuePlanSave();
@@ -2566,6 +2601,49 @@
     renderGenericRows('planHabitRows', plan.habits, true);
     renderPlanChart();
     renderPlanTimeline();
+    renderOngoingPlanList('planOngoingList');
+  }
+
+  // ---------- 목표일(D-day)이 지정된 할일/습관: 그 날짜가 지나기 전까지 계속 누적해서 보여줍니다 ----------
+  // 계획창의 어느 기간(일간/주간/월간/연간)·어느 날짜에 입력했든 상관없이,
+  // due(목표일)가 오늘 이후(오늘 포함)이고 아직 완료되지 않은 항목을 모두 모아서
+  // 계획창과 기록창 양쪽에 D-day와 함께 보여줍니다. 목표일이 지나면 자동으로 목록에서 빠집니다.
+  function collectOngoingPlanItems(){
+    const ref = todayStr();
+    const items = [];
+    ['daily','weekly','monthly','yearly'].forEach(period => {
+      const store = allPlans[period] || {};
+      Object.keys(store).forEach(key => {
+        const pl = store[key] || {};
+        (pl.todos || []).forEach(t => {
+          if(t.due && t.due >= ref && !t.done && (t.content||'').trim()){
+            items.push({ kind:'할일', content:t.content, due:t.due });
+          }
+        });
+        (pl.habits || []).forEach(t => {
+          if(t.due && t.due >= ref && !t.done && (t.content||'').trim()){
+            items.push({ kind:'습관', content:t.content, due:t.due });
+          }
+        });
+      });
+    });
+    items.sort((a,b) => a.due < b.due ? -1 : a.due > b.due ? 1 : 0);
+    return items;
+  }
+  function renderOngoingPlanList(containerId){
+    const el = $(containerId);
+    if(!el) return;
+    const items = collectOngoingPlanItems();
+    if(items.length === 0){
+      el.innerHTML = '<div class="report-empty">목표일이 지정된 진행 중인 계획·습관이 없습니다</div>';
+      return;
+    }
+    el.innerHTML = `<div class="report-dday-list">` + items.map(it => `
+      <div class="report-dday-row">
+        <span class="rd-cat">${it.kind}</span>
+        <span class="rd-text">${escapeAttr(it.content)}</span>
+        <span class="rd-date dday-badge">${ddayLabel(it.due)}</span>
+      </div>`).join('') + `</div>`;
   }
 
   // ---------- CSV 내보내기 ----------
@@ -3004,16 +3082,32 @@
     </div>`;
   }
 
-  // 인쇄창 배너들의 기본 폭 — hero(현황판)와 달력을 같은 크기(50%)로 맞추고, 나머지는 전체 폭.
-  const REPORT_BLOCK_DEFAULT_WIDTH = {
-    hero:'calc(50% - 5px)', stat:'calc(50% - 5px)',
-    goal:'100%', time:'100%', checklist:'100%', logsum:'100%',
-    calendar:'calc(50% - 5px)'
-  };
-  function reportBlock(pid, innerHtml){
-    const w = REPORT_BLOCK_DEFAULT_WIDTH[pid] || '100%';
-    return `<div class="report-block" data-pid="${pid}" draggable="true" style="width:${w};">
-      <span class="rb-handle" title="끌어서 순서 이동 · 모서리를 끌어 크기 조절">⠿</span>
+  // 인쇄창 배너 기본 배치 — hero(오늘의 완료 현황판)와 stat(오늘계획)을 같은 크기로 나란히,
+  // 달력도 hero(현황판)와 같은 폭으로 맞춥니다. 실제 좌표는 렌더링 시점에
+  // reportPanels의 실측 너비를 기준으로 계산해서, 화면 폭이 달라져도 기본 배치가 자연스럽게 잡힙니다.
+  // 사용자가 배너를 옮기거나 크기를 바꾸면 그 이후로는 이 기본값 대신 저장된 좌표를 그대로 사용합니다.
+  const REPORT_DEFAULT_HEIGHT = { hero:196, stat:196, goal:210, time:190, checklist:220, logsum:260, calendar:430 };
+  function computeDefaultReportLayout(containerWidth){
+    const gap = 10;
+    const cw = Math.max(containerWidth || 0, 460);
+    const halfW = (cw - gap) / 2;
+    const pos = {};
+    // 오늘계획(stat)의 높이를 현황판(hero)과 같게 맞춰서 두 배너가 한 줄에서 나란히 같은 높이로 보이게 합니다.
+    pos.hero = { left:0, top:0, width:halfW, height:REPORT_DEFAULT_HEIGHT.hero };
+    pos.stat = { left:halfW + gap, top:0, width:halfW, height:REPORT_DEFAULT_HEIGHT.hero };
+    let y = REPORT_DEFAULT_HEIGHT.hero + gap;
+    ['goal','time','checklist','logsum'].forEach(pid => {
+      pos[pid] = { left:0, top:y, width:cw, height:REPORT_DEFAULT_HEIGHT[pid] };
+      y += REPORT_DEFAULT_HEIGHT[pid] + gap;
+    });
+    // 달력을 '오늘의 완료 현황판(hero)'과 동일한 폭으로 맞춥니다.
+    pos.calendar = { left:0, top:y, width:halfW, height:REPORT_DEFAULT_HEIGHT.calendar };
+    return pos;
+  }
+  function reportBlock(pid, pos, innerHtml){
+    const style = `left:${pos.left}px; top:${pos.top}px; width:${pos.width}px; height:${pos.height}px;`;
+    return `<div class="report-block" data-pid="${pid}" style="${style}">
+      <span class="rb-handle" title="끌어서 화면 어디로든 자유롭게 이동 · 모서리를 끌어 크기 조절">⠿</span>
       ${innerHtml}
     </div>`;
   }
@@ -3022,6 +3116,12 @@
     const wrap = $('reportView');
     const todayPct = dayCompletionPct(todayStr());
     const dStats = planStatsFor('daily', todayStr());
+    // 저장된 배치가 있으면 그대로, 없으면 현재 화면 폭 기준으로 기본 배치를 계산합니다.
+    const savedLayout = getReportLayout();
+    const containerWidth = wrap.clientWidth || (document.querySelector('.main-content')||{}).clientWidth || 900;
+    const defaultLayout = computeDefaultReportLayout(containerWidth);
+    const layout = savedLayout || defaultLayout;
+    const posFor = pid => layout[pid] || defaultLayout[pid];
 
     wrap.innerHTML = `
       <div class="header">
@@ -3031,8 +3131,14 @@
         </div>
       </div>
 
+      <div class="report-layout-toolbar">
+        <button class="nav-btn" id="rSaveLayout">💾 배너 위치 저장</button>
+        <button class="nav-btn ghost" id="rResetLayout">↺ 배치 초기화</button>
+        <span class="rlt-status" id="rLayoutStatus"></span>
+      </div>
+
       <div class="report-panels" id="reportPanels">
-        ${reportBlock('hero', `
+        ${reportBlock('hero', posFor('hero'), `
         <div class="report-hero">
           ${reportHeroShapes()}
           <div class="rh-eyebrow">HBORAD · PRINT / SUMMARY</div>
@@ -3044,7 +3150,7 @@
           </div>
         </div>`)}
 
-        ${reportBlock('stat', `
+        ${reportBlock('stat', posFor('stat'), `
         <div class="report-stat">
           ${reportStatShape(0)}
           <div class="rs-label">📝 오늘 계획</div>
@@ -3052,13 +3158,13 @@
           <div class="rs-sub">일간 할일·습관 달성</div>
         </div>`)}
 
-        ${reportBlock('goal', `
+        ${reportBlock('goal', posFor('goal'), `
         <div class="report-panel">
           ${reportPanelShape(0)}
           <div id="goalChartPanel"></div>
         </div>`)}
 
-        ${reportBlock('time', `
+        ${reportBlock('time', posFor('time'), `
         <div class="report-panel">
           ${reportPanelShape(1)}
           <div class="rp-head">
@@ -3067,7 +3173,7 @@
           ${renderTimePlanDonutPanel()}
         </div>`)}
 
-        ${reportBlock('checklist', `
+        ${reportBlock('checklist', posFor('checklist'), `
         <div class="report-panel">
           ${reportPanelShape(2)}
           <div class="rp-head">
@@ -3077,7 +3183,7 @@
           ${renderReportChecklist(allPlans.daily && allPlans.daily[todayStr()])}
         </div>`)}
 
-        ${reportBlock('logsum', `
+        ${reportBlock('logsum', posFor('logsum'), `
         <div class="report-panel">
           ${reportPanelShape(0)}
           <div class="rp-head">
@@ -3086,7 +3192,7 @@
           ${renderReportLogSummary(allLogs[todayStr()])}
         </div>`)}
 
-        ${reportBlock('calendar', `
+        ${reportBlock('calendar', posFor('calendar'), `
         <div class="report-panel">
           ${reportPanelShape(1)}
           <div class="rp-head">
@@ -3123,101 +3229,110 @@
     bindCalNav('Report');
     bindDayEventAdd('Report');
     renderCalendar('Report');
-    applyReportLayout();
-    initReportBlockDnD();
+    initReportBlockFreeLayout();
 
+    $('rSaveLayout').addEventListener('click', () => saveReportLayoutNow());
+    $('rResetLayout').addEventListener('click', () => {
+      if(confirm('배너 배치를 기본값으로 초기화할까요?')) resetReportLayout();
+    });
     $('rGoLog').addEventListener('click', () => switchView('log'));
     $('rGoPlan').addEventListener('click', () => switchView('plan'));
     $('rGoCal').addEventListener('click', () => switchView('plan'));
   }
 
-  // ================= 인쇄창 배너: 드래그 순서 변경 + 크기 조절 저장 =================
+  // ================= 인쇄창 배너: 자유 위치 이동 + 크기 조절 저장 =================
+  // 배너를 기존 배너 자리로만 옮길 수 있던 "순서 바꾸기" 방식이 아니라,
+  // 손잡이(⠿)를 눌러 화면 안 어디로든(빈 공간 포함) 자유롭게 끌어다 놓을 수 있고,
+  // 모서리를 끌어 크기도 자유롭게 바꿀 수 있습니다. "위치 저장" 버튼을 눌러야 저장되고,
+  // "배치 초기화" 버튼을 누르면 기본 배치로 되돌아갑니다.
   function getReportLayout(){
     try{
-      const raw = localStorage.getItem('hb-report-layout');
+      const raw = localStorage.getItem('hb-report-layout-v2');
       return raw ? JSON.parse(raw) : null;
     }catch(e){ return null; }
   }
-  function saveReportLayout(patch){
-    try{
-      const cur = getReportLayout() || { order:null, sizes:{} };
-      const next = { order: patch.order !== undefined ? patch.order : cur.order, sizes: patch.sizes || cur.sizes || {} };
-      localStorage.setItem('hb-report-layout', JSON.stringify(next));
-    }catch(e){}
+  function showReportLayoutStatus(msg){
+    const el = $('rLayoutStatus');
+    if(!el) return;
+    el.textContent = msg;
+    setTimeout(() => { if(el.textContent === msg) el.textContent = ''; }, 2200);
   }
-  function applyReportLayout(){
+  function saveReportLayoutNow(){
     const wrap = $('reportPanels');
     if(!wrap) return;
-    const layout = getReportLayout();
-    if(!layout) return;
-    if(layout.order && layout.order.length){
-      layout.order.forEach(pid => {
-        const el = wrap.querySelector(`.report-block[data-pid="${pid}"]`);
-        if(el) wrap.appendChild(el);
-      });
-    }
-    if(layout.sizes){
-      Object.keys(layout.sizes).forEach(pid => {
-        const el = wrap.querySelector(`.report-block[data-pid="${pid}"]`);
-        const sz = layout.sizes[pid];
-        if(el && sz){
-          if(sz.width) el.style.width = sz.width;
-          if(sz.height) el.style.height = sz.height;
-        }
-      });
-    }
-  }
-  function persistReportOrder(){
-    const wrap = $('reportPanels');
-    if(!wrap) return;
-    saveReportLayout({ order: Array.from(wrap.children).map(b => b.dataset.pid) });
-  }
-  function persistReportSizes(){
-    const wrap = $('reportPanels');
-    if(!wrap) return;
-    const sizes = {};
+    const layout = {};
     wrap.querySelectorAll('.report-block').forEach(b => {
-      sizes[b.dataset.pid] = { width: b.style.width || '', height: b.style.height || '' };
+      layout[b.dataset.pid] = {
+        left: parseFloat(b.style.left) || 0,
+        top: parseFloat(b.style.top) || 0,
+        width: parseFloat(b.style.width) || b.offsetWidth,
+        height: parseFloat(b.style.height) || b.offsetHeight
+      };
     });
-    saveReportLayout({ sizes });
+    try{ localStorage.setItem('hb-report-layout-v2', JSON.stringify(layout)); }catch(e){}
+    showReportLayoutStatus('배너 위치를 저장했습니다');
   }
-  function initReportBlockDnD(){
+  function resetReportLayout(){
+    try{ localStorage.removeItem('hb-report-layout-v2'); }catch(e){}
+    renderReportView();
+    showReportLayoutStatus('기본 배치로 초기화했습니다');
+  }
+  function updateReportContainerHeight(){
     const wrap = $('reportPanels');
     if(!wrap) return;
-    let dragEl = null;
+    let maxBottom = 0;
+    wrap.querySelectorAll('.report-block').forEach(b => {
+      const top = parseFloat(b.style.top) || 0;
+      maxBottom = Math.max(maxBottom, top + b.offsetHeight);
+    });
+    wrap.style.height = (maxBottom + 20) + 'px';
+  }
+  function initReportBlockFreeLayout(){
+    const wrap = $('reportPanels');
+    if(!wrap) return;
+    updateReportContainerHeight();
     wrap.querySelectorAll('.report-block').forEach(block => {
-      // 드래그는 우측 상단 손잡이(⠿)를 눌러 시작할 때만 동작하도록 해서,
-      // 버튼·체크박스·셀렉트 등 내부 요소 클릭이 드래그로 오작동하지 않게 합니다.
-      block.addEventListener('mousedown', (e) => {
-        block.dataset.dragOk = e.target.closest('.rb-handle') ? '1' : '0';
-      });
-      block.addEventListener('dragstart', (e) => {
-        if(block.dataset.dragOk !== '1'){ e.preventDefault(); return; }
-        dragEl = block;
-        block.classList.add('dragging');
-      });
-      block.addEventListener('dragend', () => {
-        block.classList.remove('dragging');
-        wrap.querySelectorAll('.report-block').forEach(b => b.classList.remove('drag-over'));
-        persistReportOrder();
-      });
-      block.addEventListener('dragover', (e) => {
-        e.preventDefault();
-        if(block !== dragEl) block.classList.add('drag-over');
-      });
-      block.addEventListener('dragleave', () => block.classList.remove('drag-over'));
-      block.addEventListener('drop', (e) => {
-        e.preventDefault();
-        block.classList.remove('drag-over');
-        if(!dragEl || dragEl === block) return;
-        const blocks = Array.from(wrap.children);
-        if(blocks.indexOf(dragEl) < blocks.indexOf(block)) block.after(dragEl);
-        else block.before(dragEl);
-      });
-      // 모서리를 끌어 크기(resize)를 바꾸면 잠시 후 그 크기를 저장합니다.
+      const handle = block.querySelector('.rb-handle');
+      if(handle){
+        const startDrag = (clientX, clientY) => {
+          const startLeft = parseFloat(block.style.left) || 0;
+          const startTop = parseFloat(block.style.top) || 0;
+          block.classList.add('rb-dragging');
+          function moveTo(cx, cy){
+            const dx = cx - clientX, dy = cy - clientY;
+            // 자유 위치: 다른 배너가 그 자리에 있는지와 상관없이(빈 공간 포함) 어디로든 옮길 수 있습니다.
+            let newLeft = Math.max(0, startLeft + dx);
+            let newTop = Math.max(0, startTop + dy);
+            block.style.left = newLeft + 'px';
+            block.style.top = newTop + 'px';
+            updateReportContainerHeight();
+          }
+          function onMouseMove(e){ moveTo(e.clientX, e.clientY); }
+          function onMouseUp(){
+            document.removeEventListener('mousemove', onMouseMove);
+            document.removeEventListener('mouseup', onMouseUp);
+            block.classList.remove('rb-dragging');
+          }
+          function onTouchMove(e){ const t = e.touches[0]; if(t){ moveTo(t.clientX, t.clientY); e.preventDefault(); } }
+          function onTouchEnd(){
+            document.removeEventListener('touchmove', onTouchMove);
+            document.removeEventListener('touchend', onTouchEnd);
+            block.classList.remove('rb-dragging');
+          }
+          document.addEventListener('mousemove', onMouseMove);
+          document.addEventListener('mouseup', onMouseUp);
+          document.addEventListener('touchmove', onTouchMove, { passive:false });
+          document.addEventListener('touchend', onTouchEnd);
+        };
+        handle.addEventListener('mousedown', (e) => { e.preventDefault(); startDrag(e.clientX, e.clientY); });
+        handle.addEventListener('touchstart', (e) => {
+          const t = e.touches[0]; if(!t) return;
+          startDrag(t.clientX, t.clientY);
+        }, { passive:true });
+      }
+      // 모서리를 끌어 크기를 바꾸면 컨테이너 전체 높이도 함께 갱신합니다. 저장은 "위치 저장" 버튼으로 합니다.
       if(window.ResizeObserver){
-        let t;
-        new ResizeObserver(() => { clearTimeout(t); t = setTimeout(persistReportSizes, 400); }).observe(block);
+        new ResizeObserver(() => updateReportContainerHeight()).observe(block);
       }
     });
   }
