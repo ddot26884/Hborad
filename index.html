@@ -236,6 +236,33 @@
   .report-dday-row .rd-text{ flex:1; }
   .report-dday-row .rd-date{ font-family:'JetBrains Mono', monospace; font-size:9.5px; color:var(--ink-soft); flex-shrink:0; }
 
+  /* ---------- 인쇄창 최상단 로고 ---------- */
+  .hb-logo-mark{
+    font-family:'JetBrains Mono', monospace; font-weight:800; font-size:22px; letter-spacing:1.5px;
+    color:var(--accent-dark); text-align:center; padding:8px 0 0;
+  }
+
+  /* ---------- 목표 진행 통합 차트 ---------- */
+  .goal-chart-select-row{ display:flex; align-items:center; gap:8px; margin-bottom:8px; flex-wrap:wrap; }
+  .goal-chart-select-row select{
+    flex:1; min-width:180px; padding:6px 8px; border:1.5px solid var(--line); border-radius:6px;
+    background:var(--card); font-size:11.5px; font-family:'Noto Sans KR', sans-serif;
+  }
+  .goal-chart-scroll{ overflow-x:auto; padding-bottom:4px; }
+
+  /* ---------- 계획 vs 실제 원형(도넛) 차트 ---------- */
+  .donut-panel{ display:flex; gap:18px; flex-wrap:wrap; justify-content:space-around; }
+  .donut-block{ text-align:center; }
+  .donut-block .db-title{ font-family:'JetBrains Mono', monospace; font-size:10.5px; color:var(--ink-soft); margin-bottom:6px; }
+  .donut-wrap{ position:relative; display:inline-block; }
+  .donut-center{
+    position:absolute; top:50%; left:50%; transform:translate(-50%,-50%);
+    font-family:'JetBrains Mono', monospace; font-weight:800; font-size:15px; color:var(--ink);
+  }
+  .donut-legend{ margin-top:8px; text-align:left; display:inline-block; }
+  .donut-legend-row{ font-size:10.5px; display:flex; align-items:center; gap:5px; margin-bottom:2px; }
+  .dl-dot{ width:8px; height:8px; border-radius:50%; display:inline-block; flex-shrink:0; }
+
   .banner-date-nav{ display:flex; align-items:center; gap:6px; margin-left:auto; }
   .banner-date-nav .nav-btn{ padding:3px 8px; font-size:11px; }
   .banner-date-nav .bd-label{ font-family:'JetBrains Mono', monospace; font-size:10.5px; color:var(--ink-soft); white-space:nowrap; }
@@ -587,7 +614,7 @@
   .ls-item .li-value{ color:var(--ink); word-break:break-word; white-space:pre-wrap; }
   .ls-timeplan-row{ display:flex; gap:8px; font-size:12px; padding:2px 0; border-bottom:1px dashed var(--line); }
   .ls-timeplan-row:last-child{ border-bottom:none; }
-  .ls-timeplan-row .tp-time{ font-family:'JetBrains Mono', monospace; font-size:10.5px; color:var(--ink-soft); flex-shrink:0; width:44px; }
+  .ls-timeplan-row .tp-time{ font-family:'JetBrains Mono', monospace; font-size:10.5px; color:var(--ink-soft); flex-shrink:0; width:78px; }
   .ls-timeplan-row .tp-cat-badge{ font-family:'JetBrains Mono', monospace; font-size:9px; color:var(--teal); background:var(--teal-soft); border-radius:4px; padding:1px 5px; flex-shrink:0; }
   .ls-timeplan-row.done .tp-content{ text-decoration:line-through; color:var(--ink-soft); }
 
@@ -718,6 +745,21 @@
       </div>
       <div class="cat-tabs" id="catTabs"></div>
 
+      <div class="cat-section" id="calendarViewLog" style="margin-bottom:12px;">
+        <div class="cal-header">
+          <button class="nav-btn" id="calPrevMonthLog">◀</button>
+          <div class="cal-title mono" id="calTitleLog"></div>
+          <button class="nav-btn" id="calNextMonthLog">▶</button>
+        </div>
+        <div class="cal-grid" id="calWeekdaysLog"></div>
+        <div class="cal-grid" id="calDaysLog" style="margin-top:6px;"></div>
+        <div class="day-events">
+          <div class="de-title" id="dayEventsTitleLog">일정</div>
+          <div id="dayEventsListLog"></div>
+          <div class="de-add-row"><button type="button" class="add-row-btn" id="dayEventAddLog">+ 일정 추가</button></div>
+        </div>
+      </div>
+
       <div class="log-banner-grid">
         <!-- 왼쪽 컬럼 -->
         <div class="log-col" id="logColLeft">
@@ -740,7 +782,7 @@
               </div>
               <div class="time-scroll">
                 <table class="timeplan">
-                  <thead><tr><th>시간</th><th>구분</th><th>내용</th><th>실천</th><th></th></tr></thead>
+                  <thead><tr><th>시간 (00:00~24:00, 30분 단위)</th><th>구분</th><th>계획내용</th><th>실천여부</th><th></th></tr></thead>
                   <tbody id="timeplanBody"></tbody>
                 </table>
               </div>
@@ -1238,6 +1280,13 @@
     return slots;
   }
   const TIME_SLOTS = generateTimeSlots();
+  function slotRangeLabel(t){
+    const [h,m] = t.split(':').map(Number);
+    let eh = h, em = m + 30;
+    if(em >= 60){ em -= 60; eh += 1; }
+    if(eh >= 24) eh -= 24;
+    return t + '~' + String(eh).padStart(2,'0') + ':' + String(em).padStart(2,'0');
+  }
 
   function emptyMealRow(){ return { type:'', content:'', carb:'', protein:'', fat:'', sugar:'' }; }
   function emptySuppRow(){ return { date:'', nutrient:'', brand:'', name:'' }; }
@@ -1376,7 +1425,7 @@
     planWeekStart = getWeekStart(dateStr);
     planMonth = dateStr.slice(0, 7);
     planYear = sy;
-    if($('calendarView').style.display !== 'none') renderCalendar();
+    renderAllCalendars();
     if($('planView').style.display !== 'none') renderPlanView();
   }
 
@@ -1448,7 +1497,7 @@
     // 필요한 시간만 목록에서 골라 추가하는 방식입니다.
     const timeSel = $('timeplanNewTime');
     if(timeSel && timeSel.options.length === 0){
-      timeSel.innerHTML = TIME_SLOTS.map(t => `<option value="${t}">${t}</option>`).join('');
+      timeSel.innerHTML = TIME_SLOTS.map(t => `<option value="${t}">${slotRangeLabel(t)}</option>`).join('');
       const nowSlot = TIME_SLOTS.find(t => t >= nowHM()) || TIME_SLOTS[0];
       timeSel.value = nowSlot;
     }
@@ -1456,7 +1505,7 @@
     body.innerHTML = '';
     const sorted = entry.timePlan.map((slot, origIdx) => ({slot, origIdx})).sort((a,b) => a.slot.time.localeCompare(b.slot.time));
     if(sorted.length === 0){
-      body.innerHTML = `<tr><td colspan="5" class="timeplan-empty">위 목록에서 시간을 골라 "+ 시간 추가"로 일정을 채워보세요</td></tr>`;
+      body.innerHTML = `<tr><td colspan="5" class="timeplan-empty">위 목록에서 00:00~24:00 중 시간을 골라 "+ 시간 추가"로 30분 단위 일정을 채워보세요</td></tr>`;
     }
     sorted.forEach(({slot, origIdx}) => {
       const idx = origIdx;
@@ -1464,12 +1513,12 @@
       tr.innerHTML = `
         <td class="tp-time">
           <select class="tp-time-select" data-idx="${idx}" data-f="time">
-            ${TIME_SLOTS.map(t => `<option value="${t}" ${t===slot.time?'selected':''}>${t}</option>`).join('')}
+            ${TIME_SLOTS.map(t => `<option value="${t}" ${t===slot.time?'selected':''}>${slotRangeLabel(t)}</option>`).join('')}
           </select>
         </td>
         <td class="tp-cat"><input type="text" data-idx="${idx}" data-f="category" value="${escapeAttr(slot.category)}" list="categoryList" placeholder="구분" /></td>
-        <td><input type="text" data-idx="${idx}" data-f="content" value="${escapeAttr(slot.content)}" placeholder="내용" /></td>
-        <td class="tp-check"><div class="row-check ${slot.done?'done':''}" data-idx="${idx}"></div></td>
+        <td><input type="text" data-idx="${idx}" data-f="content" value="${escapeAttr(slot.content)}" placeholder="계획 내용" /></td>
+        <td class="tp-check"><div class="row-check ${slot.done?'done':''}" data-idx="${idx}" title="실천여부"></div></td>
         <td class="tp-del"><button type="button" class="tp-del-btn" data-idx="${idx}" title="삭제">✕</button></td>
       `;
       body.appendChild(tr);
@@ -1896,14 +1945,17 @@
   }
 
   // ---------- Calendar view ----------
-  function renderCalendar(){
-    $('calTitle').textContent = calYear + '년 ' + (calMonth+1) + '월';
-    const wkEl = $('calWeekdays');
+  function renderCalendar(suffix){
+    suffix = suffix || '';
+    const titleEl = $('calTitle'+suffix);
+    if(!titleEl) return;
+    titleEl.textContent = calYear + '년 ' + (calMonth+1) + '월';
+    const wkEl = $('calWeekdays'+suffix);
     wkEl.innerHTML = WEEKDAYS.map(w => `<div class="cal-weekday">${w}</div>`).join('');
 
     const firstWeekday = new Date(calYear, calMonth, 1).getDay();
     const daysInMonth = new Date(calYear, calMonth+1, 0).getDate();
-    const daysEl = $('calDays');
+    const daysEl = $('calDays'+suffix);
     daysEl.innerHTML = '';
 
     for(let i=0;i<firstWeekday;i++){
@@ -1922,15 +1974,14 @@
       });
       daysEl.appendChild(cell);
     }
-    renderDayEvents();
+    renderDayEvents(suffix);
   }
-  $('dayEventAdd').addEventListener('click', () => {
-    if(!allEvents[currentDate]) allEvents[currentDate] = [];
-    allEvents[currentDate].push({ id: 'ev' + Date.now() + Math.random().toString(36).slice(2,6), time:'', title:'' });
-    renderDayEvents();
-    queueEventSave();
-    renderCalendar();
-  });
+  // 인쇄창·기록창·계획창 세 군데 모두에 같은 달력을 동시에 갱신합니다.
+  function renderAllCalendars(){
+    ['', 'Log', 'Report'].forEach(sfx => renderCalendar(sfx));
+  }
+  bindDayEventAdd('');
+  bindDayEventAdd('Log');
 
   function switchView(view){
     // 탭을 바꾸기 전에: 입력 중이던 필드가 있으면 포커스를 풀어 저장을 확정하고(모바일 키보드도 닫아),
@@ -1951,12 +2002,13 @@
       // 계획 뷰 안에 달력이 함께 있으므로, 계획 뷰로 올 때마다 오늘/선택 날짜 기준으로 달력도 함께 갱신합니다.
       const [y,m] = currentDate.split('-').map(Number);
       calYear = y; calMonth = m-1;
-      renderCalendar();
+      renderAllCalendars();
       renderPlanView();
     }
     if(view === 'log'){
       renderMissionWidget();
       renderDopaPanel();
+      renderAllCalendars();
     }
     window.scrollTo(0, 0);
     document.querySelector('.main-content').scrollTop = 0;
@@ -1964,14 +2016,8 @@
   $('tabReportBtn').addEventListener('click', () => switchView('report'));
   $('tabLogBtn').addEventListener('click', () => switchView('log'));
   $('tabPlanBtn').addEventListener('click', () => switchView('plan'));
-  $('calPrevMonth').addEventListener('click', () => {
-    calMonth--; if(calMonth<0){ calMonth=11; calYear--; }
-    renderCalendar();
-  });
-  $('calNextMonth').addEventListener('click', () => {
-    calMonth++; if(calMonth>11){ calMonth=0; calYear++; }
-    renderCalendar();
-  });
+  bindCalNav('');
+  bindCalNav('Log');
 
   // ---------- static field bindings (기록) ----------
   $('wakeTime').addEventListener('change', e => { entry.wakeTime = e.target.value; queueSave(); });
@@ -2085,7 +2131,10 @@
   function createEmptyPlan(){
     return {
       categories: { thoughts:'', health:'', relationships:'', assets:'', career:'', hobby:'' },
-      targets: { thoughts:'', health:'', relationships:'', assets:'', career:'', hobby:'' },
+      targets: {
+        thoughts:{start:'',end:''}, health:{start:'',end:''}, relationships:{start:'',end:''},
+        assets:{start:'',end:''}, career:{start:'',end:''}, hobby:{start:'',end:''}
+      },
       todos: [], habits: []
     };
   }
@@ -2114,11 +2163,12 @@
     eventSaveTimer = setTimeout(persistEvents, 400);
   }
   function eventsFor(dateStr){ return allEvents[dateStr] || []; }
-  function renderDayEvents(){
-    const wrap = $('dayEventsList');
+  function renderDayEvents(suffix){
+    suffix = suffix || '';
+    const wrap = $('dayEventsList'+suffix);
     if(!wrap) return;
     const list = eventsFor(currentDate).slice().sort((a,b) => (a.time||'').localeCompare(b.time||''));
-    const titleEl = $('dayEventsTitle');
+    const titleEl = $('dayEventsTitle'+suffix);
     if(titleEl) titleEl.textContent = '🗓 ' + fmtDateShort(currentDate) + ' 일정 · ' + ddayLabel(currentDate);
     wrap.innerHTML = '';
     if(list.length === 0){ wrap.innerHTML = '<div class="de-empty">등록된 일정이 없습니다</div>'; }
@@ -2135,43 +2185,89 @@
     wrap.querySelectorAll('input[data-f]').forEach(inp => {
       inp.addEventListener('input', () => {
         const ev = eventsFor(currentDate).find(x => x.id === inp.dataset.id);
-        if(ev){ ev[inp.dataset.f] = inp.value; queueEventSave(); renderCalendar(); }
+        if(ev){ ev[inp.dataset.f] = inp.value; queueEventSave(); renderAllCalendars(); }
       });
     });
     wrap.querySelectorAll('.row-del').forEach(btn => {
       btn.addEventListener('click', () => {
         allEvents[currentDate] = eventsFor(currentDate).filter(x => x.id !== btn.dataset.id);
-        renderDayEvents();
+        renderDayEvents(suffix);
         queueEventSave();
-        renderCalendar();
+        renderAllCalendars();
       });
     });
   }
-  function collectUpcomingDdays(){
+  function bindDayEventAdd(suffix){
+    const btn = $('dayEventAdd'+suffix);
+    if(!btn) return;
+    btn.addEventListener('click', () => {
+      if(!allEvents[currentDate]) allEvents[currentDate] = [];
+      allEvents[currentDate].push({ id:'ev'+Date.now()+Math.random().toString(36).slice(2,6), time:'', title:'' });
+      renderDayEvents(suffix);
+      queueEventSave();
+      renderAllCalendars();
+    });
+  }
+  function bindCalNav(suffix){
+    const prev = $('calPrevMonth'+suffix), next = $('calNextMonth'+suffix);
+    if(prev) prev.addEventListener('click', () => { calMonth--; if(calMonth<0){ calMonth=11; calYear--; } renderAllCalendars(); });
+    if(next) next.addEventListener('click', () => { calMonth++; if(calMonth>11){ calMonth=0; calYear++; } renderAllCalendars(); });
+  }
+  // ---------- 목표 기간 통합 차트: 계획 탭에서 지정한 시작일~목표일 범위를 그대로 차트로 보여줍니다 ----------
+  function collectGoalRanges(){
     const todayS = todayStr();
-    const items = [];
+    const ranges = [];
     ['daily','weekly','monthly','yearly'].forEach(period => {
       const store = allPlans[period] || {};
       Object.keys(store).forEach(key => {
-        const pl = store[key];
-        if(pl && pl.targets){
-          PLAN_CATS.forEach(c => {
-            const t = pl.targets[c.key];
-            if(t && t >= todayS){
-              const firstLine = (pl.categories[c.key]||'').split('\n')[0].trim();
-              items.push({ cat: c.label, text: firstLine || (c.label + ' 목표'), date: t });
-            }
-          });
-        }
+        const pl = normalizePlanTargets(store[key]);
+        PLAN_CATS.forEach(c => {
+          const t = pl.targets[c.key];
+          if(t && t.start && t.end && t.end >= t.start){
+            const firstLine = (pl.categories[c.key]||'').split('\n')[0].trim();
+            ranges.push({
+              id: period+'|'+key+'|'+c.key,
+              label: c.label + (firstLine ? ' · ' + firstLine : ''),
+              start: t.start, end: t.end,
+              active: t.end >= todayS
+            });
+          }
+        });
       });
     });
-    Object.keys(allEvents).forEach(d => {
-      if(d >= todayS){
-        eventsFor(d).forEach(ev => { if(ev.title) items.push({ cat:'🗓 일정', text: ev.title, date: d }); });
-      }
-    });
-    items.sort((a,b) => a.date.localeCompare(b.date));
-    return items.slice(0, 12);
+    ranges.sort((a,b) => a.end.localeCompare(b.end));
+    return ranges;
+  }
+  let selectedGoalRangeId = null;
+  function renderGoalChartPanel(){
+    const wrap = $('goalChartPanel');
+    if(!wrap) return;
+    const ranges = collectGoalRanges();
+    if(ranges.length === 0){
+      wrap.innerHTML = `<div class="rp-head"><div class="rp-title">🎯 목표 진행 차트</div></div>
+        <div class="report-empty">계획 탭에서 카테고리별 시작일·목표일을 정하면, 그 기간만큼 진행률 차트가 여기 나타납니다.</div>`;
+      return;
+    }
+    let chosen = ranges.find(r => r.id === selectedGoalRangeId) || ranges.find(r => r.active) || ranges[0];
+    selectedGoalRangeId = chosen.id;
+    const days = [];
+    for(let d = chosen.start; d <= chosen.end; d = addDays(d, 1)){ days.push(d); if(days.length > 200) break; }
+    const cols = days.map(d => ({ label: fmtDateShort(d).split('(')[0], pct: dayCompletionPct(d), today: d===todayStr() }));
+    const avg = cols.length ? Math.round(cols.reduce((a,c)=>a+c.pct,0)/cols.length) : 0;
+    wrap.innerHTML = `
+      <div class="rp-head">
+        <div class="rp-title">🎯 목표 진행 차트</div>
+        <span class="dday-badge">${ddayLabel(chosen.end)}</span>
+      </div>
+      <div class="goal-chart-select-row">
+        <select id="goalRangeSelect">
+          ${ranges.map(r => `<option value="${r.id}" ${r.id===chosen.id?'selected':''}>${escapeAttr(r.label)} (${r.start}~${r.end})</option>`).join('')}
+        </select>
+        <span class="rp-pct-pill">평균 ${avg}%</span>
+      </div>
+      <div class="goal-chart-scroll">${renderBarChart(cols)}</div>
+    `;
+    $('goalRangeSelect').addEventListener('change', (e) => { selectedGoalRangeId = e.target.value; renderGoalChartPanel(); });
   }
 
   async function loadPlans(){
@@ -2196,11 +2292,21 @@
     if(planPeriod === 'monthly') return planMonth;
     return String(planYear);
   }
+  function normalizePlanTargets(pl){
+    if(!pl.targets) pl.targets = {};
+    PLAN_CATS.forEach(c => {
+      const t = pl.targets[c.key];
+      if(!t || typeof t === 'string'){
+        pl.targets[c.key] = { start:'', end: (typeof t === 'string' ? t : '') };
+      }
+    });
+    return pl;
+  }
   function getPlan(){
     const store = allPlans[planPeriod];
     const key = currentPlanKey();
     if(!store[key]) store[key] = createEmptyPlan();
-    return store[key];
+    return normalizePlanTargets(store[key]);
   }
   function currentPlanLabel(){
     if(planPeriod === 'daily') return fmtDateFull(planDate);
@@ -2240,16 +2346,18 @@
 
   function renderPlanCatGrid(){
     const plan = getPlan();
-    if(!plan.targets) plan.targets = { thoughts:'', health:'', relationships:'', assets:'', career:'', hobby:'' };
     const wrap = $('planCatGrid');
     wrap.innerHTML = '';
     PLAN_CATS.forEach(c => {
       const item = document.createElement('div');
       item.className = 'plan-cat-item';
-      const target = plan.targets[c.key] || '';
-      const badge = target ? `<span class="dday-badge">${ddayLabel(target)}</span>` : '';
+      const t = plan.targets[c.key] || {start:'',end:''};
+      const badge = t.end ? `<span class="dday-badge">${ddayLabel(t.end)}</span>` : '';
       item.innerHTML = `<label>${c.label}${badge}</label>
-        <div class="plan-target-row"><span class="pt-label">목표일</span><input type="date" class="pt-date" data-cat="${c.key}" value="${target}" /></div>
+        <div class="plan-target-row">
+          <span class="pt-label">시작일</span><input type="date" class="pt-date" data-cat="${c.key}" data-f="start" value="${t.start}" />
+          <span class="pt-label">목표일</span><input type="date" class="pt-date" data-cat="${c.key}" data-f="end" value="${t.end}" />
+        </div>
         <textarea rows="2" data-cat="${c.key}" placeholder="${c.label.replace(/^[^ ]+ /,'')} 목표">${escapeAttr(plan.categories[c.key])}</textarea>`;
       wrap.appendChild(item);
     });
@@ -2259,8 +2367,7 @@
     wrap.querySelectorAll('input.pt-date').forEach(inp => {
       inp.addEventListener('change', () => {
         const plan2 = getPlan();
-        if(!plan2.targets) plan2.targets = {};
-        plan2.targets[inp.dataset.cat] = inp.value;
+        plan2.targets[inp.dataset.cat][inp.dataset.f] = inp.value;
         queuePlanSave();
         renderPlanCatGrid();
       });
@@ -2621,7 +2728,7 @@
       await window.storage.set('daily-logs', JSON.stringify(allLogs), false);
       hbToast(count + '개 날짜가 등록되었습니다' + (skipped ? ` (형식 오류 ${skipped}건 제외)` : ''));
       setDate(currentDate);
-      if($('calendarView').style.display !== 'none') renderCalendar();
+      renderAllCalendars();
     } catch(e){
       console.error(e);
       hbToast('업로드 데이터 저장에 실패했습니다. 다시 시도해주세요.', true);
@@ -2715,17 +2822,6 @@
   }
 
   // ---------- 인쇄창: 오늘 기록(기록 탭에 입력한 전체 내용) 요약 ----------
-  function renderDdayList(items){
-    if(!items || !items.length){
-      return `<div class="report-empty">등록된 목표일이나 일정이 없어요. 계획 탭에서 목표일을 정하거나, 달력에 일정을 추가해보세요.</div>`;
-    }
-    return `<div class="report-dday-list">` + items.map(it => `
-      <div class="report-dday-row">
-        <span class="rd-cat">${escapeAttr(it.cat)}</span>
-        <span class="rd-text">${escapeAttr(it.text)}</span>
-        <span class="rd-date">${escapeAttr(it.date)} · ${escapeAttr(ddayLabel(it.date))}</span>
-      </div>`).join('') + `</div>`;
-  }
   function lsItem(label, value){
     if(value === undefined || value === null || value === '') return '';
     return `<div class="ls-item"><span class="li-label">${escapeAttr(label)}</span><span class="li-value">${escapeAttr(value)}</span></div>`;
@@ -2750,8 +2846,8 @@
     if(filledSlots.length){
       html += `<div><div class="ls-group-title">⏰ 시간 계획표</div><div class="ls-items">` +
         filledSlots.map(s => `<div class="ls-timeplan-row${s.done?' done':''}">
-            <span class="tp-time">${escapeAttr(s.time)}</span>
-            <span class="tp-content">${escapeAttr(s.content)||'(내용 없음)'}</span>
+            <span class="tp-time">${escapeAttr(slotRangeLabel(s.time))}</span>
+            <span class="tp-content">${escapeAttr(s.content)||'(내용 없음)'}${s.done ? ' ✓실천' : ''}</span>
             ${s.category ? `<span class="tp-cat-badge">${escapeAttr(s.category)}</span>` : ''}
           </div>`).join('') + `</div></div>`;
     }
@@ -2815,55 +2911,60 @@
     return html;
   }
 
+  // ---------- 계획 vs 실제 원형(도넛) 차트 ----------
+  const DONUT_COLORS = ['var(--accent)','var(--teal)','var(--purple)','var(--pink)','var(--green)','var(--ink-soft)'];
+  function renderDonut(dataMap, size){
+    size = size || 110;
+    const entries = Object.entries(dataMap).filter(([,v]) => v > 0);
+    const total = entries.reduce((s,[,v]) => s+v, 0);
+    const r = size/2 - 10;
+    const circumference = 2 * Math.PI * r;
+    let offset = 0;
+    const segs = total > 0 ? entries.map(([k,v], i) => {
+      const dash = (v/total) * circumference;
+      const seg = `<circle cx="${size/2}" cy="${size/2}" r="${r}" fill="none" stroke="${DONUT_COLORS[i%DONUT_COLORS.length]}" stroke-width="14"
+        stroke-dasharray="${dash} ${circumference-dash}" stroke-dashoffset="${-offset}" transform="rotate(-90 ${size/2} ${size/2})" />`;
+      offset += dash;
+      return seg;
+    }).join('') : `<circle cx="${size/2}" cy="${size/2}" r="${r}" fill="none" stroke="var(--line)" stroke-width="14" />`;
+    const legend = entries.length ? entries.map(([k,v], i) => `
+        <div class="donut-legend-row"><span class="dl-dot" style="background:${DONUT_COLORS[i%DONUT_COLORS.length]}"></span>${escapeAttr(k)} ${v}</div>
+      `).join('') : `<div class="donut-legend-row" style="color:var(--ink-soft)">기록 없음</div>`;
+    return `<div class="donut-wrap">
+        <svg width="${size}" height="${size}" viewBox="0 0 ${size} ${size}">${segs}</svg>
+        <div class="donut-center">${total}</div>
+      </div>
+      <div class="donut-legend">${legend}</div>`;
+  }
+  function timePlanBreakdown(e){
+    const planned = {}, actual = {};
+    ((e && e.timePlan) || []).forEach(s => {
+      const cat = s.category || '미분류';
+      if(s.content) planned[cat] = (planned[cat]||0) + 1;
+      if(s.done) actual[cat] = (actual[cat]||0) + 1;
+    });
+    return { planned, actual };
+  }
+  function renderTimePlanDonutPanel(){
+    const { planned, actual } = timePlanBreakdown(allLogs[todayStr()]);
+    return `<div class="donut-panel">
+      <div class="donut-block"><div class="db-title">📝 계획</div>${renderDonut(planned)}</div>
+      <div class="donut-block"><div class="db-title">✅ 실제(실천)</div>${renderDonut(actual)}</div>
+    </div>`;
+  }
+
   function renderReportView(){
     const wrap = $('reportView');
     const todayPct = dayCompletionPct(todayStr());
-    const weeklyKey = getWeekStart(reportWeekAnchor);
-    const wStats = planStatsFor('weekly', weeklyKey);
-    const mStats = planStatsFor('monthly', reportMonth);
-    const yStats = planStatsFor('yearly', String(reportYear));
     const dStats = planStatsFor('daily', todayStr());
 
-    // ---- 주간: 최근 7일 실천율 막대 ----
-    const weekDays = []; for(let i=6;i>=0;i--) weekDays.push(addDays(reportWeekAnchor, -i));
-    const weekCols = weekDays.map(d => ({
-      // "오늘"만 표시하면 정작 몇 월 며칠인지 알 수 없어서, 오늘도 날짜를 함께 표기합니다.
-      label: (d===todayStr() ? '오늘·' : '') + fmtDateShort(d).split('(')[0],
-      pct: dayCompletionPct(d),
-      today: d===todayStr()
-    }));
-
-    // ---- 월간: 이번 달 주차별 평균 실천율 ----
-    const [my, mm] = reportMonth.split('-').map(Number);
-    const daysInMonth = new Date(my, mm, 0).getDate();
-    const weekBuckets = [];
-    for(let d=1; d<=daysInMonth; ){
-      const start = d, end = Math.min(d+6, daysInMonth);
-      const dates = []; for(let x=start; x<=end; x++) dates.push(toLocalISO(new Date(my, mm-1, x)));
-      const pcts = dates.map(dayCompletionPct);
-      const avg = Math.round(pcts.reduce((a,b)=>a+b,0) / pcts.length);
-      weekBuckets.push({ label: start+'~'+end+'일', pct: avg });
-      d = end + 1;
-    }
-
-    // ---- 연간: 12개월 평균 실천율 ----
-    const monthCols = [];
-    for(let mo=1; mo<=12; mo++){
-      const dim = new Date(reportYear, mo, 0).getDate();
-      let sum = 0, cnt = 0;
-      for(let d=1; d<=dim; d++){
-        const ds = toLocalISO(new Date(reportYear, mo-1, d));
-        if(allLogs[ds] && hasContent(allLogs[ds])){ sum += dayCompletionPct(ds); cnt++; }
-      }
-      monthCols.push({ label: mo+'월', pct: cnt>0 ? Math.round(sum/cnt) : 0 });
-    }
-
     wrap.innerHTML = `
+      <div class="hb-logo-mark">hb◆rad</div>
       <div class="report-hero">
         ${reportHeroShapes()}
         <div class="rh-eyebrow">HBORAD · PRINT / SUMMARY</div>
         <div class="rh-title">📊 오늘의 완료 현황판</div>
-        <div class="rh-sub">기록·계획을 굳이 넘겨보지 않아도, 여기서 주간·월간·연간 진행 상황을 한눈에 볼 수 있어요.</div>
+        <div class="rh-sub">기록·계획을 굳이 넘겨보지 않아도, 여기서 목표 진행 상황을 한눈에 볼 수 있어요.</div>
         <div class="rh-date mono">${fmtDateFull(todayStr())} · 오늘 체크리스트 ${todayPct}% 완료</div>
         <div class="theme-picker" id="themePicker">
           <span class="tp-label">테마</span>
@@ -2877,36 +2978,23 @@
           <div class="rs-value">${dStats.done}/${dStats.total}</div>
           <div class="rs-sub">일간 할일·습관 달성</div>
         </div>
-        <div class="report-stat">
-          ${reportStatShape(1)}
-          <div class="rs-label">🌱 이번 주 계획</div>
-          <div class="rs-value">${wStats.pct}%</div>
-          <div class="rs-sub">${wStats.done}/${wStats.total} 항목 완료</div>
-        </div>
-        <div class="report-stat">
-          ${reportStatShape(2)}
-          <div class="rs-label">🗓 이번 달 계획</div>
-          <div class="rs-value">${mStats.pct}%</div>
-          <div class="rs-sub">${mStats.done}/${mStats.total} 항목 완료</div>
-        </div>
-        <div class="report-stat">
-          ${reportStatShape(3)}
-          <div class="rs-label">🏔 올해 계획</div>
-          <div class="rs-value">${yStats.pct}%</div>
-          <div class="rs-sub">${yStats.done}/${yStats.total} 항목 완료</div>
-        </div>
       </div>
 
       <div class="report-panel">
         ${reportPanelShape(0)}
-        <div class="rp-head">
-          <div class="rp-title">🎯 다가오는 D-day</div>
-        </div>
-        ${renderDdayList(collectUpcomingDdays())}
+        <div id="goalChartPanel"></div>
       </div>
 
       <div class="report-panel">
         ${reportPanelShape(1)}
+        <div class="rp-head">
+          <div class="rp-title">⏰ 오늘 시간계획 <span style="font-weight:400;color:var(--ink-soft);font-size:10.5px;">— 계획 vs 실제(실천) 구분</span></div>
+        </div>
+        ${renderTimePlanDonutPanel()}
+      </div>
+
+      <div class="report-panel">
+        ${reportPanelShape(2)}
         <div class="rp-head">
           <div class="rp-title">📅 오늘의 계획 체크리스트</div>
           <span class="rp-pct-pill">${dStats.pct}%</span>
@@ -2915,7 +3003,7 @@
       </div>
 
       <div class="report-panel">
-        ${reportPanelShape(2)}
+        ${reportPanelShape(0)}
         <div class="rp-head">
           <div class="rp-title">🗂 오늘의 전체 기록 <span style="font-weight:400;color:var(--ink-soft);font-size:10.5px;">— 기록 탭에 입력한 내용</span></div>
         </div>
@@ -2923,42 +3011,22 @@
       </div>
 
       <div class="report-panel">
-        ${reportPanelShape(2)}
-        <div class="rp-head">
-          <div class="rp-title">📈 주간 차트 <span style="font-weight:400;color:var(--ink-soft);font-size:10.5px;">— 최근 7일 실천율 (날짜 표기)</span></div>
-          <div class="rp-nav">
-            <button class="nav-btn" id="rWeekPrev">◀</button>
-            <button class="nav-btn" id="rWeekToday">오늘</button>
-            <button class="nav-btn" id="rWeekNext">▶</button>
-          </div>
-        </div>
-        ${renderBarChart(weekCols)}
-      </div>
-
-      <div class="report-panel">
-        ${reportPanelShape(0)}
-        <div class="rp-head">
-          <div class="rp-title">📈 월간 차트 <span style="font-weight:400;color:var(--ink-soft);font-size:10.5px;">— 주차별 평균 실천율</span></div>
-          <div class="rp-nav">
-            <button class="nav-btn" id="rMonthPrev">◀</button>
-            <div class="plan-label mono">${monthLabel(reportMonth)}</div>
-            <button class="nav-btn" id="rMonthNext">▶</button>
-          </div>
-        </div>
-        ${renderBarChart(weekBuckets)}
-      </div>
-
-      <div class="report-panel">
         ${reportPanelShape(1)}
         <div class="rp-head">
-          <div class="rp-title">📈 연간 차트 <span style="font-weight:400;color:var(--ink-soft);font-size:10.5px;">— 월별 평균 실천율</span></div>
+          <div class="rp-title">🗓 달력</div>
           <div class="rp-nav">
-            <button class="nav-btn" id="rYearPrev">◀</button>
-            <div class="plan-label mono">${reportYear}년</div>
-            <button class="nav-btn" id="rYearNext">▶</button>
+            <button class="nav-btn" id="calPrevMonthReport">◀</button>
+            <div class="cal-title mono" id="calTitleReport"></div>
+            <button class="nav-btn" id="calNextMonthReport">▶</button>
           </div>
         </div>
-        ${renderBarChart(monthCols)}
+        <div class="cal-grid" id="calWeekdaysReport"></div>
+        <div class="cal-grid" id="calDaysReport" style="margin-top:6px;"></div>
+        <div class="day-events">
+          <div class="de-title" id="dayEventsTitleReport">일정</div>
+          <div id="dayEventsListReport"></div>
+          <div class="de-add-row"><button type="button" class="add-row-btn" id="dayEventAddReport">+ 일정 추가</button></div>
+        </div>
       </div>
 
       <div class="report-cta-row">
@@ -2966,21 +3034,18 @@
         <button class="report-cta ghost" id="rGoPlan">🎯 계획 기입하기</button>
         <button class="report-cta ghost" id="rGoCal">🗓 달력에서 보기</button>
       </div>
-      <div class="footer-note">draft v0.6 · 인쇄창은 읽기 전용 요약이며, 실제 입력은 기록·계획 탭에서 합니다 · 브라우저 인쇄(Ctrl/Cmd+P) 시 이 화면 전체가 인쇄됩니다</div>
+      <div class="footer-note">draft v0.7 · 인쇄창은 읽기 전용 요약이며, 실제 입력은 기록·계획 탭에서 합니다 · 브라우저 인쇄(Ctrl/Cmd+P) 시 이 화면 전체가 인쇄됩니다</div>
     `;
 
     renderThemePicker();
+    renderGoalChartPanel();
+    bindCalNav('Report');
+    bindDayEventAdd('Report');
+    renderCalendar('Report');
 
     $('rGoLog').addEventListener('click', () => switchView('log'));
     $('rGoPlan').addEventListener('click', () => switchView('plan'));
     $('rGoCal').addEventListener('click', () => switchView('plan'));
-    $('rWeekPrev').addEventListener('click', () => { reportWeekAnchor = addDays(reportWeekAnchor, -7); renderReportView(); });
-    $('rWeekNext').addEventListener('click', () => { reportWeekAnchor = addDays(reportWeekAnchor, 7); renderReportView(); });
-    $('rWeekToday').addEventListener('click', () => { reportWeekAnchor = todayStr(); renderReportView(); });
-    $('rMonthPrev').addEventListener('click', () => { reportMonth = addMonths(reportMonth, -1); renderReportView(); });
-    $('rMonthNext').addEventListener('click', () => { reportMonth = addMonths(reportMonth, 1); renderReportView(); });
-    $('rYearPrev').addEventListener('click', () => { reportYear -= 1; renderReportView(); });
-    $('rYearNext').addEventListener('click', () => { reportYear += 1; renderReportView(); });
   }
 
   // ================= 테마 (디자인 색상 조합) =================
