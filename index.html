@@ -236,12 +236,6 @@
   .report-dday-row .rd-text{ flex:1; }
   .report-dday-row .rd-date{ font-family:'JetBrains Mono', monospace; font-size:9.5px; color:var(--ink-soft); flex-shrink:0; }
 
-  /* ---------- 인쇄창 최상단 로고 ---------- */
-  .hb-logo-mark{
-    font-family:'JetBrains Mono', monospace; font-weight:800; font-size:22px; letter-spacing:1.5px;
-    color:var(--accent-dark); text-align:center; padding:8px 0 0;
-  }
-
   /* ---------- 목표 진행 통합 차트 ---------- */
   .goal-chart-select-row{ display:flex; align-items:center; gap:8px; margin-bottom:8px; flex-wrap:wrap; }
   .goal-chart-select-row select{
@@ -515,6 +509,13 @@
   }
 
   /* ---------- 인쇄창 (리포트 / 완료 현황) ---------- */
+  /* 현황판(hero)과 오늘계획 배너를 가로로 나란히 배치 — hero는 절반 크기로 축소 */
+  .report-top-row{ display:flex; align-items:stretch; gap:10px; margin-bottom:12px; }
+  .report-top-row .report-hero{ flex:1 1 50%; min-width:0; margin-bottom:0; }
+  .report-top-row .report-stat{ flex:1 1 50%; min-width:0; margin-bottom:0; }
+  @media (max-width:560px){
+    .report-top-row{ flex-direction:column; }
+  }
   .report-hero{
     position:relative; overflow:hidden; border-radius:14px; border:1.5px solid var(--ink-soft);
     background:linear-gradient(135deg, var(--accent-soft), var(--card) 70%);
@@ -594,6 +595,15 @@
   .report-cta.ghost:hover{ background:var(--accent-soft); color:var(--accent-dark); }
 
   .report-empty{ font-size:11px; color:var(--ink-soft); font-family:'JetBrains Mono', monospace; padding:6px 0; }
+
+  /* 인쇄창 달력: 다른 배너와 비슷한 크기로 축소 + 드래그로 크기 조절 가능 */
+  .report-cal-shrink{
+    max-width:300px; width:100%; margin:0 auto; resize:both; overflow:auto;
+    min-width:200px; min-height:180px; padding:0 2px 2px 0;
+  }
+  @media (max-width:560px){
+    .report-cal-shrink{ max-width:100%; }
+  }
 
   /* 리포트 통계 카드에 들어가는 작은 장식 도형 */
   .report-stat{ position:relative; overflow:hidden; }
@@ -2959,19 +2969,25 @@
     const dStats = planStatsFor('daily', todayStr());
 
     wrap.innerHTML = `
-      <div class="hb-logo-mark">hb◆rad</div>
-      <div class="report-hero">
-        ${reportHeroShapes()}
-        <div class="rh-eyebrow">HBORAD · PRINT / SUMMARY</div>
-        <div class="rh-title">📊 오늘의 완료 현황판</div>
-        <div class="rh-sub">기록·계획을 굳이 넘겨보지 않아도, 여기서 목표 진행 상황을 한눈에 볼 수 있어요.</div>
-        <div class="rh-date mono">${fmtDateFull(todayStr())} · 오늘 체크리스트 ${todayPct}% 완료</div>
-        <div class="theme-picker" id="themePicker">
-          <span class="tp-label">테마</span>
+      <div class="header">
+        <div class="brand">
+          <div class="logo">hb<span>◆</span>rad</div>
+          <div class="tagline">인쇄 · 오늘의 완료 현황판</div>
         </div>
       </div>
 
-      <div class="report-grid">
+      <div class="report-top-row">
+        <div class="report-hero">
+          ${reportHeroShapes()}
+          <div class="rh-eyebrow">HBORAD · PRINT / SUMMARY</div>
+          <div class="rh-title">📊 오늘의 완료 현황판</div>
+          <div class="rh-sub">기록·계획을 굳이 넘겨보지 않아도, 여기서 목표 진행 상황을 한눈에 볼 수 있어요.</div>
+          <div class="rh-date mono">${fmtDateFull(todayStr())} · 오늘 체크리스트 ${todayPct}% 완료</div>
+          <div class="theme-picker" id="themePicker">
+            <span class="tp-label">테마</span>
+          </div>
+        </div>
+
         <div class="report-stat">
           ${reportStatShape(0)}
           <div class="rs-label">📝 오늘 계획</div>
@@ -3020,12 +3036,14 @@
             <button class="nav-btn" id="calNextMonthReport">▶</button>
           </div>
         </div>
-        <div class="cal-grid" id="calWeekdaysReport"></div>
-        <div class="cal-grid" id="calDaysReport" style="margin-top:6px;"></div>
-        <div class="day-events">
-          <div class="de-title" id="dayEventsTitleReport">일정</div>
-          <div id="dayEventsListReport"></div>
-          <div class="de-add-row"><button type="button" class="add-row-btn" id="dayEventAddReport">+ 일정 추가</button></div>
+        <div class="report-cal-shrink">
+          <div class="cal-grid" id="calWeekdaysReport"></div>
+          <div class="cal-grid" id="calDaysReport" style="margin-top:6px;"></div>
+          <div class="day-events">
+            <div class="de-title" id="dayEventsTitleReport">일정</div>
+            <div id="dayEventsListReport"></div>
+            <div class="de-add-row"><button type="button" class="add-row-btn" id="dayEventAddReport">+ 일정 추가</button></div>
+          </div>
         </div>
       </div>
 
