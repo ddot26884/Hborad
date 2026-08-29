@@ -516,12 +516,28 @@
   }
 
   /* ---------- 인쇄창 (리포트 / 완료 현황) ---------- */
-  /* 현황판(hero)과 오늘계획 배너를 가로로 나란히 배치 — hero는 절반 크기로 축소 */
-  .report-top-row{ display:flex; align-items:stretch; gap:10px; margin-bottom:12px; }
-  .report-top-row .report-hero{ flex:1 1 50%; min-width:0; margin-bottom:0; }
-  .report-top-row .report-stat{ flex:1 1 50%; min-width:0; margin-bottom:0; }
+  /* 각 배너(현황판/오늘계획/차트/시간계획/체크리스트/기록요약/달력)를
+     자유롭게 드래그로 순서를 바꾸고, 모서리를 끌어 크기를 조절할 수 있게 합니다. */
+  .report-panels{ display:flex; flex-wrap:wrap; align-items:flex-start; gap:10px; margin-bottom:12px; }
+  .report-block{
+    position:relative; box-sizing:border-box; resize:both; overflow:auto;
+    min-width:220px; min-height:90px; border-radius:14px;
+  }
+  .report-block.dragging{ opacity:0.4; }
+  .report-block.drag-over{ outline:2px dashed var(--accent); outline-offset:3px; }
+  .report-block .rb-handle{
+    position:absolute; top:6px; right:8px; z-index:5; cursor:grab; user-select:none;
+    font-size:13px; line-height:1; color:var(--ink-soft); background:var(--card);
+    border:1.5px solid var(--line); border-radius:6px; padding:2px 6px; opacity:0.5;
+    transition:opacity .15s ease;
+  }
+  .report-block .rb-handle:hover{ opacity:1; color:var(--accent-dark); border-color:var(--accent); }
+  .report-block .rb-handle:active{ cursor:grabbing; }
+  .report-block > .report-hero, .report-block > .report-stat, .report-block > .report-panel{
+    margin-bottom:0; height:100%; box-sizing:border-box;
+  }
   @media (max-width:560px){
-    .report-top-row{ flex-direction:column; }
+    .report-block{ width:100% !important; resize:vertical; }
   }
   .report-hero{
     position:relative; overflow:hidden; border-radius:14px; border:1.5px solid var(--ink-soft);
@@ -577,15 +593,21 @@
     background:var(--accent-soft); border-radius:20px; padding:3px 10px;
   }
 
-  .bar-chart{ display:flex; align-items:flex-end; gap:6px; height:96px; padding-top:4px; }
+  /* 목표진행차트: 날짜 기준이 아니라 0%~100% 전체 백분율 기준의 눈금(가로 기준선 + 좌측 축 라벨)을 추가합니다. */
+  .bar-chart-wrap{ display:flex; gap:6px; }
+  .bar-axis{ display:flex; flex-direction:column; justify-content:space-between; align-items:flex-end; height:96px; padding-top:4px; flex-shrink:0; position:sticky; left:0; background:var(--card); z-index:2; padding-right:4px; }
+  .bar-axis .ax-tick{ font-family:'JetBrains Mono', monospace; font-size:8px; font-weight:700; color:var(--ink-soft); line-height:1; }
+  .bar-chart{
+    display:flex; align-items:flex-end; gap:6px; height:96px; padding-top:4px; flex:1; min-width:0;
+    background-image:repeating-linear-gradient(to top, var(--line) 0, var(--line) 1px, transparent 1px, transparent 25%);
+  }
   .bar-chart .bc-col{ flex:1; display:flex; flex-direction:column; align-items:center; justify-content:flex-end; height:100%; gap:4px; min-width:0; }
   .bar-chart .bc-bar{ width:100%; border-radius:5px 5px 3px 3px; background:var(--paper-2); position:relative; min-height:4px; overflow:hidden; }
   .bar-chart .bc-bar .fill{ position:absolute; bottom:0; left:0; right:0; border-radius:5px 5px 3px 3px; background:linear-gradient(180deg, var(--accent), var(--accent-dark)); transition:height .4s ease; }
   .bar-chart .bc-bar.today .fill{ background:linear-gradient(180deg, var(--pink), var(--purple)); }
-  /* 하단 날짜 라벨: 기존엔 연한 회색 8.5px라 시인성이 떨어졌습니다.
-     더 굵고 진하게, 오늘 컬럼은 강조색 배지로 표시해 한눈에 들어오게 합니다. */
+  /* 날짜 라벨 크기를 상단 %(bc-pct)와 같은 크기로 맞춰, 위·아래 글자 크기가 통일되게 합니다. */
   .bar-chart .bc-label{
-    font-family:'JetBrains Mono', monospace; font-size:9.5px; font-weight:700;
+    font-family:'JetBrains Mono', monospace; font-size:8px; font-weight:700;
     color:var(--ink); white-space:nowrap; letter-spacing:-0.2px;
   }
   .bar-chart .bc-bar.today + .bc-label{
@@ -611,19 +633,11 @@
 
   .report-empty{ font-size:11px; color:var(--ink-soft); font-family:'JetBrains Mono', monospace; padding:6px 0; }
 
-  /* 인쇄창 달력: 기존 축소 크기(300px)에서 절반(150px)으로 한 번 더 축소 + 드래그로 크기 조절 가능 */
-  .report-cal-shrink{
-    max-width:150px; width:100%; margin:0 auto; resize:both; overflow:auto;
-    min-width:110px; min-height:100px; padding:0 2px 2px 0;
-  }
-  .report-cal-shrink .cal-grid{ gap:3px; }
-  .report-cal-shrink .cal-weekday{ font-size:7.5px; padding-bottom:2px; }
-  .report-cal-shrink .cal-cell{ font-size:8px; border-radius:5px; gap:1px; }
-  .report-cal-shrink .cal-cell .dot{ width:3px; height:3px; }
-  .report-cal-shrink .day-events{ margin-top:6px; }
-  .report-cal-shrink .de-title{ font-size:9.5px; margin-bottom:4px; }
+  /* 인쇄창 달력: 이제 바깥 .report-block(달력 배너) 자체를 드래그로 크기 조절하므로,
+     내부 달력은 배너 폭을 그대로 채웁니다. 기본 크기는 '오늘의 완료 현황판'과 동일(50%)하게 맞춥니다. */
+  .report-cal-shrink{ width:100%; }
   @media (max-width:560px){
-    .report-cal-shrink{ max-width:180px; }
+    .report-cal-shrink{ max-width:100%; }
   }
 
   /* 리포트 통계 카드에 들어가는 작은 장식 도형 */
@@ -2797,12 +2811,18 @@
 
   function renderBarChart(cols){
     // cols: [{label, pct, sub, today}]
-    return `<div class="bar-chart">` + cols.map(c => `
+    // 날짜 기준이 아니라 0%~100% 전체 백분율 기준선을 좌측 축으로 함께 보여줍니다.
+    const axis = [100,75,50,25,0].map(v => `<div class="ax-tick">${v}</div>`).join('');
+    const bars = cols.map(c => `
       <div class="bc-col">
         <div class="bc-pct">${c.sub!==undefined ? c.sub : (c.pct+'%')}</div>
         <div class="bc-bar${c.today?' today':''}" style="height:64px;"><div class="fill" style="height:${c.pct}%;"></div></div>
         <div class="bc-label">${c.label}</div>
-      </div>`).join('') + `</div>`;
+      </div>`).join('');
+    return `<div class="bar-chart-wrap">
+      <div class="bar-axis">${axis}</div>
+      <div class="bar-chart">${bars}</div>
+    </div>`;
   }
 
   function renderReportChecklist(plan){
@@ -2984,6 +3004,20 @@
     </div>`;
   }
 
+  // 인쇄창 배너들의 기본 폭 — hero(현황판)와 달력을 같은 크기(50%)로 맞추고, 나머지는 전체 폭.
+  const REPORT_BLOCK_DEFAULT_WIDTH = {
+    hero:'calc(50% - 5px)', stat:'calc(50% - 5px)',
+    goal:'100%', time:'100%', checklist:'100%', logsum:'100%',
+    calendar:'calc(50% - 5px)'
+  };
+  function reportBlock(pid, innerHtml){
+    const w = REPORT_BLOCK_DEFAULT_WIDTH[pid] || '100%';
+    return `<div class="report-block" data-pid="${pid}" draggable="true" style="width:${w};">
+      <span class="rb-handle" title="끌어서 순서 이동 · 모서리를 끌어 크기 조절">⠿</span>
+      ${innerHtml}
+    </div>`;
+  }
+
   function renderReportView(){
     const wrap = $('reportView');
     const todayPct = dayCompletionPct(todayStr());
@@ -2997,7 +3031,8 @@
         </div>
       </div>
 
-      <div class="report-top-row">
+      <div class="report-panels" id="reportPanels">
+        ${reportBlock('hero', `
         <div class="report-hero">
           ${reportHeroShapes()}
           <div class="rh-eyebrow">HBORAD · PRINT / SUMMARY</div>
@@ -3007,66 +3042,73 @@
           <div class="theme-picker" id="themePicker">
             <span class="tp-label">테마</span>
           </div>
-        </div>
+        </div>`)}
 
+        ${reportBlock('stat', `
         <div class="report-stat">
           ${reportStatShape(0)}
           <div class="rs-label">📝 오늘 계획</div>
           <div class="rs-value">${dStats.done}/${dStats.total}</div>
           <div class="rs-sub">일간 할일·습관 달성</div>
-        </div>
-      </div>
+        </div>`)}
 
-      <div class="report-panel">
-        ${reportPanelShape(0)}
-        <div id="goalChartPanel"></div>
-      </div>
+        ${reportBlock('goal', `
+        <div class="report-panel">
+          ${reportPanelShape(0)}
+          <div id="goalChartPanel"></div>
+        </div>`)}
 
-      <div class="report-panel">
-        ${reportPanelShape(1)}
-        <div class="rp-head">
-          <div class="rp-title">⏰ 오늘 시간계획 <span style="font-weight:400;color:var(--ink-soft);font-size:10.5px;">— 계획 vs 실제(실천) 구분</span></div>
-        </div>
-        ${renderTimePlanDonutPanel()}
-      </div>
-
-      <div class="report-panel">
-        ${reportPanelShape(2)}
-        <div class="rp-head">
-          <div class="rp-title">📅 오늘의 계획 체크리스트</div>
-          <span class="rp-pct-pill">${dStats.pct}%</span>
-        </div>
-        ${renderReportChecklist(allPlans.daily && allPlans.daily[todayStr()])}
-      </div>
-
-      <div class="report-panel">
-        ${reportPanelShape(0)}
-        <div class="rp-head">
-          <div class="rp-title">🗂 오늘의 전체 기록 <span style="font-weight:400;color:var(--ink-soft);font-size:10.5px;">— 기록 탭에 입력한 내용</span></div>
-        </div>
-        ${renderReportLogSummary(allLogs[todayStr()])}
-      </div>
-
-      <div class="report-panel">
-        ${reportPanelShape(1)}
-        <div class="rp-head">
-          <div class="rp-title">🗓 달력</div>
-          <div class="rp-nav">
-            <button class="nav-btn" id="calPrevMonthReport">◀</button>
-            <div class="cal-title mono" id="calTitleReport"></div>
-            <button class="nav-btn" id="calNextMonthReport">▶</button>
+        ${reportBlock('time', `
+        <div class="report-panel">
+          ${reportPanelShape(1)}
+          <div class="rp-head">
+            <div class="rp-title">⏰ 오늘 시간계획 <span style="font-weight:400;color:var(--ink-soft);font-size:10.5px;">— 계획 vs 실제(실천) 구분</span></div>
           </div>
-        </div>
-        <div class="report-cal-shrink">
-          <div class="cal-grid" id="calWeekdaysReport"></div>
-          <div class="cal-grid" id="calDaysReport" style="margin-top:6px;"></div>
-          <div class="day-events">
-            <div class="de-title" id="dayEventsTitleReport">일정</div>
-            <div id="dayEventsListReport"></div>
-            <div class="de-add-row"><button type="button" class="add-row-btn" id="dayEventAddReport">+ 일정 추가</button></div>
+          ${renderTimePlanDonutPanel()}
+        </div>`)}
+
+        ${reportBlock('checklist', `
+        <div class="report-panel">
+          ${reportPanelShape(2)}
+          <div class="rp-head">
+            <div class="rp-title">📅 오늘의 계획 체크리스트</div>
+            <span class="rp-pct-pill">${dStats.pct}%</span>
           </div>
-        </div>
+          ${renderReportChecklist(allPlans.daily && allPlans.daily[todayStr()])}
+        </div>`)}
+
+        ${reportBlock('logsum', `
+        <div class="report-panel">
+          ${reportPanelShape(0)}
+          <div class="rp-head">
+            <div class="rp-title">🗂 오늘의 전체 기록 <span style="font-weight:400;color:var(--ink-soft);font-size:10.5px;">— 기록 탭에 입력한 내용</span></div>
+          </div>
+          ${renderReportLogSummary(allLogs[todayStr()])}
+        </div>`)}
+
+        ${reportBlock('calendar', `
+        <div class="report-panel">
+          ${reportPanelShape(1)}
+          <div class="rp-head">
+            <div class="rp-title">🗓 달력</div>
+            <div class="rp-nav">
+              <button class="nav-btn" id="calPrevMonthReport">◀</button>
+              <div class="cal-title mono" id="calTitleReport"></div>
+              <button class="nav-btn" id="calNextMonthReport">▶</button>
+            </div>
+          </div>
+          <div class="report-cal-shrink">
+            <div class="cal-grid" id="calWeekdaysReport"></div>
+            <div class="cal-grid" id="calDaysReport" style="margin-top:6px;"></div>
+            <div class="day-events">
+              <div class="de-title" id="dayEventsTitleReport">일정</div>
+              <div id="dayEventsListReport"></div>
+              <div class="de-add-row"><button type="button" class="add-row-btn" id="dayEventAddReport">+ 일정 추가</button></div>
+            </div>
+          </div>
+        </div>`)}
       </div>
+
 
       <div class="report-cta-row">
         <button class="report-cta" id="rGoLog">📝 오늘 기록 기입하기</button>
@@ -3081,10 +3123,103 @@
     bindCalNav('Report');
     bindDayEventAdd('Report');
     renderCalendar('Report');
+    applyReportLayout();
+    initReportBlockDnD();
 
     $('rGoLog').addEventListener('click', () => switchView('log'));
     $('rGoPlan').addEventListener('click', () => switchView('plan'));
     $('rGoCal').addEventListener('click', () => switchView('plan'));
+  }
+
+  // ================= 인쇄창 배너: 드래그 순서 변경 + 크기 조절 저장 =================
+  function getReportLayout(){
+    try{
+      const raw = localStorage.getItem('hb-report-layout');
+      return raw ? JSON.parse(raw) : null;
+    }catch(e){ return null; }
+  }
+  function saveReportLayout(patch){
+    try{
+      const cur = getReportLayout() || { order:null, sizes:{} };
+      const next = { order: patch.order !== undefined ? patch.order : cur.order, sizes: patch.sizes || cur.sizes || {} };
+      localStorage.setItem('hb-report-layout', JSON.stringify(next));
+    }catch(e){}
+  }
+  function applyReportLayout(){
+    const wrap = $('reportPanels');
+    if(!wrap) return;
+    const layout = getReportLayout();
+    if(!layout) return;
+    if(layout.order && layout.order.length){
+      layout.order.forEach(pid => {
+        const el = wrap.querySelector(`.report-block[data-pid="${pid}"]`);
+        if(el) wrap.appendChild(el);
+      });
+    }
+    if(layout.sizes){
+      Object.keys(layout.sizes).forEach(pid => {
+        const el = wrap.querySelector(`.report-block[data-pid="${pid}"]`);
+        const sz = layout.sizes[pid];
+        if(el && sz){
+          if(sz.width) el.style.width = sz.width;
+          if(sz.height) el.style.height = sz.height;
+        }
+      });
+    }
+  }
+  function persistReportOrder(){
+    const wrap = $('reportPanels');
+    if(!wrap) return;
+    saveReportLayout({ order: Array.from(wrap.children).map(b => b.dataset.pid) });
+  }
+  function persistReportSizes(){
+    const wrap = $('reportPanels');
+    if(!wrap) return;
+    const sizes = {};
+    wrap.querySelectorAll('.report-block').forEach(b => {
+      sizes[b.dataset.pid] = { width: b.style.width || '', height: b.style.height || '' };
+    });
+    saveReportLayout({ sizes });
+  }
+  function initReportBlockDnD(){
+    const wrap = $('reportPanels');
+    if(!wrap) return;
+    let dragEl = null;
+    wrap.querySelectorAll('.report-block').forEach(block => {
+      // 드래그는 우측 상단 손잡이(⠿)를 눌러 시작할 때만 동작하도록 해서,
+      // 버튼·체크박스·셀렉트 등 내부 요소 클릭이 드래그로 오작동하지 않게 합니다.
+      block.addEventListener('mousedown', (e) => {
+        block.dataset.dragOk = e.target.closest('.rb-handle') ? '1' : '0';
+      });
+      block.addEventListener('dragstart', (e) => {
+        if(block.dataset.dragOk !== '1'){ e.preventDefault(); return; }
+        dragEl = block;
+        block.classList.add('dragging');
+      });
+      block.addEventListener('dragend', () => {
+        block.classList.remove('dragging');
+        wrap.querySelectorAll('.report-block').forEach(b => b.classList.remove('drag-over'));
+        persistReportOrder();
+      });
+      block.addEventListener('dragover', (e) => {
+        e.preventDefault();
+        if(block !== dragEl) block.classList.add('drag-over');
+      });
+      block.addEventListener('dragleave', () => block.classList.remove('drag-over'));
+      block.addEventListener('drop', (e) => {
+        e.preventDefault();
+        block.classList.remove('drag-over');
+        if(!dragEl || dragEl === block) return;
+        const blocks = Array.from(wrap.children);
+        if(blocks.indexOf(dragEl) < blocks.indexOf(block)) block.after(dragEl);
+        else block.before(dragEl);
+      });
+      // 모서리를 끌어 크기(resize)를 바꾸면 잠시 후 그 크기를 저장합니다.
+      if(window.ResizeObserver){
+        let t;
+        new ResizeObserver(() => { clearTimeout(t); t = setTimeout(persistReportSizes, 400); }).observe(block);
+      }
+    });
   }
 
   // ================= 테마 (디자인 색상 조합) =================
