@@ -245,9 +245,16 @@
   .goal-chart-scroll{ overflow-x:auto; padding-bottom:4px; }
 
   /* ---------- 계획 vs 실제 원형(도넛) 차트 ---------- */
-  .donut-panel{ display:flex; gap:18px; flex-wrap:wrap; justify-content:space-around; }
-  .donut-block{ text-align:center; }
-  .donut-block .db-title{ font-family:'JetBrains Mono', monospace; font-size:10.5px; color:var(--ink-soft); margin-bottom:6px; }
+  /* 시간계획 배너를 정확히 반으로 나눠 "계획" / "실행"을 좌우로 대비시킵니다. */
+  .donut-panel{ display:flex; }
+  .donut-block{ flex:1 1 50%; min-width:0; text-align:center; padding:0 10px; }
+  .donut-block:first-child{ border-right:1.5px dashed var(--line); }
+  .donut-block .db-title{ font-family:'JetBrains Mono', monospace; font-weight:700; font-size:10.5px; color:var(--ink-soft); margin-bottom:6px; }
+  @media (max-width:400px){
+    .donut-panel{ flex-wrap:wrap; }
+    .donut-block{ flex:1 1 100%; padding:8px 0; }
+    .donut-block:first-child{ border-right:none; border-bottom:1.5px dashed var(--line); }
+  }
   .donut-wrap{ position:relative; display:inline-block; }
   .donut-center{
     position:absolute; top:50%; left:50%; transform:translate(-50%,-50%);
@@ -531,7 +538,7 @@
   .theme-picker{ display:flex; align-items:center; gap:7px; flex-wrap:wrap; margin-top:12px; position:relative; z-index:1; }
   .theme-picker .tp-label{ font-family:'JetBrains Mono', monospace; font-size:10px; color:var(--ink-soft); margin-right:2px; }
   .theme-swatch{
-    width:22px; height:22px; border-radius:50%; border:2px solid var(--card); cursor:pointer;
+    width:26px; height:26px; border-radius:50%; border:2px solid var(--card); cursor:pointer;
     box-shadow:0 0 0 1.5px var(--line); position:relative; flex-shrink:0;
     transition:transform .12s ease, box-shadow .12s ease;
   }
@@ -575,8 +582,16 @@
   .bar-chart .bc-bar{ width:100%; border-radius:5px 5px 3px 3px; background:var(--paper-2); position:relative; min-height:4px; overflow:hidden; }
   .bar-chart .bc-bar .fill{ position:absolute; bottom:0; left:0; right:0; border-radius:5px 5px 3px 3px; background:linear-gradient(180deg, var(--accent), var(--accent-dark)); transition:height .4s ease; }
   .bar-chart .bc-bar.today .fill{ background:linear-gradient(180deg, var(--pink), var(--purple)); }
-  .bar-chart .bc-label{ font-family:'JetBrains Mono', monospace; font-size:8.5px; color:var(--ink-soft); white-space:nowrap; }
-  .bar-chart .bc-pct{ font-family:'JetBrains Mono', monospace; font-size:8px; color:var(--ink-soft); }
+  /* 하단 날짜 라벨: 기존엔 연한 회색 8.5px라 시인성이 떨어졌습니다.
+     더 굵고 진하게, 오늘 컬럼은 강조색 배지로 표시해 한눈에 들어오게 합니다. */
+  .bar-chart .bc-label{
+    font-family:'JetBrains Mono', monospace; font-size:9.5px; font-weight:700;
+    color:var(--ink); white-space:nowrap; letter-spacing:-0.2px;
+  }
+  .bar-chart .bc-bar.today + .bc-label{
+    color:#fff; background:var(--purple); border-radius:5px; padding:1px 5px;
+  }
+  .bar-chart .bc-pct{ font-family:'JetBrains Mono', monospace; font-size:8px; font-weight:700; color:var(--ink-soft); }
 
   .report-checklist{ display:flex; flex-direction:column; gap:5px; }
   .report-checklist .rc-row{ display:flex; align-items:center; gap:7px; font-size:12px; }
@@ -596,13 +611,19 @@
 
   .report-empty{ font-size:11px; color:var(--ink-soft); font-family:'JetBrains Mono', monospace; padding:6px 0; }
 
-  /* 인쇄창 달력: 다른 배너와 비슷한 크기로 축소 + 드래그로 크기 조절 가능 */
+  /* 인쇄창 달력: 기존 축소 크기(300px)에서 절반(150px)으로 한 번 더 축소 + 드래그로 크기 조절 가능 */
   .report-cal-shrink{
-    max-width:300px; width:100%; margin:0 auto; resize:both; overflow:auto;
-    min-width:200px; min-height:180px; padding:0 2px 2px 0;
+    max-width:150px; width:100%; margin:0 auto; resize:both; overflow:auto;
+    min-width:110px; min-height:100px; padding:0 2px 2px 0;
   }
+  .report-cal-shrink .cal-grid{ gap:3px; }
+  .report-cal-shrink .cal-weekday{ font-size:7.5px; padding-bottom:2px; }
+  .report-cal-shrink .cal-cell{ font-size:8px; border-radius:5px; gap:1px; }
+  .report-cal-shrink .cal-cell .dot{ width:3px; height:3px; }
+  .report-cal-shrink .day-events{ margin-top:6px; }
+  .report-cal-shrink .de-title{ font-size:9.5px; margin-bottom:4px; }
   @media (max-width:560px){
-    .report-cal-shrink{ max-width:100%; }
+    .report-cal-shrink{ max-width:180px; }
   }
 
   /* 리포트 통계 카드에 들어가는 작은 장식 도형 */
@@ -3081,19 +3102,54 @@
     b = Math.round(b + (mix-b)*p);
     return '#' + [r,g,b].map(v=>v.toString(16).padStart(2,'0')).join('');
   }
+  // 6개의 색상표(팔레트) 그룹을 기반으로 만든 "전체 사이트 테마" 6종.
+  // accent 하나만 바뀌던 이전 방식과 달리, 배경(paper)·카드·글자색(ink)·보조글자·
+  // 테두리(line)·강조색(accent) 전체를 팔레트에 맞춰 함께 바꿔서 사이트 전체 톤이 바뀝니다.
   const THEMES = [
-    { key:'default', label:'기본', accent:'#FF7A4A' },
-    { key:'t1', label:'레드', accent:'#9E1F10' },
-    { key:'t2', label:'스카이', accent:'#5B9BDA' },
-    { key:'t3', label:'네이비', accent:'#3E698F' },
-    { key:'t4', label:'라이트블루', accent:'#93B9DB' },
-    { key:'t5', label:'민트그레이', accent:'#79B6BD' }
-  ].map(t => ({
-    ...t,
-    dark: t.dark || shade(t.accent, -0.22),
-    soft: t.soft || shade(t.accent, 0.82)
-  }));
-  let currentThemeKey = 'default';
+    {
+      key:'t1', label:'미드나잇 코브',
+      swatch:['#272A59','#58748C','#80A2BF','#A0C3D9','#F2F2F2'],
+      paper:'#F2F2F2', paper2:'#EEF4F8', grid:'#E4EEF4', card:'#FFFFFF',
+      ink:'#272A59', inkSoft:'#58748C', line:'#C1D8E6',
+      accent:'#58748C', dark:'#272A59', soft:'#CCDAE5'
+    },
+    {
+      key:'t2', label:'사파리 올리브',
+      swatch:['#BF887B','#7F5C24','#FFDF6F','#293D40','#9DE570'],
+      paper:'#FFFCF1', paper2:'#F5FCF1', grid:'#EBFAE2', card:'#FFFFFF',
+      ink:'#293D40', inkSoft:'#7F8B8C', line:'#E2C9C4',
+      accent:'#7F5C24', dark:'#594019', soft:'#DDF6CD'
+    },
+    {
+      key:'t3', label:'피치 파스텔',
+      swatch:['#FFE9E6','#D8D1E8','#FAFFFE','#E7E8D1','#FAA169'],
+      paper:'#FAFFFE', paper2:'#EFF0E1', grid:'#EDEAF5', card:'#FFFFFF',
+      ink:'#3C3B41', inkSoft:'#8C8897', line:'#E6E1F0',
+      accent:'#FAA169', dark:'#B4744C', soft:'#FEE5D5'
+    },
+    {
+      key:'t4', label:'스카이 라군',
+      swatch:['#D9E0F0','#5B9BDA','#3E698F','#93B9DB','#79B6BD'],
+      paper:'#EEF1F8', paper2:'#E4EEF6', grid:'#D9E6F2', card:'#FFFFFF',
+      ink:'#3E698F', inkSoft:'#557F84', line:'#BED5E9',
+      accent:'#5B9BDA', dark:'#3E698F', soft:'#D1E3F5'
+    },
+    {
+      key:'t5', label:'오션 딥틸',
+      swatch:['#4886D9','#3698BF','#3290A6','#379BA6','#278C82'],
+      paper:'#EBF5F6', paper2:'#E1EFEE', grid:'#D3E9EB', card:'#FFFFFF',
+      ink:'#278C82', inkSoft:'#379BA6', line:'#A5D2D7',
+      accent:'#4886D9', dark:'#205E6C', soft:'#D3E8F1'
+    },
+    {
+      key:'t6', label:'테라코타 카멜',
+      swatch:['#E1ABAC','#F2F0EA','#C79050','#AF6F3D','#945B2C'],
+      paper:'#F2F0EA', paper2:'#F2D9DA', grid:'#F2D9DA', card:'#FFFFFF',
+      ink:'#945B2C', inkSoft:'#AF6F3D', line:'#E0C29F',
+      accent:'#AF6F3D', dark:'#945B2C', soft:'#ECC8C9'
+    }
+  ];
+  let currentThemeKey = 't3';
 
   function applyTheme(key){
     const t = THEMES.find(x => x.key === key) || THEMES[0];
@@ -3102,6 +3158,14 @@
     root.setProperty('--accent', t.accent);
     root.setProperty('--accent-dark', t.dark);
     root.setProperty('--accent-soft', t.soft);
+    // 배경/카드/글자색까지 함께 바꿔서 accent 하나만이 아니라 화면 전체 톤이 바뀌도록 합니다.
+    root.setProperty('--paper', t.paper);
+    root.setProperty('--paper-2', t.paper2);
+    root.setProperty('--grid', t.grid);
+    root.setProperty('--card', t.card);
+    root.setProperty('--ink', t.ink);
+    root.setProperty('--ink-soft', t.inkSoft);
+    root.setProperty('--line', t.line);
     // --safety 계열은 원래 기본 테마와 같은 주황색이 하드코딩되어 있어서,
     // 테마를 바꿔도 배너(리포트 히어로)만 바뀌고 캘린더 오늘 표시/토스트/진행바 등은
     // 그대로 주황색으로 남아있는 것처럼 보였습니다. 테마의 accent를 함께 반영해
@@ -3119,7 +3183,11 @@
     THEMES.forEach(t => {
       const dot = document.createElement('div');
       dot.className = 'theme-swatch' + (currentThemeKey === t.key ? ' active' : '');
-      dot.style.background = t.accent;
+      // 팔레트 5색을 그대로 파이 형태로 보여줘서, accent 색 하나만 보다
+      // 테마 전체 분위기(배경·글자·강조색)가 한눈에 시인성 있게 드러나도록 합니다.
+      const n = t.swatch.length;
+      const stops = t.swatch.map((c,i) => `${c} ${Math.round(i/n*360)}deg ${Math.round((i+1)/n*360)}deg`).join(', ');
+      dot.style.background = `conic-gradient(${stops})`;
       dot.title = t.label;
       dot.addEventListener('click', () => {
         applyTheme(t.key);
@@ -3129,8 +3197,8 @@
     });
   }
   (function initTheme(){
-    let saved = 'default';
-    try{ saved = localStorage.getItem('hb-theme') || 'default'; }catch(e){}
+    let saved = 't3';
+    try{ saved = localStorage.getItem('hb-theme') || 't3'; }catch(e){}
     applyTheme(saved);
   })();
 
