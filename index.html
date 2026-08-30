@@ -255,6 +255,14 @@
     .donut-block{ flex:1 1 100%; padding:8px 0; }
     .donut-block:first-child{ border-right:none; border-bottom:1.5px dashed var(--line); }
   }
+  /* 오늘 시간계획: 하루 24시간(48개 30분 슬롯) 중 계획/실천 비율을 백분율로 표현 */
+  .day24-pct-wrap{ display:flex; flex-direction:column; gap:6px; margin-bottom:10px; }
+  .day24-pct-row{ display:flex; align-items:center; gap:8px; }
+  .day24-pct-row .d24-label{ font-family:'JetBrains Mono', monospace; font-size:9.5px; color:var(--ink-soft); flex-shrink:0; width:118px; }
+  .day24-pct-row .progress-track{ flex:1; height:9px; }
+  .day24-pct-row .d24-pct{ font-family:'JetBrains Mono', monospace; font-size:10.5px; font-weight:800; color:var(--accent-dark); width:34px; text-align:right; flex-shrink:0; }
+  @media (max-width:520px){ .day24-pct-row .d24-label{ width:88px; font-size:9px; } }
+
   .donut-wrap{ position:relative; display:inline-block; }
   .donut-center{
     position:absolute; top:50%; left:50%; transform:translate(-50%,-50%);
@@ -527,8 +535,9 @@
   .report-block{
     position:absolute; box-sizing:border-box; resize:both; overflow:auto;
     min-width:200px; min-height:90px; border-radius:14px;
+    transition:left .16s ease, top .16s ease;
   }
-  .report-block.rb-dragging{ opacity:0.55; z-index:50; box-shadow:0 10px 22px rgba(27,36,48,0.22); }
+  .report-block.rb-dragging{ opacity:0.55; z-index:50; box-shadow:0 10px 22px rgba(27,36,48,0.22); transition:none; }
   .report-block .rb-handle{
     position:absolute; top:6px; right:8px; z-index:5; cursor:grab; user-select:none;
     font-size:13px; line-height:1; color:var(--ink-soft); background:var(--card);
@@ -622,6 +631,52 @@
     color:#fff; background:var(--purple); border-radius:5px; padding:1px 5px;
   }
   .bar-chart .bc-pct{ font-family:'JetBrains Mono', monospace; font-size:8px; font-weight:700; color:var(--ink-soft); }
+
+  /* ---------- 목표 진행 차트: 날짜별 수행여부(완료/미완료) + 전체 기간 중 현재 위치·잔여율 ---------- */
+  .goal-progress-summary{
+    display:flex; align-items:center; gap:12px; padding:10px 12px; margin-bottom:10px;
+    background:var(--accent-soft); border:1.5px solid var(--accent); border-radius:10px;
+  }
+  .gps-pct{
+    font-family:'JetBrains Mono', monospace; font-weight:800; font-size:26px; color:var(--accent-dark);
+    line-height:1; flex-shrink:0; text-align:center;
+  }
+  .gps-pct .gps-pct-label{ display:block; font-size:9px; font-weight:700; color:var(--ink-soft); margin-top:2px; letter-spacing:0.5px; }
+  .gps-bar-wrap{ flex:1; min-width:0; }
+  .gps-track{
+    position:relative; width:100%; height:12px; background:var(--card); border:1.5px solid var(--line);
+    border-radius:20px; overflow:visible;
+  }
+  .gps-fill{
+    position:absolute; left:0; top:0; bottom:0; border-radius:20px 0 0 20px; max-width:100%;
+    background:linear-gradient(90deg, var(--accent-soft), var(--accent)); transition:width .4s ease;
+  }
+  .gps-marker{
+    position:absolute; top:-15px; transform:translateX(-50%); font-size:11px; line-height:1; color:var(--accent-dark);
+    font-weight:800; white-space:nowrap;
+  }
+  .gps-range-labels{
+    display:flex; justify-content:space-between; margin-top:4px;
+    font-family:'JetBrains Mono', monospace; font-size:9px; color:var(--ink-soft);
+  }
+  .gps-sub{ font-family:'JetBrains Mono', monospace; font-size:9.5px; color:var(--ink-soft); margin-top:5px; }
+
+  .day-check-row{ display:flex; gap:6px; overflow-x:auto; padding-bottom:4px; }
+  .dc-col{ flex-shrink:0; width:30px; display:flex; flex-direction:column; align-items:center; gap:4px; position:relative; }
+  .dc-mark{
+    width:22px; height:22px; border-radius:50%; display:flex; align-items:center; justify-content:center;
+    font-size:11px; font-weight:800; border:1.5px solid var(--line); background:var(--paper-2); color:var(--ink-soft);
+  }
+  .dc-mark.dc-done{ background:var(--green); border-color:var(--green); color:#fff; }
+  .dc-mark.dc-undone{ background:var(--card); border-color:var(--safety); color:var(--safety-dark); }
+  .dc-mark.dc-none{ background:var(--paper-2); border-color:var(--line); color:var(--ink-soft); font-size:8px; }
+  .dc-col.today .dc-mark{ box-shadow:0 0 0 2.5px var(--accent); }
+  .dc-label{ font-family:'JetBrains Mono', monospace; font-size:8px; font-weight:700; color:var(--ink-soft); white-space:nowrap; }
+  .dc-col.today .dc-label{ color:#fff; background:var(--accent-dark); border-radius:5px; padding:1px 5px; }
+  .dc-today-flag{
+    position:absolute; top:-16px; font-family:'JetBrains Mono', monospace; font-size:8px; font-weight:800;
+    color:var(--accent-dark); white-space:nowrap;
+  }
 
   .report-checklist{ display:flex; flex-direction:column; gap:5px; }
   .report-checklist .rc-row{ display:flex; align-items:center; gap:7px; font-size:12px; }
@@ -2044,6 +2099,9 @@
   // 인쇄창·기록창·계획창 세 군데 모두에 같은 달력을 동시에 갱신합니다.
   function renderAllCalendars(){
     ['', 'Log', 'Report'].forEach(sfx => renderCalendar(sfx));
+    // 날짜를 옮겨서 그날의 일정 개수가 달라지면 인쇄창 달력 배너의 높이도 다시 맞춰서
+    // 늘어난 일정 목록이 가려지지 않게 합니다. (인쇄창이 화면에 없을 때는 조용히 무시됩니다.)
+    fitReportBlockToContent('calendar');
   }
   bindDayEventAdd('');
   bindDayEventAdd('Log');
@@ -2316,10 +2374,28 @@
     }
     let chosen = ranges.find(r => r.id === selectedGoalRangeId) || ranges.find(r => r.active) || ranges[0];
     selectedGoalRangeId = chosen.id;
+    // 시작일부터 목표일(마지막 날)까지의 날짜만 확인합니다. 날짜별로는 %비율이 아니라
+    // "그날 계획을 다 수행했는지(수행/미수행/기록없음)"만 확인합니다.
     const days = [];
     for(let d = chosen.start; d <= chosen.end; d = addDays(d, 1)){ days.push(d); if(days.length > 200) break; }
-    const cols = days.map(d => ({ label: fmtDateShort(d).split('(')[0], pct: dayCompletionPct(d), today: d===todayStr() }));
-    const avg = cols.length ? Math.round(cols.reduce((a,c)=>a+c.pct,0)/cols.length) : 0;
+    const todayS = todayStr();
+    const dayStates = days.map(d => {
+      const stats = checklistStats(allLogs[d]);
+      let state = 'none'; // none: 그날 계획된 항목 자체가 없음
+      if(stats.total > 0) state = (stats.done === stats.total) ? 'done' : 'undone';
+      return { date:d, label: fmtDateShort(d).split('(')[0], state, today: d===todayS };
+    });
+    const doneCount = dayStates.filter(c => c.state === 'done').length;
+    const totalDays = dayStates.length;
+
+    // 전체 기간(시작일~목표일) 중 오늘이 어느 지점에 와 있는지, 남은 비율이 얼마인지 계산합니다.
+    let elapsedDays;
+    if(todayS < chosen.start) elapsedDays = 0;
+    else if(todayS > chosen.end) elapsedDays = totalDays;
+    else elapsedDays = (dayStates.findIndex(c => c.today) + 1);
+    const percentDone = totalDays ? Math.round(elapsedDays / totalDays * 100) : 0;
+    const percentLeft = 100 - percentDone;
+
     wrap.innerHTML = `
       <div class="rp-head">
         <div class="rp-title">🎯 목표 진행 차트</div>
@@ -2329,11 +2405,32 @@
         <select id="goalRangeSelect">
           ${ranges.map(r => `<option value="${r.id}" ${r.id===chosen.id?'selected':''}>${escapeAttr(r.label)} (${r.start}~${r.end})</option>`).join('')}
         </select>
-        <span class="rp-pct-pill">평균 ${avg}%</span>
+        <span class="rp-pct-pill">${doneCount}/${totalDays}일 완료</span>
       </div>
-      <div class="goal-chart-scroll">${renderBarChart(cols)}</div>
+      <div class="goal-progress-summary">
+        <div class="gps-pct">${percentLeft}%<span class="gps-pct-label">남음</span></div>
+        <div class="gps-bar-wrap">
+          <div class="gps-track">
+            <div class="gps-fill" style="width:${percentDone}%"></div>
+            <div class="gps-marker" style="left:${percentDone}%" title="오늘 위치">▼ 오늘</div>
+          </div>
+          <div class="gps-range-labels"><span>${chosen.start}</span><span>${chosen.end}</span></div>
+        </div>
+      </div>
+      <div class="goal-chart-scroll">${renderDayCheckRow(dayStates)}</div>
     `;
     $('goalRangeSelect').addEventListener('change', (e) => { selectedGoalRangeId = e.target.value; renderGoalChartPanel(); });
+  }
+  function renderDayCheckRow(cols){
+    // 날짜별 %비율 막대 대신, "수행함(✓) / 미수행(✕) / 기록없음(·)" 만 표시합니다.
+    const marks = { done:'✓', undone:'✕', none:'·' };
+    const items = cols.map(c => `
+      <div class="dc-col${c.today ? ' today' : ''}">
+        ${c.today ? '<div class="dc-today-flag">오늘</div>' : ''}
+        <div class="dc-mark dc-${c.state}">${marks[c.state]}</div>
+        <div class="dc-label">${c.label}</div>
+      </div>`).join('');
+    return `<div class="day-check-row">${items}</div>`;
   }
 
   async function loadPlans(){
@@ -3074,9 +3171,37 @@
     });
     return { planned, actual };
   }
+  // 시간계획 한 줄 = 30분 슬롯 1칸. 하루 24시간(=48칸) 중 몇 %를 계획/실천했는지 계산합니다.
+  // 기록 탭에서 시간계획을 입력/체크하면 allLogs[오늘 날짜].timePlan이 바로 갱신되므로,
+  // 이 계산은 항상 기록 탭의 시간계획과 연동된 값을 사용합니다.
+  const DAY_SLOT_COUNT = 48; // 24h ÷ 30분
+  function timePlanDayPercent(e){
+    const list = (e && e.timePlan) || [];
+    const plannedSlots = list.filter(s => s.content && String(s.content).trim()).length;
+    const doneSlots = list.filter(s => s.done).length;
+    return {
+      plannedSlots, doneSlots,
+      plannedPct: Math.min(100, Math.round(plannedSlots / DAY_SLOT_COUNT * 100)),
+      donePct: Math.min(100, Math.round(doneSlots / DAY_SLOT_COUNT * 100))
+    };
+  }
   function renderTimePlanDonutPanel(){
-    const { planned, actual } = timePlanBreakdown(allLogs[todayStr()]);
-    return `<div class="donut-panel">
+    const todayEntry = allLogs[todayStr()];
+    const { planned, actual } = timePlanBreakdown(todayEntry);
+    const dayPct = timePlanDayPercent(todayEntry);
+    return `<div class="day24-pct-wrap">
+      <div class="day24-pct-row">
+        <span class="d24-label">📝 계획 (하루 24시간 중)</span>
+        <div class="progress-track"><div class="progress-fill" style="width:${dayPct.plannedPct}%"></div></div>
+        <span class="d24-pct">${dayPct.plannedPct}%</span>
+      </div>
+      <div class="day24-pct-row">
+        <span class="d24-label">✅ 실천 (하루 24시간 중)</span>
+        <div class="progress-track"><div class="progress-fill" style="width:${dayPct.donePct}%"></div></div>
+        <span class="d24-pct">${dayPct.donePct}%</span>
+      </div>
+    </div>
+    <div class="donut-panel">
       <div class="donut-block"><div class="db-title">📝 계획</div>${renderDonut(planned)}</div>
       <div class="donut-block"><div class="db-title">✅ 실제(실천)</div>${renderDonut(actual)}</div>
     </div>`;
@@ -3229,6 +3354,9 @@
     bindCalNav('Report');
     bindDayEventAdd('Report');
     renderCalendar('Report');
+    // 달력(요일·날짜 그리드 + 선택한 날의 일정 목록)이 배너 높이보다 커서 잘려 보이는 일이
+    // 없도록, 렌더링된 실제 내용 높이에 맞춰 달력 배너 높이를 자동으로 늘려줍니다.
+    fitReportBlockToContent('calendar');
     initReportBlockFreeLayout();
 
     $('rSaveLayout').addEventListener('click', () => saveReportLayoutNow());
@@ -3241,10 +3369,12 @@
   }
 
   // ================= 인쇄창 배너: 자유 위치 이동 + 크기 조절 저장 =================
-  // 배너를 기존 배너 자리로만 옮길 수 있던 "순서 바꾸기" 방식이 아니라,
   // 손잡이(⠿)를 눌러 화면 안 어디로든(빈 공간 포함) 자유롭게 끌어다 놓을 수 있고,
   // 모서리를 끌어 크기도 자유롭게 바꿀 수 있습니다. "위치 저장" 버튼을 눌러야 저장되고,
   // "배치 초기화" 버튼을 누르면 기본 배치로 되돌아갑니다.
+  // 단, 드래그 중인 배너가 다른 배너 자리와 일정 이상 겹치면 서로 자리를 맞바꿔서
+  // (겹쳐 있던 배너는 방금 옮겨지는 배너가 있던 자리로 이동) 두 배너가 겹친 채로
+  // 남아있지 않도록 합니다.
   function getReportLayout(){
     try{
       const raw = localStorage.getItem('hb-report-layout-v2');
@@ -3277,6 +3407,20 @@
     renderReportView();
     showReportLayoutStatus('기본 배치로 초기화했습니다');
   }
+  // 특정 배너(pid)의 실제 콘텐츠 높이(scrollHeight)가 현재 설정된 높이보다 크면,
+  // 내용이 가려지지 않도록 배너 높이를 콘텐츠 높이에 맞춰 늘립니다.
+  // (사용자가 "위치 저장"으로 직접 저장해 둔 높이가 이미 충분히 크면 그대로 둡니다.)
+  function fitReportBlockToContent(pid){
+    const wrap = $('reportPanels');
+    if(!wrap) return;
+    const block = wrap.querySelector(`.report-block[data-pid="${pid}"]`);
+    if(!block) return;
+    const needed = block.scrollHeight + 4; // 여백 약간 추가
+    const current = parseFloat(block.style.height) || 0;
+    if(needed > current){
+      block.style.height = needed + 'px';
+    }
+  }
   function updateReportContainerHeight(){
     const wrap = $('reportPanels');
     if(!wrap) return;
@@ -3297,14 +3441,58 @@
         const startDrag = (clientX, clientY) => {
           const startLeft = parseFloat(block.style.left) || 0;
           const startTop = parseFloat(block.style.top) || 0;
+          // "빈 자리(home)" = 지금 드래그 중인 배너가 마지막으로 안정적으로 있던 자리.
+          // 다른 배너와 자리를 맞바꿀 때, 밀려나는 배너는 이 자리로 이동합니다.
+          let homeLeft = startLeft, homeTop = startTop;
           block.classList.add('rb-dragging');
+
+          // 드래그 시작 시점의 다른 배너들 위치를 스냅샷으로 기록해두고,
+          // 자리가 바뀔 때마다 이 값도 함께 갱신하며 추적합니다.
+          const others = Array.from(wrap.querySelectorAll('.report-block'))
+            .filter(b => b !== block)
+            .map(b => ({
+              el: b,
+              left: parseFloat(b.style.left) || 0,
+              top: parseFloat(b.style.top) || 0,
+              width: b.offsetWidth,
+              height: b.offsetHeight
+            }));
+
+          function overlapArea(r1, r2){
+            const x1 = Math.max(r1.left, r2.left), y1 = Math.max(r1.top, r2.top);
+            const x2 = Math.min(r1.left + r1.width, r2.left + r2.width);
+            const y2 = Math.min(r1.top + r1.height, r2.top + r2.height);
+            const w = x2 - x1, h = y2 - y1;
+            return (w > 0 && h > 0) ? w * h : 0;
+          }
+
           function moveTo(cx, cy){
             const dx = cx - clientX, dy = cy - clientY;
-            // 자유 위치: 다른 배너가 그 자리에 있는지와 상관없이(빈 공간 포함) 어디로든 옮길 수 있습니다.
             let newLeft = Math.max(0, startLeft + dx);
             let newTop = Math.max(0, startTop + dy);
             block.style.left = newLeft + 'px';
             block.style.top = newTop + 'px';
+
+            // 드래그 중인 배너와 가장 많이 겹치는 배너를 찾아, 겹침이 일정 면적을
+            // 넘으면 서로 자리를 맞바꿔서 두 배너가 겹친 채로 남지 않게 합니다.
+            const draggedRect = { left:newLeft, top:newTop, width:block.offsetWidth, height:block.offsetHeight };
+            let bestOther = null, bestArea = 0;
+            others.forEach(o => {
+              const area = overlapArea(draggedRect, o);
+              if(area > bestArea){ bestArea = area; bestOther = o; }
+            });
+            const threshold = draggedRect.width * draggedRect.height * 0.3;
+            if(bestOther && bestArea > threshold){
+              const otherOldLeft = bestOther.left, otherOldTop = bestOther.top;
+              // 겹쳐진 배너는 지금 드래그 중인 배너가 있던(비어 있는) 자리로 이동합니다.
+              bestOther.el.style.left = homeLeft + 'px';
+              bestOther.el.style.top = homeTop + 'px';
+              bestOther.left = homeLeft;
+              bestOther.top = homeTop;
+              // 그 배너가 원래 있던 자리가 이제 새로운 "빈 자리"가 됩니다.
+              homeLeft = otherOldLeft;
+              homeTop = otherOldTop;
+            }
             updateReportContainerHeight();
           }
           function onMouseMove(e){ moveTo(e.clientX, e.clientY); }
