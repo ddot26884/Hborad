@@ -520,24 +520,38 @@
      빈 공간을 포함해 원하는 위치 어디로든 자유롭게 배치할 수 있습니다. */
   .report-panels{ position:relative; margin-bottom:12px; }
   .report-block{
-    position:absolute; box-sizing:border-box; resize:both; overflow:auto;
+    position:absolute; box-sizing:border-box; overflow:hidden;
     min-width:200px; min-height:90px; border-radius:14px;
     transition:left .16s ease, top .16s ease;
   }
-  .report-block.rb-dragging{ opacity:0.55; z-index:50; box-shadow:0 10px 22px rgba(27,36,48,0.22); transition:none; }
+  .report-block.rb-dragging, .report-block.rb-resizing{ opacity:0.55; z-index:50; box-shadow:0 10px 22px rgba(27,36,48,0.22); transition:none; }
   /* 손잡이(⠿)와 소/중/대 크기 버튼을 하나의 툴바로 묶어 우상단에 둡니다.
      각 배너의 실제 제목·내용은 좌측/중앙에 있으므로, 우상단 한 곳에만 컨트롤을 모아두면
      제목이나 본문 텍스트를 가리지 않습니다. */
   .report-block .rb-toolbar{
     position:absolute; top:6px; right:8px; z-index:5; display:flex; align-items:center; gap:4px;
   }
+  /* 이동 손잡이 · 크기 버튼 · 모서리 크기조절 핸들은 평소에는 완전히 투명하게 숨겨 두고,
+     마우스가 그 근처로 다가왔을 때(.rb-controls-near)나 실제로 끌고 있는 동안에만
+     보이고 조작할 수 있게 합니다. 배너 본문 위에 컨트롤이 항상 떠 있지 않아 내용을 가리지 않습니다. */
+  .report-block .rb-handle,
+  .report-block .rb-size-toggle,
+  .report-block .rb-resize-handle{
+    opacity:0; pointer-events:none; transition:opacity .15s ease;
+  }
+  .report-block.rb-controls-near .rb-handle,
+  .report-block.rb-controls-near .rb-size-toggle,
+  .report-block.rb-controls-near .rb-resize-handle,
+  .report-block.rb-dragging .rb-handle,
+  .report-block.rb-resizing .rb-resize-handle{
+    opacity:1; pointer-events:auto;
+  }
   .report-block .rb-handle{
     cursor:grab; user-select:none;
     font-size:13px; line-height:1; color:var(--ink-soft); background:var(--card);
-    border:1.5px solid var(--line); border-radius:6px; padding:2px 6px; opacity:0.5;
-    transition:opacity .15s ease;
+    border:1.5px solid var(--line); border-radius:6px; padding:2px 6px;
   }
-  .report-block .rb-handle:hover{ opacity:1; color:var(--accent-dark); border-color:var(--accent); }
+  .report-block .rb-handle:hover{ color:var(--accent-dark); border-color:var(--accent); }
   .report-block .rb-handle:active{ cursor:grabbing; }
   /* 배너 크기 규격화: 소형/중형/대형 버튼. 눌러진 규격은 강조 표시하고,
      모서리를 직접 끌어 자유롭게 크기를 바꾸면 강조가 풀립니다. */
@@ -545,19 +559,42 @@
   .report-block .rb-size-btn{
     font-family:'JetBrains Mono', monospace; font-size:10px; font-weight:700; line-height:1;
     color:var(--ink-soft); background:var(--card); border:1.5px solid var(--line); border-radius:5px;
-    padding:3px 6px; cursor:pointer; opacity:0.55; transition:opacity .15s ease, background-color .15s ease, color .15s ease, border-color .15s ease;
+    padding:3px 6px; cursor:pointer; transition:background-color .15s ease, color .15s ease, border-color .15s ease;
   }
-  .report-block .rb-size-btn:hover{ opacity:1; color:var(--accent-dark); border-color:var(--accent); }
-  .report-block .rb-size-btn.active{ opacity:1; background:var(--ink); color:#fff; border-color:var(--ink); }
+  .report-block .rb-size-btn:hover{ color:var(--accent-dark); border-color:var(--accent); }
+  .report-block .rb-size-btn.active{ background:var(--ink); color:#fff; border-color:var(--ink); }
+  /* 모서리 크기조절 핸들: 브라우저 기본 resize 대신 직접 구현해서, 이동 손잡이와 마찬가지로
+     마우스가 근접했을 때만 나타나 조정할 수 있게 합니다. */
+  .report-block .rb-resize-handle{
+    position:absolute; right:3px; bottom:3px; width:16px; height:16px; z-index:5;
+    cursor:nwse-resize; user-select:none; border-radius:4px;
+    background:linear-gradient(135deg,
+      transparent 0 40%, var(--ink-soft) 40% 46%, transparent 46% 58%,
+      var(--ink-soft) 58% 64%, transparent 64% 76%, var(--ink-soft) 76% 82%, transparent 82%);
+  }
+  .report-block .rb-resize-handle:hover{
+    background:linear-gradient(135deg,
+      transparent 0 40%, var(--accent-dark) 40% 46%, transparent 46% 58%,
+      var(--accent-dark) 58% 64%, transparent 64% 76%, var(--accent-dark) 76% 82%, transparent 82%);
+  }
   .report-block > .report-hero, .report-block > .report-stat, .report-block > .report-panel{
     margin-bottom:0; height:100%; box-sizing:border-box;
   }
   .report-layout-toolbar{ display:flex; align-items:center; gap:8px; margin-bottom:10px; flex-wrap:wrap; }
   .report-layout-toolbar .rlt-status{ font-family:'JetBrains Mono', monospace; font-size:10px; color:var(--teal); }
+  /* 손가락 터치 기기는 "마우스 근접"이라는 개념이 없으므로 컨트롤을 항상 보이게 둡니다. */
+  @media (pointer:coarse){
+    .report-block .rb-handle,
+    .report-block .rb-size-toggle,
+    .report-block .rb-resize-handle{
+      opacity:1; pointer-events:auto;
+    }
+  }
   @media (max-width:560px){
     /* 모바일에서는 자유 배치가 다루기 어려우므로, 저장된 좌표와 무관하게 세로로 쌓아서 보여줍니다. */
     .report-panels{ display:flex; flex-direction:column; gap:10px; height:auto !important; }
-    .report-block{ position:static !important; width:100% !important; height:auto !important; resize:vertical; }
+    .report-block{ position:static !important; width:100% !important; height:auto !important; }
+    .report-block .rb-resize-handle{ display:none; }
   }
   .report-hero{
     position:relative; overflow:hidden; border-radius:14px; border:1.5px solid var(--ink-soft);
@@ -3200,9 +3237,10 @@
     return `<div class="report-block" data-pid="${pid}" data-size-mode="${sizeMode}" style="${style}">
       <div class="rb-toolbar">
         <div class="rb-size-toggle">${sizeButtons}</div>
-        <span class="rb-handle" title="끌어서 화면 어디로든 자유롭게 이동 · 모서리를 끌어 크기 조절">⠿</span>
+        <span class="rb-handle" title="끌어서 화면 어디로든 자유롭게 이동">⠿</span>
       </div>
       ${innerHtml}
+      <span class="rb-resize-handle" title="끌어서 크기 조절"></span>
     </div>`;
   }
 
@@ -3340,11 +3378,12 @@
 
   // ================= 인쇄창 배너: 자유 위치 이동 + 크기 조절 저장 =================
   // 손잡이(⠿)를 눌러 화면 안 어디로든(빈 공간 포함) 자유롭게 끌어다 놓을 수 있고,
-  // 모서리를 끌어 크기도 자유롭게 바꿀 수 있습니다. "위치 저장" 버튼을 눌러야 저장되고,
-  // "배치 초기화" 버튼을 누르면 기본 배치로 되돌아갑니다.
-  // 단, 드래그 중인 배너가 다른 배너 자리와 일정 이상 겹치면 서로 자리를 맞바꿔서
-  // (겹쳐 있던 배너는 방금 옮겨지는 배너가 있던 자리로 이동) 두 배너가 겹친 채로
-  // 남아있지 않도록 합니다.
+  // 모서리의 크기조절 핸들을 끌어 크기도 자유롭게 바꿀 수 있습니다. "위치 저장" 버튼을 눌러야
+  // 저장되고, "배치 초기화" 버튼을 누르면 기본 배치로 되돌아갑니다.
+  // 어떤 경우에도(이동 중·크기 조절 중·규격 버튼 선택·렌더링 직후 콘텐츠 높이 반영 등) 배너들이
+  // 서로 겹친 채로 남지 않도록, resolveOverlaps()가 항상 최소 간격(REPORT_MIN_GAP)만큼
+  // 떨어지도록 다른 배너를 밀어냅니다.
+  const REPORT_MIN_GAP = 10;
   function getReportLayout(){
     try{
       const raw = localStorage.getItem('hb-report-layout-v2');
@@ -3418,6 +3457,9 @@
     const base = REPORT_DEFAULT_HEIGHT[pid] || 150;
     block.style.height = Math.max(needed, base, 90) + 'px';
     updateReportBlockSizeButtons(block, size);
+    // 소/중/대 규격을 바꿔서 이 배너가 다른 배너와 겹치게 되면, 다른 배너들을
+    // 한 곳도 겹치지 않게 최소 간격만큼 밀어냅니다.
+    resolveOverlaps(block);
     updateReportContainerHeight();
     setTimeout(() => { block._programmaticResize = false; }, 60);
   }
@@ -3431,69 +3473,113 @@
     });
     wrap.style.height = (maxBottom + 20) + 'px';
   }
+  // ---------- 배너 겹침 방지: 최소 간격을 두고 서로 밀어내기 ----------
+  // activeEl이 주어지면(지금 이동·크기조절 중인 배너) 그 배너는 고정한 채 나머지만 밀어내고,
+  // activeEl이 없으면(렌더링 직후 전체 점검용) 더 위쪽·왼쪽에 있는 배너를 기준으로 삼아
+  // 정리합니다. 여러 배너가 연쇄적으로 겹칠 수 있으므로 더 이상 겹침이 없을 때까지
+  // 여러 번(최대 10회) 반복해서 안정된 배치를 찾습니다.
+  function resolveOverlaps(activeEl){
+    const wrap = $('reportPanels');
+    if(!wrap) return;
+    const gap = REPORT_MIN_GAP;
+    const containerWidth = wrap.clientWidth || 900;
+    const blocks = Array.from(wrap.querySelectorAll('.report-block'));
+    if(blocks.length < 2) return;
+    function rectOf(el){
+      return { el, left:parseFloat(el.style.left)||0, top:parseFloat(el.style.top)||0,
+        width:el.offsetWidth, height:el.offsetHeight };
+    }
+    for(let pass = 0; pass < 10; pass++){
+      const rects = blocks.map(rectOf);
+      let moved = false;
+      for(let i = 0; i < rects.length; i++){
+        for(let j = i + 1; j < rects.length; j++){
+          const a = rects[i], b = rects[j];
+          const overlapX = Math.min(a.left + a.width, b.left + b.width) - Math.max(a.left, b.left);
+          const overlapY = Math.min(a.top + a.height, b.top + b.height) - Math.max(a.top, b.top);
+          // 두 축 모두 최소 간격(gap)보다 좁으면(=겹쳤거나 간격이 부족하면) 밀어냅니다.
+          if(overlapX > -gap && overlapY > -gap){
+            let fixed, movable;
+            if(a.el === activeEl){ fixed = a; movable = b; }
+            else if(b.el === activeEl){ fixed = b; movable = a; }
+            else if(a.top < b.top || (a.top === b.top && a.left <= b.left)){ fixed = a; movable = b; }
+            else { fixed = b; movable = a; }
+            // 겹침이 더 얕은(적게 밀면 되는) 축으로 먼저 밀어봅니다.
+            const needX = gap - overlapX, needY = gap - overlapY;
+            let handled = false;
+            if(needX < needY){
+              let newLeft = (movable.left + movable.width / 2 < fixed.left + fixed.width / 2)
+                ? fixed.left - movable.width - gap
+                : fixed.left + fixed.width + gap;
+              newLeft = Math.max(0, Math.min(newLeft, Math.max(0, containerWidth - movable.width)));
+              if(Math.abs(newLeft - movable.left) > 0.5){
+                movable.el.style.left = newLeft + 'px';
+                movable.left = newLeft;
+                moved = true;
+                handled = true;
+              }
+            }
+            if(!handled){
+              // 가로로 밀 공간이 없거나 세로가 더 얕은 겹침이면 세로로 밀어냅니다.
+              const newTop = (movable.top + movable.height / 2 < fixed.top + fixed.height / 2)
+                ? Math.max(0, fixed.top - movable.height - gap)
+                : fixed.top + fixed.height + gap;
+              movable.el.style.top = newTop + 'px';
+              movable.top = newTop;
+              moved = true;
+            }
+          }
+        }
+      }
+      if(!moved) break;
+    }
+    updateReportContainerHeight();
+  }
+  // ---------- 이동 손잡이 / 크기 버튼 / 크기조절 핸들: 마우스가 근접했을 때만 보이고 조작 가능 ----------
+  function initReportBlockProximity(){
+    const wrap = $('reportPanels');
+    if(!wrap) return;
+    const NEAR = 46; // px — 이 거리 안으로 마우스가 들어오면 해당 배너의 컨트롤이 나타납니다.
+    function update(clientX, clientY){
+      wrap.querySelectorAll('.report-block').forEach(block => {
+        const rect = block.getBoundingClientRect();
+        const nearToolbar = clientX >= rect.left && clientX <= rect.right + NEAR &&
+                             clientY >= rect.top - NEAR && clientY <= rect.top + 40;
+        const nearResize = clientX >= rect.right - 60 && clientX <= rect.right + NEAR &&
+                            clientY >= rect.bottom - 60 && clientY <= rect.bottom + NEAR;
+        block.classList.toggle('rb-controls-near', nearToolbar || nearResize);
+      });
+    }
+    wrap.addEventListener('mousemove', (e) => update(e.clientX, e.clientY));
+    wrap.addEventListener('mouseleave', () => {
+      wrap.querySelectorAll('.report-block').forEach(b => b.classList.remove('rb-controls-near'));
+    });
+  }
   function initReportBlockFreeLayout(){
     const wrap = $('reportPanels');
     if(!wrap) return;
+    // 렌더링 직후에는 콘텐츠 높이 반영(fitReportBlockToContent) 등으로 배너끼리 겹쳐 있을 수
+    // 있으므로, 개별 조작 전에 먼저 한 번 전체를 점검해 정리합니다.
+    resolveOverlaps(null);
     updateReportContainerHeight();
+    initReportBlockProximity();
     wrap.querySelectorAll('.report-block').forEach(block => {
       const handle = block.querySelector('.rb-handle');
       if(handle){
         const startDrag = (clientX, clientY) => {
           const startLeft = parseFloat(block.style.left) || 0;
           const startTop = parseFloat(block.style.top) || 0;
-          // "빈 자리(home)" = 지금 드래그 중인 배너가 마지막으로 안정적으로 있던 자리.
-          // 다른 배너와 자리를 맞바꿀 때, 밀려나는 배너는 이 자리로 이동합니다.
-          let homeLeft = startLeft, homeTop = startTop;
           block.classList.add('rb-dragging');
-
-          // 드래그 시작 시점의 다른 배너들 위치를 스냅샷으로 기록해두고,
-          // 자리가 바뀔 때마다 이 값도 함께 갱신하며 추적합니다.
-          const others = Array.from(wrap.querySelectorAll('.report-block'))
-            .filter(b => b !== block)
-            .map(b => ({
-              el: b,
-              left: parseFloat(b.style.left) || 0,
-              top: parseFloat(b.style.top) || 0,
-              width: b.offsetWidth,
-              height: b.offsetHeight
-            }));
-
-          function overlapArea(r1, r2){
-            const x1 = Math.max(r1.left, r2.left), y1 = Math.max(r1.top, r2.top);
-            const x2 = Math.min(r1.left + r1.width, r2.left + r2.width);
-            const y2 = Math.min(r1.top + r1.height, r2.top + r2.height);
-            const w = x2 - x1, h = y2 - y1;
-            return (w > 0 && h > 0) ? w * h : 0;
-          }
 
           function moveTo(cx, cy){
             const dx = cx - clientX, dy = cy - clientY;
-            let newLeft = Math.max(0, startLeft + dx);
-            let newTop = Math.max(0, startTop + dy);
+            const newLeft = Math.max(0, startLeft + dx);
+            const newTop = Math.max(0, startTop + dy);
             block.style.left = newLeft + 'px';
             block.style.top = newTop + 'px';
-
-            // 드래그 중인 배너와 가장 많이 겹치는 배너를 찾아, 겹침이 일정 면적을
-            // 넘으면 서로 자리를 맞바꿔서 두 배너가 겹친 채로 남지 않게 합니다.
-            const draggedRect = { left:newLeft, top:newTop, width:block.offsetWidth, height:block.offsetHeight };
-            let bestOther = null, bestArea = 0;
-            others.forEach(o => {
-              const area = overlapArea(draggedRect, o);
-              if(area > bestArea){ bestArea = area; bestOther = o; }
-            });
-            const threshold = draggedRect.width * draggedRect.height * 0.3;
-            if(bestOther && bestArea > threshold){
-              const otherOldLeft = bestOther.left, otherOldTop = bestOther.top;
-              // 겹쳐진 배너는 지금 드래그 중인 배너가 있던(비어 있는) 자리로 이동합니다.
-              bestOther.el.style.left = homeLeft + 'px';
-              bestOther.el.style.top = homeTop + 'px';
-              bestOther.left = homeLeft;
-              bestOther.top = homeTop;
-              // 그 배너가 원래 있던 자리가 이제 새로운 "빈 자리"가 됩니다.
-              homeLeft = otherOldLeft;
-              homeTop = otherOldTop;
-            }
-            updateReportContainerHeight();
+            // 이 배너가 다른 배너와 겹치면, 겹친 배너를 최소 간격만큼 밀어내어
+            // 어떤 경우에도 서로 겹친 채로 남아있지 않게 합니다.
+            resolveOverlaps(block);
           }
           function onMouseMove(e){ moveTo(e.clientX, e.clientY); }
           function onMouseUp(){
@@ -3526,14 +3612,63 @@
           applyReportBlockSize(block.dataset.pid, btn.dataset.size);
         });
       });
-      // 모서리를 끌어 크기를 바꾸면 컨테이너 전체 높이도 함께 갱신합니다. 저장은 "위치 저장" 버튼으로 합니다.
-      // 규격 버튼이 아니라 모서리를 직접 끌어 자유롭게 크기를 바꾼 경우에는,
-      // 더 이상 표준 규격과 일치하지 않으므로 소/중/대 강조 표시를 해제합니다.
+      // 모서리의 크기조절 핸들: 브라우저 기본 resize 대신 직접 구현해서, 마우스 근접 시에만
+      // 나타나게 하고(.rb-controls-near) 내용이 잘리지 않는 높이 이하로는 줄어들지 않게 합니다.
+      const resizeHandle = block.querySelector('.rb-resize-handle');
+      if(resizeHandle){
+        const startResize = (clientX, clientY) => {
+          const startWidth = block.offsetWidth;
+          const startHeight = block.offsetHeight;
+          block.classList.add('rb-resizing');
+
+          function onMove(cx, cy){
+            const dx = cx - clientX, dy = cy - clientY;
+            const newWidth = Math.max(220, startWidth + dx);
+            block.style.width = newWidth + 'px';
+            // 폭이 바뀌면 줄바꿈으로 필요한 세로 길이도 달라지므로, 폭을 먼저 반영한 뒤
+            // 내용이 실제로 차지하는 높이(scrollHeight)를 다시 측정해 그 이하로는 줄지 않게 합니다.
+            const contentNeeded = block.scrollHeight;
+            const newHeight = Math.max(90, startHeight + dy, contentNeeded);
+            block.style.height = newHeight + 'px';
+            // 모서리를 직접 끌면 더 이상 소/중/대 표준 규격과 일치하지 않으므로 강조를 해제합니다.
+            if(block.dataset.sizeMode){ updateReportBlockSizeButtons(block, ''); }
+            // 크기가 바뀌어 다른 배너와 겹치면 그 배너들을 최소 간격만큼 밀어냅니다.
+            resolveOverlaps(block);
+          }
+          function onMouseMove(e){ onMove(e.clientX, e.clientY); }
+          function onMouseUp(){
+            document.removeEventListener('mousemove', onMouseMove);
+            document.removeEventListener('mouseup', onMouseUp);
+            block.classList.remove('rb-resizing');
+            updateReportContainerHeight();
+          }
+          function onTouchMove(e){ const t = e.touches[0]; if(t){ onMove(t.clientX, t.clientY); e.preventDefault(); } }
+          function onTouchEnd(){
+            document.removeEventListener('touchmove', onTouchMove);
+            document.removeEventListener('touchend', onTouchEnd);
+            block.classList.remove('rb-resizing');
+            updateReportContainerHeight();
+          }
+          document.addEventListener('mousemove', onMouseMove);
+          document.addEventListener('mouseup', onMouseUp);
+          document.addEventListener('touchmove', onTouchMove, { passive:false });
+          document.addEventListener('touchend', onTouchEnd);
+        };
+        resizeHandle.addEventListener('mousedown', (e) => { e.preventDefault(); e.stopPropagation(); startResize(e.clientX, e.clientY); });
+        resizeHandle.addEventListener('touchstart', (e) => {
+          e.stopPropagation();
+          const t = e.touches[0]; if(!t) return;
+          startResize(t.clientX, t.clientY);
+        }, { passive:true });
+      }
+      // 콘텐츠가 이후에 바뀌어(예: 달력 월 이동 등) 배너 높이가 자연스럽게 변할 때도
+      // 다른 배너와 겹치지 않도록 다시 점검합니다.
       if(window.ResizeObserver){
         new ResizeObserver(() => {
           if(!block._programmaticResize && block.dataset.sizeMode){
             updateReportBlockSizeButtons(block, '');
           }
+          resolveOverlaps(block);
           updateReportContainerHeight();
         }).observe(block);
       }
