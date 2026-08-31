@@ -69,7 +69,8 @@
     box-sizing:border-box; position:relative;
     transition:background-color .16s ease, color .16s ease, border-color .16s ease;
   }
-  .side-tab .icon{ font-size:16px; transition:transform .16s ease; }
+  .side-tab .icon{ font-size:16px; transition:transform .16s ease; display:inline-flex; color:currentColor; }
+  .side-tab .icon svg{ width:17px; height:17px; display:block; }
   .side-tab.active{
     background:var(--card); color:var(--ink);
     border-color:var(--ink-soft); border-right-color:var(--card);
@@ -599,7 +600,14 @@
 
      "적정 페이지 사이즈" 기준: A4 세로(210×297mm, 96dpi 환산 약 794px)를 기준 폭으로 삼아
      화면 미리보기와 실제 인쇄 결과가 최대한 같아 보이도록 --report-page-w 값을 사용합니다. */
-  :root{ --report-gap:10px; --report-page-w:794px; }
+  :root{
+    --report-gap:10px; --report-page-w:794px;
+    /* 배너 규격별 고정 높이 — 내용에 따라 늘었다 줄었다 하지 않고, 웬만한 내용이
+       한 화면에 다 보이는 평균적인 분량을 기준으로 고정합니다. */
+    --report-h-small:238px; --report-h-medium:288px; --report-h-large:340px;
+    /* 달력 배너는 다른 배너보다 한 단계 더 작게(최대한 작게) 고정합니다. */
+    --report-h-cal-small:200px; --report-h-cal-medium:220px; --report-h-cal-large:250px;
+  }
   .report-panels{
     display:flex; flex-wrap:wrap; align-content:flex-start; align-items:flex-start;
     gap:var(--report-gap); margin-bottom:12px;
@@ -614,15 +622,14 @@
   .report-block.dragging{ opacity:0.45; }
   .report-block.drag-over{ box-shadow:0 -3px 0 var(--accent) inset; }
   /* 소형 = 한 줄에 3개, 중형 = 한 줄에 2개, 대형 = 한 줄에 1개(전체 폭). */
-  .report-block[data-size="small"]{ flex:0 0 calc((100% - 2*var(--report-gap)) / 3); width:calc((100% - 2*var(--report-gap)) / 3); }
-  .report-block[data-size="medium"]{ flex:0 0 calc((100% - var(--report-gap)) / 2); width:calc((100% - var(--report-gap)) / 2); }
-  .report-block[data-size="large"]{ flex:0 0 100%; width:100%; }
-  /* 달력 배너는 요일/날짜 그리드 + 일정 목록까지 담아야 해서 다른 배너와 내용 성격이
-     크게 다르므로, 소형/중형/대형의 기준 폭을 다른 배너와 별도로 상정합니다.
-     (소형=절반 폭, 중형·대형=전체 폭 — 다른 배너보다 한 단계씩 넉넉하게) */
-  .report-block[data-pid="calendar"][data-size="small"]{ flex:0 0 calc((100% - var(--report-gap)) / 2); width:calc((100% - var(--report-gap)) / 2); }
-  .report-block[data-pid="calendar"][data-size="medium"]{ flex:0 0 75%; width:75%; }
-  .report-block[data-pid="calendar"][data-size="large"]{ flex:0 0 100%; width:100%; }
+  .report-block[data-size="small"]{ flex:0 0 calc((100% - 2*var(--report-gap)) / 3); width:calc((100% - 2*var(--report-gap)) / 3); height:var(--report-h-small); }
+  .report-block[data-size="medium"]{ flex:0 0 calc((100% - var(--report-gap)) / 2); width:calc((100% - var(--report-gap)) / 2); height:var(--report-h-medium); }
+  .report-block[data-size="large"]{ flex:0 0 100%; width:100%; height:var(--report-h-large); }
+  /* 달력 배너는 다른 배너보다 폭도, 높이도 최대한 작게 고정합니다(소형/중형/대형 모두
+     기본 배너보다 한 단계 더 작은 폭을 씁니다). */
+  .report-block[data-pid="calendar"][data-size="small"]{ flex:0 0 calc((100% - 2*var(--report-gap)) / 3); width:calc((100% - 2*var(--report-gap)) / 3); height:var(--report-h-cal-small); }
+  .report-block[data-pid="calendar"][data-size="medium"]{ flex:0 0 calc((100% - var(--report-gap)) / 2); width:calc((100% - var(--report-gap)) / 2); height:var(--report-h-cal-medium); }
+  .report-block[data-pid="calendar"][data-size="large"]{ flex:0 0 100%; width:100%; height:var(--report-h-cal-large); }
   .report-block .rb-toolbar{
     display:flex; align-items:center; justify-content:space-between; gap:6px; margin-bottom:5px;
   }
@@ -630,7 +637,8 @@
     font-family:'JetBrains Mono', monospace; font-size:10.5px; font-weight:700; color:var(--ink-soft);
     cursor:grab; letter-spacing:0.5px; user-select:none; white-space:nowrap;
   }
-  .report-block .rb-size-toggle{ display:flex; gap:3px; }
+  .report-block .rb-size-toggle{ display:flex; gap:3px; opacity:0; transition:opacity .15s ease; }
+  .report-block:hover .rb-size-toggle, .report-block:focus-within .rb-size-toggle{ opacity:1; }
   .report-block .rb-size-btn{
     font-family:'JetBrains Mono', monospace; font-size:10px; font-weight:700; line-height:1;
     color:var(--ink-soft); background:var(--card); border:1.5px solid var(--line); border-radius:5px;
@@ -639,7 +647,7 @@
   .report-block .rb-size-btn:hover{ color:var(--accent-dark); border-color:var(--accent); }
   .report-block .rb-size-btn.active{ background:var(--ink); color:#fff; border-color:var(--ink); }
   .report-block > .report-hero, .report-block > .report-stat, .report-block > .report-panel{
-    margin-bottom:0; flex:1; box-sizing:border-box; height:100%;
+    margin-bottom:0; flex:1; box-sizing:border-box; height:100%; min-height:0; overflow-y:auto;
   }
   .report-layout-toolbar{ display:flex; align-items:center; gap:8px; margin-bottom:10px; flex-wrap:wrap; }
   .report-layout-toolbar .rlt-status{ font-family:'JetBrains Mono', monospace; font-size:10px; color:var(--teal); }
@@ -779,6 +787,13 @@
   @media (max-width:560px){
     .report-cal-shrink{ max-width:100%; }
   }
+  /* 달력 배너 내부도 최대한 작게: 그리드 간격/셀 글자/일정 목록 줄임 */
+  .report-cal-shrink .cal-grid{ gap:3px; }
+  .report-cal-shrink .cal-weekday{ font-size:8.5px; padding-bottom:2px; }
+  .report-cal-shrink .cal-cell{ font-size:9px; border-radius:5px; gap:1px; }
+  .report-cal-shrink .day-events{ margin-top:6px; }
+  .report-cal-shrink .day-events .de-title{ font-size:10px; margin-bottom:4px; }
+  .report-cal-shrink .de-row{ padding:3px 5px; margin-bottom:3px; }
 
   /* 리포트 통계 카드에 들어가는 작은 장식 도형 */
   .report-stat{ position:relative; overflow:hidden; }
@@ -875,10 +890,10 @@
 <div class="app-shell">
 
   <nav class="side-tabs">
-    <div class="side-tab active" id="tabReportBtn"><span class="icon">📊</span>인쇄</div>
-    <div class="side-tab" id="tabLogBtn"><span class="icon">📝</span>기록</div>
-    <div class="side-tab" id="tabPlanBtn"><span class="icon">🎯</span>계획</div>
-    <div class="side-tab" id="tabListBtn"><span class="icon">📋</span>목록</div>
+    <div class="side-tab active" id="tabReportBtn"><span class="icon"><svg viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M5 3.5h7l3 3V16a.5.5 0 0 1-.5.5h-9A.5.5 0 0 1 5 16V4a.5.5 0 0 1 0-.5Z" stroke="currentColor" stroke-width="1.6" stroke-linejoin="round"/><path d="M12 3.5V6a1 1 0 0 0 1 1h2.5" stroke="currentColor" stroke-width="1.6" stroke-linejoin="round"/><path d="M7.3 12v-2.2M10 12V8.3M12.7 12v-3.4" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/></svg></span>인쇄</div>
+    <div class="side-tab" id="tabLogBtn"><span class="icon"><svg viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M12.3 3.3a1.2 1.2 0 0 1 1.7 0l1.7 1.7a1.2 1.2 0 0 1 0 1.7L7.3 15.1l-3.6.6.6-3.6 8-8Z" stroke="currentColor" stroke-width="1.6" stroke-linejoin="round"/><path d="M10.8 4.8l2.4 2.4" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/></svg></span>기록</div>
+    <div class="side-tab" id="tabPlanBtn"><span class="icon"><svg viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg"><circle cx="10" cy="10" r="6.3" stroke="currentColor" stroke-width="1.6"/><circle cx="10" cy="10" r="3.4" stroke="currentColor" stroke-width="1.6"/><circle cx="10" cy="10" r="0.9" fill="currentColor"/></svg></span>계획</div>
+    <div class="side-tab" id="tabListBtn"><span class="icon"><svg viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M6.6 5.5h8.4M6.6 10h8.4M6.6 14.5h8.4" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/><circle cx="3.7" cy="5.5" r="0.95" fill="currentColor"/><circle cx="3.7" cy="10" r="0.95" fill="currentColor"/><circle cx="3.7" cy="14.5" r="0.95" fill="currentColor"/></svg></span>목록</div>
   </nav>
 
   <div class="main-content">
@@ -3428,22 +3443,6 @@
                C 70 78 98 38 150 38 Z"
             fill="var(--card)" stroke="var(--ink-soft)" stroke-width="2"/>
       <path d="M74 112 Q68 52 150 40 Q232 52 226 112 Q210 70 150 66 Q90 70 74 112 Z" fill="var(--ink)" opacity="0.88"/>
-      ${reportHeadSideIconSvg()}
-    `;
-  }
-  // 머리통 옆(오른쪽 위)에 "생각이 떠오르는" 이미지(전구 아이콘)를 함께 그려서
-  // 머리 모양 마인드맵과 나란히 보이도록 합니다.
-  function reportHeadSideIconSvg(){
-    return `
-      <g transform="translate(246,18)">
-        <circle cx="18" cy="18" r="17" fill="var(--yellow)" opacity="0.9" stroke="var(--ink-soft)" stroke-width="1.3"/>
-        <path d="M18 8 A9 9 0 0 1 24 24 L23 26 L13 26 L12 24 A9 9 0 0 1 18 8 Z" fill="#FFFDF6" stroke="var(--ink-soft)" stroke-width="1.1"/>
-        <rect x="13.5" y="26" width="9" height="3.4" rx="1.2" fill="var(--ink-soft)"/>
-        <line x1="15" y1="30.4" x2="21" y2="30.4" stroke="var(--ink-soft)" stroke-width="1.1"/>
-        <line x1="4" y1="18" x2="0" y2="18" stroke="var(--ink-soft)" stroke-width="1.3" stroke-linecap="round"/>
-        <line x1="8.5" y1="6.5" x2="5.7" y2="3.7" stroke="var(--ink-soft)" stroke-width="1.3" stroke-linecap="round"/>
-        <line x1="27.5" y1="6.5" x2="30.3" y2="3.7" stroke="var(--ink-soft)" stroke-width="1.3" stroke-linecap="round"/>
-      </g>
     `;
   }
   // 단어 노드를 머리 안쪽 타원 영역에 균등하게 흩어 배치합니다 (골든 앵글 스파이럴).
@@ -3894,36 +3893,16 @@
     renderReportView();
     showReportLayoutStatus('모든 배너를 소형으로 되돌렸습니다');
   }
-  // ---------- 배너 규격 균일화: 같은 규격(소/중/대)끼리는 항상 같은 높이 ----------
-  // 폭은 CSS가 규격별로 고정하지만, 내용 길이는 배너마다 다르므로 높이를 그대로 두면
-  // 같은 규격이라도 들쭉날쭉해 보입니다. 규격 그룹별로 실제 필요한 콘텐츠 높이(scrollHeight)의
-  // 최댓값을 구해 그 그룹의 모든 배너에 동일하게 적용합니다 — 내용이 잘리는 배너도 없고,
-  // 같은 규격끼리 높이가 다른 배너도 없습니다.
-  // scopeKey를 주면 그 그룹(예: 'calendar' 또는 특정 규격)만 다시 계산합니다 — 달력처럼
-  // 내용이 수시로 바뀌는 배너 때문에 관계없는 다른 배너까지 매번 높이가 흔들리는 것을 막기 위함입니다.
+  // ---------- 배너 규격 높이: 이제 내용 길이에 따라 매번 다시 재는 대신,
+  // 규격(소/중/대)별로 CSS(--report-h-*)에 고정된 높이를 그대로 씁니다.
+  // (모든 내용이 보이는 평균적인 분량을 기준으로 고정했고, 그 이상 내용은
+  // 배너 안에서 스크롤되어 잘리지 않습니다.) 여기서는 인라인 height를 강제로
+  // 남겨 CSS 고정값을 가리는 일이 없도록 비워두기만 합니다.
   function equalizeReportBannerHeights(scopeKey){
     const wrap = $('reportPanels');
     if(!wrap) return;
     const blocks = Array.from(wrap.querySelectorAll('.report-block'));
-    if(!blocks.length) return;
-    const groups = {};
-    blocks.forEach(b => {
-      const size = b.dataset.size || 'small';
-      // 달력 배너는 폭 기준부터 다른 배너와 별도로 상정하므로(위 CSS 참고),
-      // 높이 균일화도 다른 소/중/대 배너 그룹과 함께 묶지 않고 자기 자신의 내용 높이만 씁니다.
-      const groupKey = (b.dataset.pid === 'calendar') ? 'calendar' : size;
-      (groups[groupKey] = groups[groupKey] || []).push(b);
-    });
-    const keys = scopeKey ? [scopeKey] : Object.keys(groups);
-    keys.forEach(key => {
-      const groupBlocks = groups[key];
-      if(!groupBlocks || !groupBlocks.length) return;
-      // 이 그룹에 속한 배너만 자연 높이로 되돌려 측정합니다(다른 그룹 배너는 건드리지 않음).
-      groupBlocks.forEach(b => { b.style.height = 'auto'; });
-      let maxH = 0;
-      groupBlocks.forEach(b => { maxH = Math.max(maxH, b.scrollHeight); });
-      groupBlocks.forEach(b => { b.style.height = maxH + 'px'; });
-    });
+    blocks.forEach(b => { b.style.height = ''; });
   }
   // ---------- 소/중/대 버튼: 규격을 바꾸고 그룹 높이를 다시 맞춥니다 ----------
   function applyReportBlockSize(pid, size){
