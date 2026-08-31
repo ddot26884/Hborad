@@ -287,6 +287,9 @@
   .field-grid{ display:grid; grid-template-columns:repeat(auto-fit,minmax(120px,1fr)); gap:8px; }
   .field-grid.cols2{ grid-template-columns:repeat(2,1fr); }
   .field{ display:flex; flex-direction:column; gap:3px; margin-bottom:8px; }
+  /* 일기: 생각/질문/감상/키워드 각각의 "주제+내용" 묶음을 점선으로 구분 */
+  .diary-subfield{ padding-bottom:8px; margin-bottom:8px; border-bottom:1px dashed var(--line); }
+  .diary-subfield:last-child{ border-bottom:none; margin-bottom:0; padding-bottom:0; }
   .field:last-child{ margin-bottom:0; }
   .field label{ font-size:10px; color:var(--ink-soft); font-family:'JetBrains Mono', monospace; letter-spacing:0.2px; }
   .field input[type=text], .field input[type=number], .field input[type=time], .field select, textarea{
@@ -337,6 +340,19 @@
   .tp-del-btn{ background:none; border:none; color:var(--ink-soft); cursor:pointer; font-size:13px; }
   .tp-del-btn:hover{ color:var(--safety-dark); }
   .timeplan-empty{ font-size:11px; color:var(--ink-soft); font-family:'JetBrains Mono', monospace; padding:8px 4px; }
+  /* 시간계획/시간실천 hh:mm~hh:mm 범위 일괄 입력 행 */
+  .time-range-row{ display:flex; gap:6px; align-items:center; margin-bottom:8px; flex-wrap:wrap; }
+  .time-range-row .tr-label{ font-family:'JetBrains Mono', monospace; font-size:11px; font-weight:700; color:var(--ink-soft); flex-shrink:0; min-width:58px; }
+  .time-range-row .tr-tilde{ color:var(--ink-soft); font-family:'JetBrains Mono', monospace; }
+  .time-range-row input[type=time]{
+    font-family:'JetBrains Mono', monospace; font-size:11.5px; padding:6px 7px; border:1.5px solid var(--line);
+    border-radius:6px; background:var(--card); min-width:0;
+  }
+  .time-range-row input[type=text]{
+    font-family:'Noto Sans KR', sans-serif; font-size:12px; padding:6px 8px; border:1.5px solid var(--line);
+    border-radius:6px; background:var(--card); min-width:0; flex:1;
+  }
+  @media (max-width:700px){ .time-range-row input[type=text]{ flex:1 1 100%; } }
 
   /* ---------- List rows (할일 / 습관 / 계획) ---------- */
   .list-rows{ display:flex; flex-direction:column; gap:5px; margin-bottom:8px; }
@@ -380,11 +396,16 @@
   /* ---------- 마인드맵 기록(기록탭) ---------- */
   .mindmap-add-row{ display:flex; gap:6px; margin-bottom:9px; }
   .mindmap-add-row input[type=text]{ flex:1; padding:8px 10px; border:1.5px solid var(--line); border-radius:6px; font-size:13px; background:var(--paper); min-width:0; }
+  .mindmap-ratio-select{
+    font-family:'JetBrains Mono', monospace; font-size:12px; padding:8px 6px; border:1.5px solid var(--line);
+    border-radius:6px; background:var(--paper); color:var(--ink); flex-shrink:0; width:78px;
+  }
   .mindmap-word-list{ display:flex; flex-wrap:wrap; gap:6px; }
   .mm-word-chip{
     display:inline-flex; align-items:center; gap:6px; background:var(--purple-soft); color:var(--purple);
     border-radius:20px; padding:5px 6px 5px 11px; font-size:11.5px; font-weight:600;
   }
+  .mm-word-chip .mm-word-ratio{ color:var(--ink-soft); font-family:'JetBrains Mono', monospace; font-size:10px; font-weight:700; }
   .mm-word-chip .mm-del{ cursor:pointer; color:var(--purple); opacity:0.6; font-weight:800; width:16px; height:16px; border-radius:50%; display:flex; align-items:center; justify-content:center; }
   .mm-word-chip .mm-del:hover{ opacity:1; background:#fff; color:var(--safety-dark); }
   .sub-title:first-child{ margin-top:0; }
@@ -595,6 +616,8 @@
     padding:6px 12px; cursor:pointer; display:inline-flex; align-items:center; gap:5px;
   }
   .report-print-btn:hover{ background:var(--accent-dark); border-color:var(--accent-dark); }
+  .report-save-btn{ background:var(--teal); border-color:var(--teal); }
+  .report-save-btn:hover{ background:var(--teal-soft); color:var(--teal); border-color:var(--teal); }
   .report-size-legend{
     font-family:'JetBrains Mono', monospace; font-size:9.5px; color:var(--ink-soft);
     display:flex; align-items:center; gap:2px; flex-wrap:wrap;
@@ -861,15 +884,12 @@
         <div class="cat-title">🧠 마인드맵 기록 <span class="cnt">— 여기 적은 단어가 인쇄탭 마인드맵(머리모양)에 하나씩 추가돼요</span></div>
         <div class="mindmap-add-row">
           <input type="text" id="mindmapWordInput" placeholder="떠오르는 생각을 단어/짧은 문장으로 (예: 여행, 이직 고민)" />
+          <select id="mindmapWordRatio" class="mindmap-ratio-select" title="인쇄탭 마인드맵에서 이 단어가 표시될 크기 비율"></select>
           <button type="button" class="add-row-btn" id="mindmapWordAdd">+ 추가</button>
         </div>
         <div class="mindmap-word-list" id="mindmapWordList"></div>
       </div>
 
-      <div class="cat-search-wrap">
-        <input type="text" id="catSearchInput" placeholder="🔍 기록 내용 검색 (예: 러닝, 팀장님, 예산)" />
-        <span class="cat-search-hint" id="catSearchHint"></span>
-      </div>
       <div class="cat-tabs" id="catTabs"></div>
 
       <div class="log-banner-grid">
@@ -892,6 +912,26 @@
                 <select id="timeplanNewTime"></select>
                 <button type="button" class="add-row-btn" id="timeplanAddRow">+ 시간 추가</button>
               </div>
+
+              <!-- 시간계획: hh:mm ~ hh:mm 범위로 한번에 여러 시간(슬롯)에 계획 내용을 채워넣기 -->
+              <div class="time-range-row">
+                <span class="tr-label">⏱ 시간계획</span>
+                <input type="time" id="tpRangePlanStart" step="1800" />
+                <span class="tr-tilde">~</span>
+                <input type="time" id="tpRangePlanEnd" step="1800" />
+                <input type="text" id="tpRangePlanContent" placeholder="계획 내용" />
+                <input type="text" id="tpRangePlanCategory" list="categoryList" placeholder="구분" />
+                <button type="button" class="add-row-btn" id="tpRangePlanApply">+ 범위 계획 추가</button>
+              </div>
+              <!-- 시간실천: hh:mm ~ hh:mm 범위를 지정하면 그 시간대 슬롯을 한번에 "실천"으로 체크 -->
+              <div class="time-range-row">
+                <span class="tr-label">✅ 시간실천</span>
+                <input type="time" id="tpRangeDoneStart" step="1800" />
+                <span class="tr-tilde">~</span>
+                <input type="time" id="tpRangeDoneEnd" step="1800" />
+                <button type="button" class="add-row-btn" id="tpRangeDoneApply">✓ 범위 실천 체크</button>
+              </div>
+
               <div class="time-scroll">
                 <table class="timeplan">
                   <thead><tr><th>시간 (00:00~24:00, 30분 단위)</th><th>구분</th><th>계획내용</th><th>실천여부</th><th></th></tr></thead>
@@ -921,10 +961,22 @@
             <!-- 생각 -->
             <div class="cat-section" data-cat="thoughts">
               <div class="cat-title">💭 생각</div>
-              <div class="field"><label>생각</label><textarea id="diaryThoughts" rows="2" placeholder="오늘 든 생각을 적어보세요"></textarea></div>
-              <div class="field"><label>질문</label><textarea id="diaryQuestions" rows="2" placeholder="스스로에게 던지는 질문"></textarea></div>
-              <div class="field"><label>감상</label><textarea id="diaryImpression" rows="2" placeholder="오늘 하루에 대한 감상"></textarea></div>
-              <div class="field"><label>키워드</label><input type="text" id="diaryKeywords" placeholder="쉼표로 구분 (예: 성장, 피로, 뿌듯함)" /></div>
+              <div class="diary-subfield">
+                <div class="field"><label>주제</label><input type="text" id="diaryThoughtsTopic" placeholder="이 생각의 주제 (예: 오늘의 고민)" /></div>
+                <div class="field"><label>생각</label><textarea id="diaryThoughts" rows="2" placeholder="오늘 든 생각을 적어보세요"></textarea></div>
+              </div>
+              <div class="diary-subfield">
+                <div class="field"><label>주제</label><input type="text" id="diaryQuestionsTopic" placeholder="이 질문의 주제 (예: 진로, 관계)" /></div>
+                <div class="field"><label>질문</label><textarea id="diaryQuestions" rows="2" placeholder="스스로에게 던지는 질문"></textarea></div>
+              </div>
+              <div class="diary-subfield">
+                <div class="field"><label>주제</label><input type="text" id="diaryImpressionTopic" placeholder="이 감상의 주제 (예: 하루 마무리)" /></div>
+                <div class="field"><label>감상</label><textarea id="diaryImpression" rows="2" placeholder="오늘 하루에 대한 감상"></textarea></div>
+              </div>
+              <div class="diary-subfield">
+                <div class="field"><label>주제</label><input type="text" id="diaryKeywordsTopic" placeholder="이 키워드 묶음의 주제" /></div>
+                <div class="field"><label>키워드</label><input type="text" id="diaryKeywords" placeholder="쉼표로 구분 (예: 성장, 피로, 뿌듯함)" /></div>
+              </div>
             </div>
           </div>
 
@@ -1313,7 +1365,7 @@
     if(!e) return false;
     switch(catKey){
       case 'thoughts':
-        return !!(e.diary && (e.diary.thoughts||e.diary.questions||e.diary.impression||e.diary.keywords)) || !!e.reference;
+        return !!(e.diary && (e.diary.thoughts||e.diary.thoughtsTopic||e.diary.questions||e.diary.questionsTopic||e.diary.impression||e.diary.impressionTopic||e.diary.keywords||e.diary.keywordsTopic)) || !!e.reference;
       case 'health': {
         if(e.wakeTime || e.sleepTime || e.exerciseYN || e.exerciseType || e.condition) return true;
         const h = e.health || {};
@@ -1438,7 +1490,7 @@
         total:'', deficient:''
       },
       todos: [], habits: [],
-      diary: { thoughts:'', questions:'', impression:'', keywords:'' },
+      diary: { thoughts:'', thoughtsTopic:'', questions:'', questionsTopic:'', impression:'', impressionTopic:'', keywords:'', keywordsTopic:'' },
       reference: '',
       relationships: { people:'', memo:'', gratitude:'', score:0 },
       assets: { expense:'', income:'', total:'', memo:'', nextAction:'' },
@@ -1473,6 +1525,12 @@
     }
     if(!Array.isArray(e.health.exercises)) e.health.exercises = [];
     if(!e.health.body) e.health.body = { fat:'', muscle:'', weight:'' };
+    // 예전 일기 데이터에는 "주제" 칸이 없었으므로 없으면 빈 값으로 채워둡니다.
+    if(!e.diary) e.diary = { thoughts:'', thoughtsTopic:'', questions:'', questionsTopic:'', impression:'', impressionTopic:'', keywords:'', keywordsTopic:'' };
+    if(e.diary.thoughtsTopic === undefined) e.diary.thoughtsTopic = '';
+    if(e.diary.questionsTopic === undefined) e.diary.questionsTopic = '';
+    if(e.diary.impressionTopic === undefined) e.diary.impressionTopic = '';
+    if(e.diary.keywordsTopic === undefined) e.diary.keywordsTopic = '';
     return e;
   }
   function hasContent(e){
@@ -1487,7 +1545,7 @@
     }
     if(e.todos && e.todos.length>0) return true;
     if(e.habits && e.habits.length>0) return true;
-    if(e.diary && (e.diary.thoughts||e.diary.questions||e.diary.impression||e.diary.keywords)) return true;
+    if(e.diary && (e.diary.thoughts||e.diary.thoughtsTopic||e.diary.questions||e.diary.questionsTopic||e.diary.impression||e.diary.impressionTopic||e.diary.keywords||e.diary.keywordsTopic)) return true;
     if(e.reference) return true;
     if(e.relationships && (e.relationships.people||e.relationships.memo||e.relationships.gratitude||e.relationships.score)) return true;
     if(e.assets && (e.assets.expense||e.assets.income||e.assets.total||e.assets.memo||e.assets.nextAction)) return true;
@@ -1576,9 +1634,13 @@
     $('exYes').classList.toggle('on', entry.exerciseYN === '예');
     $('exNo').classList.toggle('on', entry.exerciseYN === '아니오');
     $('diaryThoughts').value = entry.diary.thoughts;
+    $('diaryThoughtsTopic').value = entry.diary.thoughtsTopic || '';
     $('diaryQuestions').value = entry.diary.questions;
+    $('diaryQuestionsTopic').value = entry.diary.questionsTopic || '';
     $('diaryImpression').value = entry.diary.impression;
+    $('diaryImpressionTopic').value = entry.diary.impressionTopic || '';
     $('diaryKeywords').value = entry.diary.keywords;
+    $('diaryKeywordsTopic').value = entry.diary.keywordsTopic || '';
     $('referenceNote').value = entry.reference;
     $('relPeople').value = entry.relationships.people;
     $('relMemo').value = entry.relationships.memo;
@@ -2180,9 +2242,13 @@
   $('exNo').addEventListener('click', () => { entry.exerciseYN = entry.exerciseYN==='아니오' ? '' : '아니오'; renderAll(); queueSave(); });
 
   $('diaryThoughts').addEventListener('input', e => { entry.diary.thoughts = e.target.value; queueSave(); });
+  $('diaryThoughtsTopic').addEventListener('input', e => { entry.diary.thoughtsTopic = e.target.value; queueSave(); });
   $('diaryQuestions').addEventListener('input', e => { entry.diary.questions = e.target.value; queueSave(); });
+  $('diaryQuestionsTopic').addEventListener('input', e => { entry.diary.questionsTopic = e.target.value; queueSave(); });
   $('diaryImpression').addEventListener('input', e => { entry.diary.impression = e.target.value; queueSave(); });
+  $('diaryImpressionTopic').addEventListener('input', e => { entry.diary.impressionTopic = e.target.value; queueSave(); });
   $('diaryKeywords').addEventListener('input', e => { entry.diary.keywords = e.target.value; queueSave(); });
+  $('diaryKeywordsTopic').addEventListener('input', e => { entry.diary.keywordsTopic = e.target.value; queueSave(); });
   $('referenceNote').addEventListener('input', e => { entry.reference = e.target.value; queueSave(); });
 
   $('relPeople').addEventListener('input', e => { entry.relationships.people = e.target.value; queueSave(); });
@@ -2232,6 +2298,62 @@
   $('diaryNextDay').addEventListener('click', () => setDate(addDays(currentDate, 1)));
   $('diaryTodayBtn').addEventListener('click', () => setDate(todayStr()));
 
+  // ---------- 시간계획/시간실천: hh:mm ~ hh:mm 범위로 한번에 여러 시간(30분 슬롯) 반영 ----------
+  function timeStrToMinutes(t){ const [h,m] = t.split(':').map(Number); return h*60+m; }
+  // start(포함)부터 end(미포함)까지 30분 단위 슬롯 시각 목록을 만듭니다. 자정을 넘기는
+  // 범위(예: 23:00~01:00)도 자연스럽게 처리하고, 시작=종료면 하루 전체(48칸)로 봅니다.
+  function enumerateTimeRangeSlots(startStr, endStr){
+    let start = Math.floor(timeStrToMinutes(startStr)/30)*30;
+    let end = Math.floor(timeStrToMinutes(endStr)/30)*30;
+    let span = ((end - start) % 1440 + 1440) % 1440;
+    if(span === 0) span = 1440;
+    const count = span / 30;
+    const times = [];
+    for(let i=0;i<count;i++){
+      const mm = (start + i*30) % 1440;
+      times.push(String(Math.floor(mm/60)).padStart(2,'0') + ':' + String(mm%60).padStart(2,'0'));
+    }
+    return times;
+  }
+  $('tpRangePlanApply').addEventListener('click', () => {
+    const s = $('tpRangePlanStart').value, e = $('tpRangePlanEnd').value;
+    const content = $('tpRangePlanContent').value.trim();
+    const category = $('tpRangePlanCategory').value.trim();
+    if(!s || !e){ hbToast('시작~종료 시각을 모두 선택해주세요', true); return; }
+    if(!content && !category){ hbToast('계획 내용 또는 구분을 입력해주세요', true); return; }
+    const times = enumerateTimeRangeSlots(s, e);
+    times.forEach(t => {
+      const idx = entry.timePlan.findIndex(slot => slot.time === t);
+      if(idx >= 0){
+        if(content) entry.timePlan[idx].content = content;
+        if(category) entry.timePlan[idx].category = category;
+      } else {
+        entry.timePlan.push({ time:t, content: content||'', category: category||'', done:false });
+      }
+    });
+    renderTimePlan();
+    queueSave();
+    $('tpRangePlanContent').value = '';
+    $('tpRangePlanCategory').value = '';
+    hbToast(`${s}~${e} 사이 ${times.length}개 시간대에 계획을 반영했어요`);
+  });
+  $('tpRangeDoneApply').addEventListener('click', () => {
+    const s = $('tpRangeDoneStart').value, e = $('tpRangeDoneEnd').value;
+    if(!s || !e){ hbToast('시작~종료 시각을 모두 선택해주세요', true); return; }
+    const times = enumerateTimeRangeSlots(s, e);
+    times.forEach(t => {
+      const idx = entry.timePlan.findIndex(slot => slot.time === t);
+      if(idx >= 0){
+        entry.timePlan[idx].done = true;
+      } else {
+        entry.timePlan.push({ time:t, content:'', category:'', done:true });
+      }
+    });
+    renderTimePlan();
+    queueSave();
+    hbToast(`${s}~${e} 사이 ${times.length}개 시간대를 실천으로 체크했어요`);
+  });
+
   // ---------- 시간계획 일괄 입력 ----------
   $('timeplanBulkApply').addEventListener('click', () => {
     const raw = $('timeplanBulkText').value;
@@ -2266,7 +2388,6 @@
   });
 
   renderCatTabs();
-  $('catSearchInput').addEventListener('input', applyCatSearch);
   initBannerDrag();
 
   // ================= 마인드맵 기록 (기록탭 ⇄ 인쇄탭 연동) =================
@@ -2285,6 +2406,8 @@
     try{ await window.storage.set('mindmap-words', JSON.stringify(mindmapWords), false); }
     catch(e){ console.error(e); hbToast('마인드맵 저장 실패: ' + ((e && e.message) || '알 수 없는 오류'), true); }
   }
+  // 단어의 비중(1~50%)에 따라 인쇄탭 마인드맵에서 크기가 달라집니다. 기본값은 10%.
+  const MINDMAP_DEFAULT_RATIO = 10;
   function renderMindmapRecordList(){
     const wrap = $('mindmapWordList');
     if(!wrap) return;
@@ -2295,6 +2418,7 @@
     wrap.innerHTML = mindmapWords.slice().reverse().map(w => `
       <span class="mm-word-chip" data-id="${w.id}">
         <span class="mm-word-text">${escapeAttr(w.text)}</span>
+        <span class="mm-word-ratio">${w.ratio || MINDMAP_DEFAULT_RATIO}%</span>
         <span class="mm-del" data-id="${w.id}" title="삭제">✕</span>
       </span>
     `).join('');
@@ -2308,10 +2432,12 @@
   }
   function addMindmapWordFromInput(){
     const input = $('mindmapWordInput');
+    const ratioSel = $('mindmapWordRatio');
     if(!input) return;
     const v = input.value.trim();
     if(!v) return;
-    mindmapWords.push({ id:'mm'+Date.now()+Math.random().toString(36).slice(2,6), text:v, date: currentDate || todayStr() });
+    const ratio = (ratioSel && +ratioSel.value) || MINDMAP_DEFAULT_RATIO;
+    mindmapWords.push({ id:'mm'+Date.now()+Math.random().toString(36).slice(2,6), text:v, date: currentDate || todayStr(), ratio });
     persistMindmapWords();
     input.value = '';
     renderMindmapRecordList();
@@ -2319,7 +2445,14 @@
   (function bindMindmapWordInput(){
     const addBtn = $('mindmapWordAdd');
     const input = $('mindmapWordInput');
+    const ratioSel = $('mindmapWordRatio');
     if(!addBtn || !input) return;
+    // 50% ~ 1% 순서로 선택지를 채워둡니다.
+    if(ratioSel && ratioSel.options.length === 0){
+      let opts = '';
+      for(let p=50; p>=1; p--){ opts += `<option value="${p}"${p===MINDMAP_DEFAULT_RATIO?' selected':''}>${p}%</option>`; }
+      ratioSel.innerHTML = opts;
+    }
     addBtn.addEventListener('click', addMindmapWordFromInput);
     input.addEventListener('keydown', (e) => { if(e.key === 'Enter'){ e.preventDefault(); addMindmapWordFromInput(); } });
   })();
@@ -2864,7 +2997,7 @@
       '식사기록(구분:내용:탄수화물:단백질:지방:당)','영양제기록(날짜:명칭:성분:브랜드)',
       '체지방','골격근량','체중','운동루틴기록(루틴:부위:방법:중량:회수:비고)',
       '건강합계','부족영양',
-      '생각','질문','감상','키워드','참고',
+      '생각_주제','생각','질문_주제','질문','감상_주제','감상','키워드_주제','키워드','참고',
       '관계_사람','관계_메모','관계_감사','관계_만족도',
       '지출','수입','총자산','투자메모','다음액션',
       '업무요약','성과이슈','배운점','내일우선순위',
@@ -2881,7 +3014,10 @@
         encodeRows(h.meals, MEAL_CSV_KEYS), encodeRows(h.supplements, SUPP_CSV_KEYS),
         (h.body&&h.body.fat)||'', (h.body&&h.body.muscle)||'', (h.body&&h.body.weight)||'', encodeRows(h.exercises, EXERCISE_CSV_KEYS),
         h.total || '', h.deficient || '',
-        (e.diary && e.diary.thoughts) || '', (e.diary && e.diary.questions) || '', (e.diary && e.diary.impression) || '', (e.diary && e.diary.keywords) || '', e.reference || '',
+        (e.diary && e.diary.thoughtsTopic) || '', (e.diary && e.diary.thoughts) || '',
+        (e.diary && e.diary.questionsTopic) || '', (e.diary && e.diary.questions) || '',
+        (e.diary && e.diary.impressionTopic) || '', (e.diary && e.diary.impression) || '',
+        (e.diary && e.diary.keywordsTopic) || '', (e.diary && e.diary.keywords) || '', e.reference || '',
         (e.relationships && e.relationships.people) || '', (e.relationships && e.relationships.memo) || '', (e.relationships && e.relationships.gratitude) || '', (e.relationships && e.relationships.score) || '',
         (e.assets && e.assets.expense) || '', (e.assets && e.assets.income) || '', (e.assets && e.assets.total) || '', (e.assets && e.assets.memo) || '', (e.assets && e.assets.nextAction) || '',
         (e.career && e.career.summary) || '', (e.career && e.career.achievements) || '', (e.career && e.career.learned) || '', (e.career && e.career.priority) || '',
@@ -2917,9 +3053,13 @@
     {h:'운동루틴기록(루틴:부위:방법:중량:회수:비고)', apply:(e,v)=>{ e.health.exercises = decodeRows(v, EXERCISE_CSV_KEYS, emptyExerciseRow); }},
     {h:'건강합계', apply:(e,v)=>{ e.health.total = v; }},
     {h:'부족영양', apply:(e,v)=>{ e.health.deficient = v; }},
+    {h:'생각_주제', apply:(e,v)=>{ e.diary.thoughtsTopic = v; }},
     {h:'생각', apply:(e,v)=>{ e.diary.thoughts = v; }},
+    {h:'질문_주제', apply:(e,v)=>{ e.diary.questionsTopic = v; }},
     {h:'질문', apply:(e,v)=>{ e.diary.questions = v; }},
+    {h:'감상_주제', apply:(e,v)=>{ e.diary.impressionTopic = v; }},
     {h:'감상', apply:(e,v)=>{ e.diary.impression = v; }},
+    {h:'키워드_주제', apply:(e,v)=>{ e.diary.keywordsTopic = v; }},
     {h:'키워드', apply:(e,v)=>{ e.diary.keywords = v; }},
     {h:'참고', apply:(e,v)=>{ e.reference = v; }},
     {h:'관계_사람', apply:(e,v)=>{ e.relationships.people = v; }},
@@ -3187,6 +3327,22 @@
                C 70 78 98 38 150 38 Z"
             fill="var(--card)" stroke="var(--ink-soft)" stroke-width="2"/>
       <path d="M74 112 Q68 52 150 40 Q232 52 226 112 Q210 70 150 66 Q90 70 74 112 Z" fill="var(--ink)" opacity="0.88"/>
+      ${reportHeadSideIconSvg()}
+    `;
+  }
+  // 머리통 옆(오른쪽 위)에 "생각이 떠오르는" 이미지(전구 아이콘)를 함께 그려서
+  // 머리 모양 마인드맵과 나란히 보이도록 합니다.
+  function reportHeadSideIconSvg(){
+    return `
+      <g transform="translate(246,18)">
+        <circle cx="18" cy="18" r="17" fill="var(--yellow)" opacity="0.9" stroke="var(--ink-soft)" stroke-width="1.3"/>
+        <path d="M18 8 A9 9 0 0 1 24 24 L23 26 L13 26 L12 24 A9 9 0 0 1 18 8 Z" fill="#FFFDF6" stroke="var(--ink-soft)" stroke-width="1.1"/>
+        <rect x="13.5" y="26" width="9" height="3.4" rx="1.2" fill="var(--ink-soft)"/>
+        <line x1="15" y1="30.4" x2="21" y2="30.4" stroke="var(--ink-soft)" stroke-width="1.1"/>
+        <line x1="4" y1="18" x2="0" y2="18" stroke="var(--ink-soft)" stroke-width="1.3" stroke-linecap="round"/>
+        <line x1="8.5" y1="6.5" x2="5.7" y2="3.7" stroke="var(--ink-soft)" stroke-width="1.3" stroke-linecap="round"/>
+        <line x1="27.5" y1="6.5" x2="30.3" y2="3.7" stroke="var(--ink-soft)" stroke-width="1.3" stroke-linecap="round"/>
+      </g>
     `;
   }
   // 단어 노드를 머리 안쪽 타원 영역에 균등하게 흩어 배치합니다 (골든 앵글 스파이럴).
@@ -3219,10 +3375,15 @@
       const { x, y } = positions[i];
       const color = REPORT_MINDMAP_COLORS[i % REPORT_MINDMAP_COLORS.length];
       const label = w.text.length > 7 ? w.text.slice(0,7)+'…' : w.text;
-      const boxW = Math.max(36, label.length * 8.5 + 14);
+      // 기록탭에서 고른 비율(1~50%)에 따라 노드 크기를 키우거나 줄입니다.
+      const ratio = Math.min(50, Math.max(1, w.ratio || MINDMAP_DEFAULT_RATIO));
+      const scale = 0.6 + (ratio / 50) * 1.0; // 1% → 0.62배, 50% → 1.6배
+      const fontSize = (10 * scale).toFixed(1);
+      const boxH = (22 * scale).toFixed(1);
+      const boxW = Math.max(36*scale, label.length * 8.5*scale + 14*scale);
       nodes += `<g>
-        <rect x="${(x-boxW/2).toFixed(1)}" y="${(y-11).toFixed(1)}" width="${boxW.toFixed(1)}" height="22" rx="11" fill="${color}" opacity="0.88" stroke="#fff" stroke-width="1"/>
-        <text x="${x.toFixed(1)}" y="${(y+4).toFixed(1)}" text-anchor="middle" font-size="10" font-family="'JetBrains Mono', monospace" font-weight="700" fill="#fff">${escapeAttr(label)}</text>
+        <rect x="${(x-boxW/2).toFixed(1)}" y="${(y-boxH/2).toFixed(1)}" width="${boxW.toFixed(1)}" height="${boxH}" rx="${(boxH/2).toFixed(1)}" fill="${color}" opacity="0.88" stroke="#fff" stroke-width="1"/>
+        <text x="${x.toFixed(1)}" y="${(y+fontSize*0.35).toFixed(1)}" text-anchor="middle" font-size="${fontSize}" font-family="'JetBrains Mono', monospace" font-weight="700" fill="#fff">${escapeAttr(label)}</text>
       </g>`;
     });
     const tabsHtml = `<div class="rmm-period-tabs">${REPORT_MINDMAP_PERIODS.map(p =>
@@ -3290,9 +3451,12 @@
 
     // 하루 정리 / 일기
     if(e.diary){
+      const diaryLabel = (base, topic) => topic ? `${base} · ${topic}` : base;
       const diaryLines = [
-        lsItem('생각', e.diary.thoughts), lsItem('질문', e.diary.questions),
-        lsItem('소감', e.diary.impression), lsItem('키워드', e.diary.keywords)
+        lsItem(diaryLabel('생각', e.diary.thoughtsTopic), e.diary.thoughts),
+        lsItem(diaryLabel('질문', e.diary.questionsTopic), e.diary.questions),
+        lsItem(diaryLabel('소감', e.diary.impressionTopic), e.diary.impression),
+        lsItem(diaryLabel('키워드', e.diary.keywordsTopic), e.diary.keywords)
       ].join('');
       if(diaryLines) html += `<div><div class="ls-group-title">📔 하루 정리</div><div class="ls-items">${diaryLines}</div></div>`;
     }
@@ -3440,6 +3604,7 @@
 
       <div class="report-layout-toolbar">
         <button type="button" class="report-print-btn" id="rPrintBtn">🖨 인쇄</button>
+        <button type="button" class="report-print-btn report-save-btn" id="rSaveLayoutBtn">💾 배치 저장</button>
         <button class="nav-btn ghost" id="rResetLayout">↺ 전체 소형으로</button>
         <span class="report-size-legend">소=한 줄에 3개 · 중=한 줄에 2개 · 대=한 줄에 1개</span>
         <span class="rlt-status" id="rLayoutStatus"></span>
@@ -3559,6 +3724,12 @@
     equalizeReportBannerHeights();
 
     $('rPrintBtn').addEventListener('click', () => window.print());
+    $('rSaveLayoutBtn').addEventListener('click', () => {
+      saveReportSizes();
+      saveReportOrder();
+      saveReportLayoutToServer();
+      showReportLayoutStatus('현재 배치를 저장했습니다 ✓');
+    });
     $('rResetLayout').addEventListener('click', () => {
       if(confirm('모든 배너를 소형으로 되돌릴까요?')) resetReportSizes();
     });
@@ -3591,6 +3762,25 @@
       sizes[b.dataset.pid] = b.dataset.size || 'small';
     });
     try{ localStorage.setItem('hb-report-sizes-v1', JSON.stringify(sizes)); }catch(e){}
+  }
+  // 배치 저장 버튼: localStorage(이 브라우저용)뿐 아니라 서버(window.storage)에도 함께 저장해서
+  // 다른 기기/브라우저에서 열어도 저장해둔 배치가 그대로 불러와지도록 합니다.
+  async function saveReportLayoutToServer(){
+    try{
+      const payload = JSON.stringify({ sizes: getReportSizes(), order: getReportOrder() });
+      await window.storage.set('report-layout-v1', payload, false);
+    }catch(e){ console.error(e); hbToast('배치 서버 저장 실패: ' + ((e && e.message) || '알 수 없는 오류'), true); }
+  }
+  // 이 기기에 저장된 배치(localStorage)가 없을 때만 서버에 저장된 배치를 가져와 채웁니다.
+  async function loadReportLayoutFromServer(){
+    try{
+      if(getReportSizes() || getReportOrder()) return; // 이미 이 기기에 배치가 있으면 그대로 사용
+      const res = await window.storage.get('report-layout-v1', false);
+      if(!res || !res.value) return;
+      const data = JSON.parse(res.value);
+      if(data && data.sizes) localStorage.setItem('hb-report-sizes-v1', JSON.stringify(data.sizes));
+      if(data && data.order) localStorage.setItem('hb-report-order-v1', JSON.stringify(data.order));
+    }catch(e){ /* 서버에 저장된 배치가 없으면 조용히 무시 */ }
   }
   function showReportLayoutStatus(msg){
     const el = $('rLayoutStatus');
@@ -3876,6 +4066,7 @@
     await loadPlans();
     await loadEvents();
     await loadMindmapWords();
+    await loadReportLayoutFromServer();
     await loadAll();
     switchView('report');
   };
