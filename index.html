@@ -514,47 +514,31 @@
   }
 
   /* ---------- 인쇄창 (리포트 / 완료 현황) ---------- */
-  /* 각 배너(현황판/오늘계획/차트/시간계획/체크리스트/기록요약/달력)를
-     자유 위치(픽셀 좌표)로 어디로든 이동하고, 모서리를 끌어 크기를 조절할 수 있게 합니다.
-     기존 배너가 있던 자리로만 옮길 수 있던 "순서 바꾸기" 방식이 아니라,
-     빈 공간을 포함해 원하는 위치 어디로든 자유롭게 배치할 수 있습니다. */
-  .report-panels{ position:relative; margin-bottom:12px; }
+  /* 배너 배치 방식: 자유 위치(절대좌표) 이동 대신, flex-wrap 기반의 "규격 배치"를 씁니다.
+     소형/중형/대형은 폭 비율로만 정해지고 실제 줄바꿈은 브라우저 레이아웃 엔진이 처리하므로,
+     배너끼리 서로 겹치는 상태 자체가 구조적으로 발생하지 않습니다.
+     높이는 고정값이 아니라 내용에 맞춰 자동으로 늘어나며(overflow로 잘리지 않음),
+     같은 규격(소/중/대)끼리는 항상 같은 폭·같은 높이로 맞춰 정렬합니다(균일화).
+
+     "적정 페이지 사이즈" 기준: A4 세로(210×297mm, 96dpi 환산 약 794px)를 기준 폭으로 삼아
+     화면 미리보기와 실제 인쇄 결과가 최대한 같아 보이도록 --report-page-w 값을 사용합니다. */
+  :root{ --report-gap:10px; --report-page-w:794px; }
+  .report-panels{
+    display:flex; flex-wrap:wrap; align-content:flex-start;
+    gap:var(--report-gap); margin-bottom:12px;
+    max-width:var(--report-page-w);
+  }
   .report-block{
-    position:absolute; box-sizing:border-box; overflow:hidden;
-    min-width:200px; min-height:90px; border-radius:14px;
-    transition:left .16s ease, top .16s ease;
+    box-sizing:border-box; overflow:visible; border-radius:14px;
+    display:flex; flex-direction:column; min-width:0;
   }
-  .report-block.rb-dragging, .report-block.rb-resizing{ opacity:0.55; z-index:50; box-shadow:0 10px 22px rgba(27,36,48,0.22); transition:none; }
-  /* 손잡이(⠿)와 소/중/대 크기 버튼을 하나의 툴바로 묶어 우상단에 둡니다.
-     각 배너의 실제 제목·내용은 좌측/중앙에 있으므로, 우상단 한 곳에만 컨트롤을 모아두면
-     제목이나 본문 텍스트를 가리지 않습니다. */
+  /* 소형 = 한 줄에 3개, 중형 = 한 줄에 2개, 대형 = 한 줄에 1개(전체 폭). */
+  .report-block[data-size="small"]{ flex:0 0 calc((100% - 2*var(--report-gap)) / 3); width:calc((100% - 2*var(--report-gap)) / 3); }
+  .report-block[data-size="medium"]{ flex:0 0 calc((100% - var(--report-gap)) / 2); width:calc((100% - var(--report-gap)) / 2); }
+  .report-block[data-size="large"]{ flex:0 0 100%; width:100%; }
   .report-block .rb-toolbar{
-    position:absolute; top:6px; right:8px; z-index:5; display:flex; align-items:center; gap:4px;
+    display:flex; align-items:center; justify-content:flex-end; margin-bottom:5px;
   }
-  /* 이동 손잡이 · 크기 버튼 · 모서리 크기조절 핸들은 평소에는 완전히 투명하게 숨겨 두고,
-     마우스가 그 근처로 다가왔을 때(.rb-controls-near)나 실제로 끌고 있는 동안에만
-     보이고 조작할 수 있게 합니다. 배너 본문 위에 컨트롤이 항상 떠 있지 않아 내용을 가리지 않습니다. */
-  .report-block .rb-handle,
-  .report-block .rb-size-toggle,
-  .report-block .rb-resize-handle{
-    opacity:0; pointer-events:none; transition:opacity .15s ease;
-  }
-  .report-block.rb-controls-near .rb-handle,
-  .report-block.rb-controls-near .rb-size-toggle,
-  .report-block.rb-controls-near .rb-resize-handle,
-  .report-block.rb-dragging .rb-handle,
-  .report-block.rb-resizing .rb-resize-handle{
-    opacity:1; pointer-events:auto;
-  }
-  .report-block .rb-handle{
-    cursor:grab; user-select:none;
-    font-size:13px; line-height:1; color:var(--ink-soft); background:var(--card);
-    border:1.5px solid var(--line); border-radius:6px; padding:2px 6px;
-  }
-  .report-block .rb-handle:hover{ color:var(--accent-dark); border-color:var(--accent); }
-  .report-block .rb-handle:active{ cursor:grabbing; }
-  /* 배너 크기 규격화: 소형/중형/대형 버튼. 눌러진 규격은 강조 표시하고,
-     모서리를 직접 끌어 자유롭게 크기를 바꾸면 강조가 풀립니다. */
   .report-block .rb-size-toggle{ display:flex; gap:3px; }
   .report-block .rb-size-btn{
     font-family:'JetBrains Mono', monospace; font-size:10px; font-weight:700; line-height:1;
@@ -563,38 +547,26 @@
   }
   .report-block .rb-size-btn:hover{ color:var(--accent-dark); border-color:var(--accent); }
   .report-block .rb-size-btn.active{ background:var(--ink); color:#fff; border-color:var(--ink); }
-  /* 모서리 크기조절 핸들: 브라우저 기본 resize 대신 직접 구현해서, 이동 손잡이와 마찬가지로
-     마우스가 근접했을 때만 나타나 조정할 수 있게 합니다. */
-  .report-block .rb-resize-handle{
-    position:absolute; right:3px; bottom:3px; width:16px; height:16px; z-index:5;
-    cursor:nwse-resize; user-select:none; border-radius:4px;
-    background:linear-gradient(135deg,
-      transparent 0 40%, var(--ink-soft) 40% 46%, transparent 46% 58%,
-      var(--ink-soft) 58% 64%, transparent 64% 76%, var(--ink-soft) 76% 82%, transparent 82%);
-  }
-  .report-block .rb-resize-handle:hover{
-    background:linear-gradient(135deg,
-      transparent 0 40%, var(--accent-dark) 40% 46%, transparent 46% 58%,
-      var(--accent-dark) 58% 64%, transparent 64% 76%, var(--accent-dark) 76% 82%, transparent 82%);
-  }
   .report-block > .report-hero, .report-block > .report-stat, .report-block > .report-panel{
-    margin-bottom:0; height:100%; box-sizing:border-box;
+    margin-bottom:0; flex:1; box-sizing:border-box; height:100%;
   }
   .report-layout-toolbar{ display:flex; align-items:center; gap:8px; margin-bottom:10px; flex-wrap:wrap; }
   .report-layout-toolbar .rlt-status{ font-family:'JetBrains Mono', monospace; font-size:10px; color:var(--teal); }
-  /* 손가락 터치 기기는 "마우스 근접"이라는 개념이 없으므로 컨트롤을 항상 보이게 둡니다. */
-  @media (pointer:coarse){
-    .report-block .rb-handle,
-    .report-block .rb-size-toggle,
-    .report-block .rb-resize-handle{
-      opacity:1; pointer-events:auto;
-    }
+  .report-print-btn{
+    font-family:'JetBrains Mono', monospace; font-weight:700; font-size:12px;
+    background:var(--ink); color:#fff; border:1.5px solid var(--ink); border-radius:6px;
+    padding:6px 12px; cursor:pointer; display:inline-flex; align-items:center; gap:5px;
   }
-  @media (max-width:560px){
-    /* 모바일에서는 자유 배치가 다루기 어려우므로, 저장된 좌표와 무관하게 세로로 쌓아서 보여줍니다. */
-    .report-panels{ display:flex; flex-direction:column; gap:10px; height:auto !important; }
-    .report-block{ position:static !important; width:100% !important; height:auto !important; }
-    .report-block .rb-resize-handle{ display:none; }
+  .report-print-btn:hover{ background:var(--accent-dark); border-color:var(--accent-dark); }
+  .report-size-legend{
+    font-family:'JetBrains Mono', monospace; font-size:9.5px; color:var(--ink-soft);
+    display:flex; align-items:center; gap:2px; flex-wrap:wrap;
+  }
+  @media (max-width:700px){
+    /* 좁은 화면에서는 소형(3열)/중형(2열)도 한 줄에 넣기 어려우므로 세로로 쌓습니다. */
+    .report-block[data-size="small"], .report-block[data-size="medium"]{
+      flex:0 0 100%; width:100%;
+    }
   }
   .report-hero{
     position:relative; overflow:hidden; border-radius:14px; border:1.5px solid var(--ink-soft);
@@ -691,17 +663,11 @@
   .report-checklist .rc-row .rc-text.done{ text-decoration:line-through; color:var(--ink-soft); }
   .report-checklist .rc-cat{ font-family:'JetBrains Mono', monospace; font-size:9.5px; color:var(--accent-dark); background:var(--accent-soft); border-radius:5px; padding:1px 6px; flex-shrink:0; }
 
-  .report-cta-row{ display:flex; gap:8px; flex-wrap:wrap; margin-top:2px; }
-  .report-cta{
-    font-family:'JetBrains Mono', monospace; font-weight:700; font-size:11.5px; padding:9px 13px;
-    background:var(--ink); color:#fff; border:none; border-radius:8px; cursor:pointer;
-    display:flex; align-items:center; gap:6px; transition:background-color .14s;
-  }
-  .report-cta:hover{ background:var(--accent-dark); }
-  .report-cta.ghost{ background:var(--paper-2); color:var(--ink); }
-  .report-cta.ghost:hover{ background:var(--accent-soft); color:var(--accent-dark); }
-
   .report-empty{ font-size:11px; color:var(--ink-soft); font-family:'JetBrains Mono', monospace; padding:6px 0; }
+
+  /* ---------- 인쇄창: 마인드맵 배너 ---------- */
+  .report-mindmap-svg{ width:100%; height:auto; display:block; }
+  .report-mindmap-note{ margin-top:4px; }
 
   /* 인쇄창 달력: 이제 바깥 .report-block(달력 배너) 자체를 드래그로 크기 조절하므로,
      내부 달력은 배너 폭을 그대로 채웁니다. 기본 크기는 '오늘의 완료 현황판'과 동일(50%)하게 맞춥니다. */
@@ -739,14 +705,18 @@
   }
 
   /* ---------- 인쇄(브라우저 프린트) ---------- */
+  /* 적정 페이지 사이즈 기준: A4 세로(210×297mm), 여백 12mm.
+     화면의 --report-page-w(794px)와 같은 기준이라 미리보기와 인쇄 결과 폭이 일치합니다. */
+  @page{ size:A4; margin:12mm; }
   @media print{
     body{ background:#fff !important; }
-    .side-tabs, .theme-picker, .report-cta-row, .nav-btn, .rp-nav, .save-status{ display:none !important; }
+    .side-tabs, .theme-picker, .nav-btn, .rp-nav, .save-status,
+    .report-layout-toolbar, .report-block .rb-toolbar{ display:none !important; }
     .app-shell{ display:block !important; max-width:100% !important; }
     .main-content{ padding:0 !important; }
+    .report-panels{ max-width:100% !important; }
     .report-panel, .report-hero{ box-shadow:none !important; break-inside:avoid; page-break-inside:avoid; border-color:#999 !important; }
     .time-scroll{ max-height:none !important; overflow:visible !important; }
-    .report-grid{ grid-template-columns:repeat(4,1fr) !important; }
   }
 
   /* ---------- Login gate ---------- */
@@ -2108,7 +2078,7 @@
     ['', 'Log', 'Report'].forEach(sfx => renderCalendar(sfx));
     // 날짜를 옮겨서 그날의 일정 개수가 달라지면 인쇄창 달력 배너의 높이도 다시 맞춰서
     // 늘어난 일정 목록이 가려지지 않게 합니다. (인쇄창이 화면에 없을 때는 조용히 무시됩니다.)
-    fitReportBlockToContent('calendar');
+    equalizeReportBannerHeights();
   }
   bindDayEventAdd('');
   bindDayEventAdd('Log');
@@ -3038,6 +3008,40 @@
     return `<svg class="rp-shape" viewBox="0 0 80 60" xmlns="http://www.w3.org/2000/svg">${REPORT_PANEL_SHAPES[i % REPORT_PANEL_SHAPES.length]}</svg>`;
   }
 
+  // ---------- 인쇄창: 마인드맵 배너 ----------
+  // 오늘 기록의 6개 카테고리(생각/건강/인간관계/자산투자/직업/취미)를 중심 노드에서
+  // 방사형으로 뻗어나가는 마인드맵으로 보여줍니다. 오늘 실제로 입력된 카테고리는
+  // 강조 색으로, 아직 비어있는 카테고리는 흐리게 표시해 한눈에 파악할 수 있게 합니다.
+  const REPORT_MINDMAP_COLORS = ['var(--teal)','var(--accent)','var(--purple)','var(--pink)','var(--green)','var(--yellow)'];
+  function renderReportMindmap(entry){
+    const branches = TIMELINE_CATS.slice(0, 6);
+    const cx = 150, cy = 138, r = 96;
+    const nodeR = 30;
+    const n = branches.length;
+    let lines = '', nodes = '';
+    branches.forEach((b, i) => {
+      const angle = (Math.PI * 2 * i / n) - Math.PI / 2;
+      const x = cx + r * Math.cos(angle);
+      const y = cy + r * Math.sin(angle);
+      const active = categoryHasContent(entry, b.key);
+      const color = REPORT_MINDMAP_COLORS[i % REPORT_MINDMAP_COLORS.length];
+      lines += `<line x1="${cx}" y1="${cy}" x2="${x}" y2="${y}" stroke="${active ? color : 'var(--line)'}" stroke-width="${active ? 2.5 : 1.5}" opacity="${active ? 0.85 : 0.5}"/>`;
+      nodes += `<g>
+        <circle cx="${x}" cy="${y}" r="${nodeR}" fill="${active ? color : 'var(--paper-2)'}" opacity="${active ? 0.22 : 1}" stroke="${active ? color : 'var(--line)'}" stroke-width="1.5"/>
+        <text x="${x}" y="${y - 3}" text-anchor="middle" font-size="14">${b.icon}</text>
+        <text x="${x}" y="${y + 13}" text-anchor="middle" font-size="8.5" font-family="'JetBrains Mono', monospace" font-weight="700" fill="var(--ink)">${b.label}</text>
+      </g>`;
+    });
+    return `<svg class="report-mindmap-svg" viewBox="0 0 300 276" xmlns="http://www.w3.org/2000/svg">
+      ${lines}
+      <circle cx="${cx}" cy="${cy}" r="36" fill="var(--ink)" />
+      <text x="${cx}" y="${cy - 4}" text-anchor="middle" font-size="12" font-weight="800" fill="#fff">오늘의</text>
+      <text x="${cx}" y="${cy + 12}" text-anchor="middle" font-size="12" font-weight="800" fill="#fff">기록</text>
+      ${nodes}
+    </svg>
+    <div class="report-empty report-mindmap-note">● 색이 채워진 항목 = 오늘 해당 카테고리에 기록이 있음</div>`;
+  }
+
   // ---------- 인쇄창: 오늘 기록(기록 탭에 입력한 전체 내용) 요약 ----------
   function lsItem(label, value){
     if(value === undefined || value === null || value === '') return '';
@@ -3198,49 +3202,26 @@
     </div>`;
   }
 
-  // 인쇄창 배너 기본 배치 — hero(오늘의 완료 현황판)와 stat(오늘계획)을 같은 크기로 나란히,
-  // 달력도 hero(현황판)와 같은 폭으로 맞춥니다. 실제 좌표는 렌더링 시점에
-  // reportPanels의 실측 너비를 기준으로 계산해서, 화면 폭이 달라져도 기본 배치가 자연스럽게 잡힙니다.
-  // 사용자가 배너를 옮기거나 크기를 바꾸면 그 이후로는 이 기본값 대신 저장된 좌표를 그대로 사용합니다.
-  const REPORT_DEFAULT_HEIGHT = { hero:196, stat:196, goal:210, time:190, checklist:220, logsum:260, calendar:430 };
-  // 배너 크기 규격화: 소형/중형/대형 3단계. width는 인쇄창 폭(containerWidth) 대비 비율로 계산하고,
-  // height는 "그 폭에서 실제로 필요한 콘텐츠 높이"를 항상 함께 반영해(never 잘림) 정합니다.
+  // 배너 크기 규격화: 소형(한 줄에 3개) / 중형(한 줄에 2개) / 대형(한 줄에 1개, 전체 폭) 3단계.
+  // 실제 폭은 CSS(.report-block[data-size=...])가 담당하므로 여기서는 라벨과 기본값만 관리합니다.
   const REPORT_SIZE_PRESETS = {
-    small:  { label:'소형', short:'소', widthRatio:0.32, minWidth:220 },
-    medium: { label:'중형', short:'중', widthRatio:0.49, minWidth:260 },
-    large:  { label:'대형', short:'대', widthRatio:0.99, minWidth:300 }
+    small:  { label:'소형', short:'소', desc:'한 줄에 3개' },
+    medium: { label:'중형', short:'중', desc:'한 줄에 2개' },
+    large:  { label:'대형', short:'대', desc:'한 줄에 1개(전체 폭)' }
   };
-  function computeDefaultReportLayout(containerWidth){
-    const gap = 10;
-    const cw = Math.max(containerWidth || 0, 460);
-    const halfW = (cw - gap) / 2;
-    const pos = {};
-    // 오늘계획(stat)의 높이를 현황판(hero)과 같게 맞춰서 두 배너가 한 줄에서 나란히 같은 높이로 보이게 합니다.
-    pos.hero = { left:0, top:0, width:halfW, height:REPORT_DEFAULT_HEIGHT.hero };
-    pos.stat = { left:halfW + gap, top:0, width:halfW, height:REPORT_DEFAULT_HEIGHT.hero };
-    let y = REPORT_DEFAULT_HEIGHT.hero + gap;
-    ['goal','time','checklist','logsum'].forEach(pid => {
-      pos[pid] = { left:0, top:y, width:cw, height:REPORT_DEFAULT_HEIGHT[pid] };
-      y += REPORT_DEFAULT_HEIGHT[pid] + gap;
-    });
-    // 달력을 '오늘의 완료 현황판(hero)'과 동일한 폭으로 맞춥니다.
-    pos.calendar = { left:0, top:y, width:halfW, height:REPORT_DEFAULT_HEIGHT.calendar };
-    return pos;
-  }
-  function reportBlock(pid, pos, innerHtml){
-    const style = `left:${pos.left}px; top:${pos.top}px; width:${pos.width}px; height:${pos.height}px;`;
-    const sizeMode = pos.sizeMode || '';
+  // 배너 기본 규격: 사용자의 요청대로 모든 배너는 소형을 기본값으로 합니다.
+  const REPORT_DEFAULT_SIZE = { hero:'small', stat:'small', mindmap:'small', goal:'small', time:'small', checklist:'small', logsum:'small', calendar:'small' };
+  function reportBlock(pid, innerHtml, size){
+    size = size || REPORT_DEFAULT_SIZE[pid] || 'small';
     const sizeButtons = Object.keys(REPORT_SIZE_PRESETS).map(key => {
       const p = REPORT_SIZE_PRESETS[key];
-      return `<button type="button" class="rb-size-btn${sizeMode===key?' active':''}" data-pid="${pid}" data-size="${key}" title="${p.label}(내용이 모두 보이는 크기로 맞춤)">${p.short}</button>`;
+      return `<button type="button" class="rb-size-btn${size===key?' active':''}" data-pid="${pid}" data-size="${key}" title="${p.label} — ${p.desc}">${p.short}</button>`;
     }).join('');
-    return `<div class="report-block" data-pid="${pid}" data-size-mode="${sizeMode}" style="${style}">
+    return `<div class="report-block" data-pid="${pid}" data-size="${size}">
       <div class="rb-toolbar">
         <div class="rb-size-toggle">${sizeButtons}</div>
-        <span class="rb-handle" title="끌어서 화면 어디로든 자유롭게 이동">⠿</span>
       </div>
       ${innerHtml}
-      <span class="rb-resize-handle" title="끌어서 크기 조절"></span>
     </div>`;
   }
 
@@ -3248,12 +3229,9 @@
     const wrap = $('reportView');
     const todayPct = dayCompletionPct(todayStr());
     const dStats = planStatsFor('daily', todayStr());
-    // 저장된 배치가 있으면 그대로, 없으면 현재 화면 폭 기준으로 기본 배치를 계산합니다.
-    const savedLayout = getReportLayout();
-    const containerWidth = wrap.clientWidth || (document.querySelector('.main-content')||{}).clientWidth || 900;
-    const defaultLayout = computeDefaultReportLayout(containerWidth);
-    const layout = savedLayout || defaultLayout;
-    const posFor = pid => layout[pid] || defaultLayout[pid];
+    // 저장된 배너 규격(소/중/대)이 있으면 그대로 쓰고, 없으면 전체 기본값(소형)을 씁니다.
+    const savedSizes = getReportSizes();
+    const sizeFor = pid => (savedSizes && savedSizes[pid]) || REPORT_DEFAULT_SIZE[pid] || 'small';
 
     wrap.innerHTML = `
       <div class="header">
@@ -3264,13 +3242,14 @@
       </div>
 
       <div class="report-layout-toolbar">
-        <button class="nav-btn" id="rSaveLayout">💾 배너 위치 저장</button>
-        <button class="nav-btn ghost" id="rResetLayout">↺ 배치 초기화</button>
+        <button type="button" class="report-print-btn" id="rPrintBtn">🖨 인쇄</button>
+        <button class="nav-btn ghost" id="rResetLayout">↺ 전체 소형으로</button>
+        <span class="report-size-legend">소=한 줄에 3개 · 중=한 줄에 2개 · 대=한 줄에 1개</span>
         <span class="rlt-status" id="rLayoutStatus"></span>
       </div>
 
       <div class="report-panels" id="reportPanels">
-        ${reportBlock('hero', posFor('hero'), `
+        ${reportBlock('hero', `
         <div class="report-hero">
           ${reportHeroShapes()}
           <div class="rh-eyebrow">HBORAD · PRINT / SUMMARY</div>
@@ -3280,32 +3259,41 @@
           <div class="theme-picker" id="themePicker">
             <span class="tp-label">테마</span>
           </div>
-        </div>`)}
+        </div>`, sizeFor('hero'))}
 
-        ${reportBlock('stat', posFor('stat'), `
+        ${reportBlock('stat', `
         <div class="report-stat">
           ${reportStatShape(0)}
           <div class="rs-label">📝 오늘 계획</div>
           <div class="rs-value">${dStats.done}/${dStats.total}</div>
           <div class="rs-sub">일간 할일·습관 달성</div>
-        </div>`)}
+        </div>`, sizeFor('stat'))}
 
-        ${reportBlock('goal', posFor('goal'), `
+        ${reportBlock('mindmap', `
+        <div class="report-panel">
+          ${reportPanelShape(2)}
+          <div class="rp-head">
+            <div class="rp-title">🧠 오늘의 기록 마인드맵</div>
+          </div>
+          ${renderReportMindmap(allLogs[todayStr()])}
+        </div>`, sizeFor('mindmap'))}
+
+        ${reportBlock('goal', `
         <div class="report-panel">
           ${reportPanelShape(0)}
           <div id="goalChartPanel"></div>
-        </div>`)}
+        </div>`, sizeFor('goal'))}
 
-        ${reportBlock('time', posFor('time'), `
+        ${reportBlock('time', `
         <div class="report-panel">
           ${reportPanelShape(1)}
           <div class="rp-head">
             <div class="rp-title">⏰ 오늘 시간계획 <span style="font-weight:400;color:var(--ink-soft);font-size:10.5px;">— 계획 vs 실제(실천) 구분</span></div>
           </div>
           ${renderTimePlanDonutPanel()}
-        </div>`)}
+        </div>`, sizeFor('time'))}
 
-        ${reportBlock('checklist', posFor('checklist'), `
+        ${reportBlock('checklist', `
         <div class="report-panel">
           ${reportPanelShape(2)}
           <div class="rp-head">
@@ -3313,18 +3301,18 @@
             <span class="rp-pct-pill">${dStats.pct}%</span>
           </div>
           ${renderReportChecklist(allPlans.daily && allPlans.daily[todayStr()])}
-        </div>`)}
+        </div>`, sizeFor('checklist'))}
 
-        ${reportBlock('logsum', posFor('logsum'), `
+        ${reportBlock('logsum', `
         <div class="report-panel">
           ${reportPanelShape(0)}
           <div class="rp-head">
             <div class="rp-title">🗂 오늘의 전체 기록 <span style="font-weight:400;color:var(--ink-soft);font-size:10.5px;">— 기록 탭에 입력한 내용</span></div>
           </div>
           ${renderReportLogSummary(allLogs[todayStr()])}
-        </div>`)}
+        </div>`, sizeFor('logsum'))}
 
-        ${reportBlock('calendar', posFor('calendar'), `
+        ${reportBlock('calendar', `
         <div class="report-panel">
           ${reportPanelShape(1)}
           <div class="rp-head">
@@ -3344,16 +3332,10 @@
               <div class="de-add-row"><button type="button" class="add-row-btn" id="dayEventAddReport">+ 일정 추가</button></div>
             </div>
           </div>
-        </div>`)}
+        </div>`, sizeFor('calendar'))}
       </div>
 
-
-      <div class="report-cta-row">
-        <button class="report-cta" id="rGoLog">📝 오늘 기록 기입하기</button>
-        <button class="report-cta ghost" id="rGoPlan">🎯 계획 기입하기</button>
-        <button class="report-cta ghost" id="rGoCal">🗓 달력에서 보기</button>
-      </div>
-      <div class="footer-note">draft v0.7 · 인쇄창은 읽기 전용 요약이며, 실제 입력은 기록·계획 탭에서 합니다 · 브라우저 인쇄(Ctrl/Cmd+P) 시 이 화면 전체가 인쇄됩니다</div>
+      <div class="footer-note">draft v0.8 · 인쇄창은 읽기 전용 요약이며, 실제 입력은 기록·계획 탭에서 합니다 · 인쇄 버튼(또는 Ctrl/Cmd+P) 클릭 시 이 화면 전체가 A4 기준으로 인쇄됩니다</div>
     `;
 
     renderThemePicker();
@@ -3361,34 +3343,37 @@
     bindCalNav('Report');
     bindDayEventAdd('Report');
     renderCalendar('Report');
+    initReportBlockSizing();
     // 모든 배너(특히 달력·오늘 시간계획처럼 내용 길이가 날마다 달라지는 배너)가
-    // 저장된/기본 높이보다 실제 내용이 더 커서 잘려 보이는 일이 없도록,
-    // 렌더링된 실제 내용 높이에 맞춰 배너 높이를 자동으로 늘려줍니다.
-    ['hero','stat','goal','time','checklist','logsum','calendar'].forEach(fitReportBlockToContent);
-    initReportBlockFreeLayout();
+    // 같은 규격끼리는 같은 높이를 유지하면서도 내용이 잘리지 않도록, 렌더링 직후
+    // 실제 내용 높이를 측정해 규격(소/중/대)별로 높이를 맞춥니다.
+    equalizeReportBannerHeights();
 
-    $('rSaveLayout').addEventListener('click', () => saveReportLayoutNow());
+    $('rPrintBtn').addEventListener('click', () => window.print());
     $('rResetLayout').addEventListener('click', () => {
-      if(confirm('배너 배치를 기본값으로 초기화할까요?')) resetReportLayout();
+      if(confirm('모든 배너를 소형으로 되돌릴까요?')) resetReportSizes();
     });
-    $('rGoLog').addEventListener('click', () => switchView('log'));
-    $('rGoPlan').addEventListener('click', () => switchView('plan'));
-    $('rGoCal').addEventListener('click', () => switchView('plan'));
   }
 
-  // ================= 인쇄창 배너: 자유 위치 이동 + 크기 조절 저장 =================
-  // 손잡이(⠿)를 눌러 화면 안 어디로든(빈 공간 포함) 자유롭게 끌어다 놓을 수 있고,
-  // 모서리의 크기조절 핸들을 끌어 크기도 자유롭게 바꿀 수 있습니다. "위치 저장" 버튼을 눌러야
-  // 저장되고, "배치 초기화" 버튼을 누르면 기본 배치로 되돌아갑니다.
-  // 어떤 경우에도(이동 중·크기 조절 중·규격 버튼 선택·렌더링 직후 콘텐츠 높이 반영 등) 배너들이
-  // 서로 겹친 채로 남지 않도록, resolveOverlaps()가 항상 최소 간격(REPORT_MIN_GAP)만큼
-  // 떨어지도록 다른 배너를 밀어냅니다.
-  const REPORT_MIN_GAP = 10;
-  function getReportLayout(){
+  // ================= 인쇄창 배너: 규격(소/중/대) 표준화 =================
+  // 자유 위치 이동/자유 크기조절은 겹침·잘림 문제의 원인이었으므로 완전히 제거했습니다.
+  // 이제 배너는 소형(한 줄 3개)/중형(한 줄 2개)/대형(한 줄 1개) 중 하나의 규격만 가지며,
+  // 실제 폭은 CSS(flex-wrap)가 정하므로 배너끼리 겹치는 상태 자체가 생길 수 없습니다.
+  // 사용자는 각 배너 우상단의 소/중/대 버튼으로 규격만 바꿀 수 있고, 그 선택은 저장됩니다.
+  function getReportSizes(){
     try{
-      const raw = localStorage.getItem('hb-report-layout-v2');
+      const raw = localStorage.getItem('hb-report-sizes-v1');
       return raw ? JSON.parse(raw) : null;
     }catch(e){ return null; }
+  }
+  function saveReportSizes(){
+    const wrap = $('reportPanels');
+    if(!wrap) return;
+    const sizes = {};
+    wrap.querySelectorAll('.report-block').forEach(b => {
+      sizes[b.dataset.pid] = b.dataset.size || 'small';
+    });
+    try{ localStorage.setItem('hb-report-sizes-v1', JSON.stringify(sizes)); }catch(e){}
   }
   function showReportLayoutStatus(msg){
     const el = $('rLayoutStatus');
@@ -3396,215 +3381,52 @@
     el.textContent = msg;
     setTimeout(() => { if(el.textContent === msg) el.textContent = ''; }, 2200);
   }
-  function saveReportLayoutNow(){
-    const wrap = $('reportPanels');
-    if(!wrap) return;
-    const layout = {};
-    wrap.querySelectorAll('.report-block').forEach(b => {
-      layout[b.dataset.pid] = {
-        left: parseFloat(b.style.left) || 0,
-        top: parseFloat(b.style.top) || 0,
-        width: parseFloat(b.style.width) || b.offsetWidth,
-        height: parseFloat(b.style.height) || b.offsetHeight,
-        sizeMode: b.dataset.sizeMode || ''
-      };
-    });
-    try{ localStorage.setItem('hb-report-layout-v2', JSON.stringify(layout)); }catch(e){}
-    showReportLayoutStatus('배너 위치를 저장했습니다');
-  }
-  function resetReportLayout(){
-    try{ localStorage.removeItem('hb-report-layout-v2'); }catch(e){}
+  function resetReportSizes(){
+    try{ localStorage.removeItem('hb-report-sizes-v1'); }catch(e){}
     renderReportView();
-    showReportLayoutStatus('기본 배치로 초기화했습니다');
+    showReportLayoutStatus('모든 배너를 소형으로 되돌렸습니다');
   }
-  // 특정 배너(pid)의 실제 콘텐츠 높이(scrollHeight)가 현재 설정된 높이보다 크면,
-  // 내용이 가려지지 않도록 배너 높이를 콘텐츠 높이에 맞춰 늘립니다.
-  // (사용자가 "위치 저장"으로 직접 저장해 둔 높이가 이미 충분히 크면 그대로 둡니다.)
-  function fitReportBlockToContent(pid){
+  // ---------- 배너 규격 균일화: 같은 규격(소/중/대)끼리는 항상 같은 높이 ----------
+  // 폭은 CSS가 규격별로 고정하지만, 내용 길이는 배너마다 다르므로 높이를 그대로 두면
+  // 같은 규격이라도 들쭉날쭉해 보입니다. 규격 그룹별로 실제 필요한 콘텐츠 높이(scrollHeight)의
+  // 최댓값을 구해 그 그룹의 모든 배너에 동일하게 적용합니다 — 내용이 잘리는 배너도 없고,
+  // 같은 규격끼리 높이가 다른 배너도 없습니다.
+  function equalizeReportBannerHeights(){
     const wrap = $('reportPanels');
     if(!wrap) return;
-    const block = wrap.querySelector(`.report-block[data-pid="${pid}"]`);
-    if(!block) return;
-    const needed = block.scrollHeight + 4; // 여백 약간 추가
-    const current = parseFloat(block.style.height) || 0;
-    if(needed > current){
-      block.style.height = needed + 'px';
-    }
-  }
-  // ---------- 배너 크기 규격화: 소형/중형/대형 ----------
-  // 버튼을 누르면 그 규격에 해당하는 폭으로 바꾸고, 그 폭에서 실제로 필요한 콘텐츠 높이를
-  // 다시 측정해(scrollHeight) 내용이 잘리지 않는 높이로 함께 맞춥니다.
-  function updateReportBlockSizeButtons(block, sizeMode){
-    block.dataset.sizeMode = sizeMode || '';
-    block.querySelectorAll('.rb-size-btn').forEach(btn => {
-      btn.classList.toggle('active', !!sizeMode && btn.dataset.size === sizeMode);
+    const blocks = Array.from(wrap.querySelectorAll('.report-block'));
+    if(!blocks.length) return;
+    // 먼저 모든 배너를 내용에 맞는 자연스러운 높이로 되돌려 실제 필요 높이를 측정합니다.
+    blocks.forEach(b => { b.style.height = 'auto'; });
+    const groups = {};
+    blocks.forEach(b => {
+      const size = b.dataset.size || 'small';
+      (groups[size] = groups[size] || []).push(b);
+    });
+    Object.keys(groups).forEach(size => {
+      const groupBlocks = groups[size];
+      let maxH = 0;
+      groupBlocks.forEach(b => { maxH = Math.max(maxH, b.scrollHeight); });
+      groupBlocks.forEach(b => { b.style.height = maxH + 'px'; });
     });
   }
+  // ---------- 소/중/대 버튼: 규격을 바꾸고 그룹 높이를 다시 맞춥니다 ----------
   function applyReportBlockSize(pid, size){
     const wrap = $('reportPanels');
     if(!wrap) return;
     const block = wrap.querySelector(`.report-block[data-pid="${pid}"]`);
-    const preset = REPORT_SIZE_PRESETS[size];
-    if(!block || !preset) return;
-    const containerWidth = wrap.clientWidth || 900;
-    let newWidth = Math.round(containerWidth * preset.widthRatio);
-    newWidth = Math.max(preset.minWidth, Math.min(newWidth, containerWidth));
-    block._programmaticResize = true;
-    block.style.width = newWidth + 'px';
-    // 폭이 바뀌면 줄바꿈 등으로 필요한 높이도 달라지므로, 실제 콘텐츠 높이를 다시 측정해
-    // 최소한 그 높이 이상을 확보합니다 — 어떤 규격을 골라도 내용이 가려지지 않도록.
-    const needed = block.scrollHeight + 4;
-    const base = REPORT_DEFAULT_HEIGHT[pid] || 150;
-    block.style.height = Math.max(needed, base, 90) + 'px';
-    updateReportBlockSizeButtons(block, size);
-    // 소/중/대 규격을 바꿔서 이 배너가 다른 배너와 겹치게 되면, 다른 배너들을
-    // 한 곳도 겹치지 않게 최소 간격만큼 밀어냅니다.
-    resolveOverlaps(block);
-    updateReportContainerHeight();
-    setTimeout(() => { block._programmaticResize = false; }, 60);
-  }
-  function updateReportContainerHeight(){
-    const wrap = $('reportPanels');
-    if(!wrap) return;
-    let maxBottom = 0;
-    wrap.querySelectorAll('.report-block').forEach(b => {
-      const top = parseFloat(b.style.top) || 0;
-      maxBottom = Math.max(maxBottom, top + b.offsetHeight);
+    if(!block || !REPORT_SIZE_PRESETS[size]) return;
+    block.dataset.size = size;
+    block.querySelectorAll('.rb-size-btn').forEach(btn => {
+      btn.classList.toggle('active', btn.dataset.size === size);
     });
-    wrap.style.height = (maxBottom + 20) + 'px';
+    equalizeReportBannerHeights();
+    saveReportSizes();
   }
-  // ---------- 배너 겹침 방지: 최소 간격을 두고 서로 밀어내기 ----------
-  // activeEl이 주어지면(지금 이동·크기조절 중인 배너) 그 배너는 고정한 채 나머지만 밀어내고,
-  // activeEl이 없으면(렌더링 직후 전체 점검용) 더 위쪽·왼쪽에 있는 배너를 기준으로 삼아
-  // 정리합니다. 여러 배너가 연쇄적으로 겹칠 수 있으므로 더 이상 겹침이 없을 때까지
-  // 여러 번(최대 10회) 반복해서 안정된 배치를 찾습니다.
-  function resolveOverlaps(activeEl){
+  function initReportBlockSizing(){
     const wrap = $('reportPanels');
     if(!wrap) return;
-    const gap = REPORT_MIN_GAP;
-    const containerWidth = wrap.clientWidth || 900;
-    const blocks = Array.from(wrap.querySelectorAll('.report-block'));
-    if(blocks.length < 2) return;
-    function rectOf(el){
-      return { el, left:parseFloat(el.style.left)||0, top:parseFloat(el.style.top)||0,
-        width:el.offsetWidth, height:el.offsetHeight };
-    }
-    for(let pass = 0; pass < 10; pass++){
-      const rects = blocks.map(rectOf);
-      let moved = false;
-      for(let i = 0; i < rects.length; i++){
-        for(let j = i + 1; j < rects.length; j++){
-          const a = rects[i], b = rects[j];
-          const overlapX = Math.min(a.left + a.width, b.left + b.width) - Math.max(a.left, b.left);
-          const overlapY = Math.min(a.top + a.height, b.top + b.height) - Math.max(a.top, b.top);
-          // 두 축 모두 최소 간격(gap)보다 좁으면(=겹쳤거나 간격이 부족하면) 밀어냅니다.
-          if(overlapX > -gap && overlapY > -gap){
-            let fixed, movable;
-            if(a.el === activeEl){ fixed = a; movable = b; }
-            else if(b.el === activeEl){ fixed = b; movable = a; }
-            else if(a.top < b.top || (a.top === b.top && a.left <= b.left)){ fixed = a; movable = b; }
-            else { fixed = b; movable = a; }
-            // 겹침이 더 얕은(적게 밀면 되는) 축으로 먼저 밀어봅니다.
-            const needX = gap - overlapX, needY = gap - overlapY;
-            let handled = false;
-            if(needX < needY){
-              let newLeft = (movable.left + movable.width / 2 < fixed.left + fixed.width / 2)
-                ? fixed.left - movable.width - gap
-                : fixed.left + fixed.width + gap;
-              newLeft = Math.max(0, Math.min(newLeft, Math.max(0, containerWidth - movable.width)));
-              if(Math.abs(newLeft - movable.left) > 0.5){
-                movable.el.style.left = newLeft + 'px';
-                movable.left = newLeft;
-                moved = true;
-                handled = true;
-              }
-            }
-            if(!handled){
-              // 가로로 밀 공간이 없거나 세로가 더 얕은 겹침이면 세로로 밀어냅니다.
-              const newTop = (movable.top + movable.height / 2 < fixed.top + fixed.height / 2)
-                ? Math.max(0, fixed.top - movable.height - gap)
-                : fixed.top + fixed.height + gap;
-              movable.el.style.top = newTop + 'px';
-              movable.top = newTop;
-              moved = true;
-            }
-          }
-        }
-      }
-      if(!moved) break;
-    }
-    updateReportContainerHeight();
-  }
-  // ---------- 이동 손잡이 / 크기 버튼 / 크기조절 핸들: 마우스가 근접했을 때만 보이고 조작 가능 ----------
-  function initReportBlockProximity(){
-    const wrap = $('reportPanels');
-    if(!wrap) return;
-    const NEAR = 46; // px — 이 거리 안으로 마우스가 들어오면 해당 배너의 컨트롤이 나타납니다.
-    function update(clientX, clientY){
-      wrap.querySelectorAll('.report-block').forEach(block => {
-        const rect = block.getBoundingClientRect();
-        const nearToolbar = clientX >= rect.left && clientX <= rect.right + NEAR &&
-                             clientY >= rect.top - NEAR && clientY <= rect.top + 40;
-        const nearResize = clientX >= rect.right - 60 && clientX <= rect.right + NEAR &&
-                            clientY >= rect.bottom - 60 && clientY <= rect.bottom + NEAR;
-        block.classList.toggle('rb-controls-near', nearToolbar || nearResize);
-      });
-    }
-    wrap.addEventListener('mousemove', (e) => update(e.clientX, e.clientY));
-    wrap.addEventListener('mouseleave', () => {
-      wrap.querySelectorAll('.report-block').forEach(b => b.classList.remove('rb-controls-near'));
-    });
-  }
-  function initReportBlockFreeLayout(){
-    const wrap = $('reportPanels');
-    if(!wrap) return;
-    // 렌더링 직후에는 콘텐츠 높이 반영(fitReportBlockToContent) 등으로 배너끼리 겹쳐 있을 수
-    // 있으므로, 개별 조작 전에 먼저 한 번 전체를 점검해 정리합니다.
-    resolveOverlaps(null);
-    updateReportContainerHeight();
-    initReportBlockProximity();
     wrap.querySelectorAll('.report-block').forEach(block => {
-      const handle = block.querySelector('.rb-handle');
-      if(handle){
-        const startDrag = (clientX, clientY) => {
-          const startLeft = parseFloat(block.style.left) || 0;
-          const startTop = parseFloat(block.style.top) || 0;
-          block.classList.add('rb-dragging');
-
-          function moveTo(cx, cy){
-            const dx = cx - clientX, dy = cy - clientY;
-            const newLeft = Math.max(0, startLeft + dx);
-            const newTop = Math.max(0, startTop + dy);
-            block.style.left = newLeft + 'px';
-            block.style.top = newTop + 'px';
-            // 이 배너가 다른 배너와 겹치면, 겹친 배너를 최소 간격만큼 밀어내어
-            // 어떤 경우에도 서로 겹친 채로 남아있지 않게 합니다.
-            resolveOverlaps(block);
-          }
-          function onMouseMove(e){ moveTo(e.clientX, e.clientY); }
-          function onMouseUp(){
-            document.removeEventListener('mousemove', onMouseMove);
-            document.removeEventListener('mouseup', onMouseUp);
-            block.classList.remove('rb-dragging');
-          }
-          function onTouchMove(e){ const t = e.touches[0]; if(t){ moveTo(t.clientX, t.clientY); e.preventDefault(); } }
-          function onTouchEnd(){
-            document.removeEventListener('touchmove', onTouchMove);
-            document.removeEventListener('touchend', onTouchEnd);
-            block.classList.remove('rb-dragging');
-          }
-          document.addEventListener('mousemove', onMouseMove);
-          document.addEventListener('mouseup', onMouseUp);
-          document.addEventListener('touchmove', onTouchMove, { passive:false });
-          document.addEventListener('touchend', onTouchEnd);
-        };
-        handle.addEventListener('mousedown', (e) => { e.preventDefault(); startDrag(e.clientX, e.clientY); });
-        handle.addEventListener('touchstart', (e) => {
-          const t = e.touches[0]; if(!t) return;
-          startDrag(t.clientX, t.clientY);
-        }, { passive:true });
-      }
-      // 소형/중형/대형 버튼: 눌린 규격에 맞춰 폭·높이를 표준화합니다 (내용은 항상 잘리지 않게).
       block.querySelectorAll('.rb-size-btn').forEach(btn => {
         btn.addEventListener('click', (e) => {
           e.preventDefault();
@@ -3612,68 +3434,24 @@
           applyReportBlockSize(block.dataset.pid, btn.dataset.size);
         });
       });
-      // 모서리의 크기조절 핸들: 브라우저 기본 resize 대신 직접 구현해서, 마우스 근접 시에만
-      // 나타나게 하고(.rb-controls-near) 내용이 잘리지 않는 높이 이하로는 줄어들지 않게 합니다.
-      const resizeHandle = block.querySelector('.rb-resize-handle');
-      if(resizeHandle){
-        const startResize = (clientX, clientY) => {
-          const startWidth = block.offsetWidth;
-          const startHeight = block.offsetHeight;
-          block.classList.add('rb-resizing');
-
-          function onMove(cx, cy){
-            const dx = cx - clientX, dy = cy - clientY;
-            const newWidth = Math.max(220, startWidth + dx);
-            block.style.width = newWidth + 'px';
-            // 폭이 바뀌면 줄바꿈으로 필요한 세로 길이도 달라지므로, 폭을 먼저 반영한 뒤
-            // 내용이 실제로 차지하는 높이(scrollHeight)를 다시 측정해 그 이하로는 줄지 않게 합니다.
-            const contentNeeded = block.scrollHeight;
-            const newHeight = Math.max(90, startHeight + dy, contentNeeded);
-            block.style.height = newHeight + 'px';
-            // 모서리를 직접 끌면 더 이상 소/중/대 표준 규격과 일치하지 않으므로 강조를 해제합니다.
-            if(block.dataset.sizeMode){ updateReportBlockSizeButtons(block, ''); }
-            // 크기가 바뀌어 다른 배너와 겹치면 그 배너들을 최소 간격만큼 밀어냅니다.
-            resolveOverlaps(block);
-          }
-          function onMouseMove(e){ onMove(e.clientX, e.clientY); }
-          function onMouseUp(){
-            document.removeEventListener('mousemove', onMouseMove);
-            document.removeEventListener('mouseup', onMouseUp);
-            block.classList.remove('rb-resizing');
-            updateReportContainerHeight();
-          }
-          function onTouchMove(e){ const t = e.touches[0]; if(t){ onMove(t.clientX, t.clientY); e.preventDefault(); } }
-          function onTouchEnd(){
-            document.removeEventListener('touchmove', onTouchMove);
-            document.removeEventListener('touchend', onTouchEnd);
-            block.classList.remove('rb-resizing');
-            updateReportContainerHeight();
-          }
-          document.addEventListener('mousemove', onMouseMove);
-          document.addEventListener('mouseup', onMouseUp);
-          document.addEventListener('touchmove', onTouchMove, { passive:false });
-          document.addEventListener('touchend', onTouchEnd);
-        };
-        resizeHandle.addEventListener('mousedown', (e) => { e.preventDefault(); e.stopPropagation(); startResize(e.clientX, e.clientY); });
-        resizeHandle.addEventListener('touchstart', (e) => {
-          e.stopPropagation();
-          const t = e.touches[0]; if(!t) return;
-          startResize(t.clientX, t.clientY);
-        }, { passive:true });
-      }
       // 콘텐츠가 이후에 바뀌어(예: 달력 월 이동 등) 배너 높이가 자연스럽게 변할 때도
-      // 다른 배너와 겹치지 않도록 다시 점검합니다.
+      // 같은 규격끼리 높이가 어긋나지 않도록 다시 맞춥니다.
       if(window.ResizeObserver){
+        let scheduled = false;
         new ResizeObserver(() => {
-          if(!block._programmaticResize && block.dataset.sizeMode){
-            updateReportBlockSizeButtons(block, '');
-          }
-          resolveOverlaps(block);
-          updateReportContainerHeight();
+          if(block._equalizing || scheduled) return;
+          scheduled = true;
+          requestAnimationFrame(() => {
+            scheduled = false;
+            block._equalizing = true;
+            equalizeReportBannerHeights();
+            block._equalizing = false;
+          });
         }).observe(block);
       }
     });
   }
+
 
   // ================= 테마 (디자인 색상 조합) =================
   // 조합을 늘리고 싶으면 이 배열에 { key, label, accent, dark, soft } 만 추가하면 됩니다.
