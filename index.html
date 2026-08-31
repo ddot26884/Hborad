@@ -263,7 +263,10 @@
   .day24-pct-row .d24-pct{ font-family:'JetBrains Mono', monospace; font-size:10.5px; font-weight:800; color:var(--accent-dark); width:34px; text-align:right; flex-shrink:0; }
   @media (max-width:520px){ .day24-pct-row .d24-label{ width:88px; font-size:9px; } }
 
-  .donut-wrap{ position:relative; display:inline-block; }
+  /* 도넛 SVG는 width/height 고정 픽셀 대신 viewBox + 반응형 CSS로 그려서,
+     배너 크기(소/중/대)를 바꾸거나 화면이 좁아져도 항상 배너 폭 안에 맞게 축소됩니다. */
+  .donut-wrap{ position:relative; width:100%; margin:0 auto; }
+  .donut-svg{ display:block; width:100%; height:auto; }
   .donut-center{
     position:absolute; top:50%; left:50%; transform:translate(-50%,-50%);
     font-family:'JetBrains Mono', monospace; font-weight:800; font-size:15px; color:var(--ink);
@@ -347,6 +350,14 @@
   .list-row input.due-input{ flex:0 0 128px; font-family:'JetBrains Mono', monospace; font-size:11.5px; padding:6px 7px; border:1.5px solid var(--line); border-radius:6px; background:var(--paper); }
   .list-row .row-dday{ flex-shrink:0; margin-left:0; }
   .ongoing-plan-section .report-empty{ padding:2px 0; }
+  /* 기록탭 할일/습관 줄: 내용/체크 한 줄 + 계획일정·실행일정(연월일) 한 줄로 두 단 구성 */
+  .list-row.has-dates{ display:flex; flex-direction:column; align-items:stretch; gap:5px; padding:6px 0 9px; border-bottom:1px dashed var(--line); }
+  .list-row.has-dates:last-child{ border-bottom:none; padding-bottom:2px; }
+  .list-row-main{ display:flex; align-items:center; gap:5px; }
+  .list-row-main input[type=text]{ flex:1; padding:7px 9px; border:1.5px solid var(--line); border-radius:6px; font-size:13px; background:var(--paper); min-width:0; }
+  .list-row-dates{ display:flex; gap:12px; flex-wrap:wrap; padding-left:25px; }
+  .lrd-field{ display:flex; align-items:center; gap:5px; font-family:'JetBrains Mono', monospace; font-size:10px; color:var(--ink-soft); white-space:nowrap; }
+  .lrd-field input[type=date]{ font-family:'JetBrains Mono', monospace; font-size:11px; padding:4px 6px; border:1.5px solid var(--line); border-radius:5px; background:var(--paper); color:var(--ink); }
   .row-check{
     width:20px; height:20px; border:2px solid var(--ink-soft); border-radius:5px; cursor:pointer; flex-shrink:0;
     display:flex; align-items:center; justify-content:center; background:var(--paper);
@@ -365,6 +376,17 @@
   .row-hint{ font-size:10px; color:var(--ink-soft); font-family:'JetBrains Mono', monospace; margin-bottom:5px; }
   .empty-hint{ font-size:11px; color:var(--ink-soft); font-family:'JetBrains Mono', monospace; padding:5px 0; }
   .sub-title{ font-family:'JetBrains Mono', monospace; font-size:11.5px; font-weight:700; color:var(--ink-soft); margin:10px 0 6px; }
+
+  /* ---------- 마인드맵 기록(기록탭) ---------- */
+  .mindmap-add-row{ display:flex; gap:6px; margin-bottom:9px; }
+  .mindmap-add-row input[type=text]{ flex:1; padding:8px 10px; border:1.5px solid var(--line); border-radius:6px; font-size:13px; background:var(--paper); min-width:0; }
+  .mindmap-word-list{ display:flex; flex-wrap:wrap; gap:6px; }
+  .mm-word-chip{
+    display:inline-flex; align-items:center; gap:6px; background:var(--purple-soft); color:var(--purple);
+    border-radius:20px; padding:5px 6px 5px 11px; font-size:11.5px; font-weight:600;
+  }
+  .mm-word-chip .mm-del{ cursor:pointer; color:var(--purple); opacity:0.6; font-weight:800; width:16px; height:16px; border-radius:50%; display:flex; align-items:center; justify-content:center; }
+  .mm-word-chip .mm-del:hover{ opacity:1; background:#fff; color:var(--safety-dark); }
   .sub-title:first-child{ margin-top:0; }
 
   .footer-note{ text-align:center; font-size:10px; color:var(--ink-soft); margin-top:16px; font-family:'JetBrains Mono', monospace; }
@@ -834,26 +856,14 @@
         <span class="save-status" id="saveStatus"></span>
       </div>
 
-      <!-- 오늘의 체크리스트: 맨 위에 배치 -->
-      <div class="dopa-panel" id="dopaPanel" style="margin-top:0;margin-bottom:10px;">
-        <div class="dopa-head">
-          <div class="dopa-mascot" id="dopaMascot"></div>
-          <div class="dopa-msg">
-            <div class="dm-title" id="dopaTitle">오늘의 체크리스트</div>
-            <div class="dm-sub" id="dopaSub">할일 · 습관을 체크하면 여기서 응원해줄게요</div>
-          </div>
+      <!-- 마인드맵 기록: 떠오르는 생각을 단어로 자유롭게 적으면 인쇄탭 머리모양 마인드맵에 하나씩 추가됩니다 -->
+      <div class="cat-section" id="logMindmapSection" style="margin-top:0;">
+        <div class="cat-title">🧠 마인드맵 기록 <span class="cnt">— 여기 적은 단어가 인쇄탭 마인드맵(머리모양)에 하나씩 추가돼요</span></div>
+        <div class="mindmap-add-row">
+          <input type="text" id="mindmapWordInput" placeholder="떠오르는 생각을 단어/짧은 문장으로 (예: 여행, 이직 고민)" />
+          <button type="button" class="add-row-btn" id="mindmapWordAdd">+ 추가</button>
         </div>
-        <div class="progress-track"><div class="progress-fill" id="dopaFill" style="width:0%"></div></div>
-        <div class="progress-pct" id="dopaPct">0 / 0 완료</div>
-        <div class="week-chart" id="weekChart"></div>
-      </div>
-
-      <div class="mission-widget" id="missionWidget"></div>
-
-      <!-- 계획창에서 목표일(D-day)을 지정한 할일/습관은, 그 날짜가 지나기 전까지 여기에서도 계속 보입니다 -->
-      <div class="cat-section ongoing-plan-section" id="logOngoingPlanSection">
-        <div class="cat-title">🎯 진행 중인 계획·습관 <span class="cnt">— 계획창에서 목표일을 지정하면 그 날까지 표시</span></div>
-        <div id="logOngoingPlanList"></div>
+        <div class="mindmap-word-list" id="mindmapWordList"></div>
       </div>
 
       <div class="cat-search-wrap">
@@ -861,21 +871,6 @@
         <span class="cat-search-hint" id="catSearchHint"></span>
       </div>
       <div class="cat-tabs" id="catTabs"></div>
-
-      <div class="cat-section" id="calendarViewLog" style="margin-bottom:12px;">
-        <div class="cal-header">
-          <button class="nav-btn" id="calPrevMonthLog">◀</button>
-          <div class="cal-title mono" id="calTitleLog"></div>
-          <button class="nav-btn" id="calNextMonthLog">▶</button>
-        </div>
-        <div class="cal-grid" id="calWeekdaysLog"></div>
-        <div class="cal-grid" id="calDaysLog" style="margin-top:6px;"></div>
-        <div class="day-events">
-          <div class="de-title" id="dayEventsTitleLog">일정</div>
-          <div id="dayEventsListLog"></div>
-          <div class="de-add-row"><button type="button" class="add-row-btn" id="dayEventAddLog">+ 일정 추가</button></div>
-        </div>
-      </div>
 
       <div class="log-banner-grid">
         <!-- 왼쪽 컬럼 -->
@@ -1047,15 +1042,18 @@
         </div>
       </div>
 
-      <!-- 할일 · 습관 (편집) -->
+      <!-- 할일 (편집) -->
       <div class="cat-section" data-cat="tasks">
-        <div class="cat-title">✅ 할일 · 습관</div>
-        <div class="sub-title">할일</div>
-        <div class="row-hint">⇒ 버튼으로 다음날로 이월할 수 있어요</div>
+        <div class="cat-title">✅ 할일</div>
+        <div class="row-hint">⇒ 버튼으로 다음날로 이월 · 계획일정/실행일정을 연월일로 각각 기입할 수 있어요</div>
         <div class="list-rows" id="todoRows"></div>
         <button class="add-row-btn" id="addTodoRow">+ 할일 추가</button>
-        <div class="sub-title">습관</div>
-        <div class="row-hint">⇒ 버튼으로 다음날로 이월할 수 있어요</div>
+      </div>
+
+      <!-- 습관 (편집) -->
+      <div class="cat-section" data-cat="tasks">
+        <div class="cat-title">🔁 습관</div>
+        <div class="row-hint">⇒ 버튼으로 다음날로 이월 · 계획일정/실행일정을 연월일로 각각 기입할 수 있어요</div>
         <div class="list-rows" id="habitRows"></div>
         <button class="add-row-btn" id="addHabitRow">+ 습관 추가</button>
       </div>
@@ -1609,6 +1607,7 @@
     applyCatTab(currentCatTab);
     renderDopaPanel();
     renderMissionWidget();
+    renderMindmapRecordList();
   }
 
   function renderScoreRow(elId, getVal, setVal){
@@ -1759,6 +1758,8 @@
     $('bodyWeight').value = entry.health.body.weight;
   }
 
+  // 할일/습관 각 줄은 내용 · 실천체크 외에, 계획일정(언제 하기로 계획했는지)과
+  // 실행일정(실제로 언제 실행했는지/할지)을 연월일로 각각 따로 기입할 수 있습니다.
   function renderListRows(containerId, key){
     const el = $(containerId);
     const list = entry[key];
@@ -1769,18 +1770,30 @@
     }
     list.forEach((item, idx) => {
       const row = document.createElement('div');
-      row.className = 'list-row';
+      row.className = 'list-row has-dates';
       row.innerHTML = `
-        <div class="row-order">${idx+1}</div>
-        <input type="text" value="${escapeAttr(item.content)}" data-idx="${idx}" />
-        <div class="row-check ${item.done?'done':''}" data-idx="${idx}" title="실천"></div>
-        <button class="row-move" data-idx="${idx}" title="다음날로 이월">⇒</button>
-        <button class="row-del" data-idx="${idx}">✕</button>
+        <div class="list-row-main">
+          <div class="row-order">${idx+1}</div>
+          <input type="text" value="${escapeAttr(item.content)}" data-idx="${idx}" placeholder="내용을 입력하세요" />
+          <div class="row-check ${item.done?'done':''}" data-idx="${idx}" title="실천"></div>
+          <button class="row-move" data-idx="${idx}" title="다음날로 이월">⇒</button>
+          <button class="row-del" data-idx="${idx}">✕</button>
+        </div>
+        <div class="list-row-dates">
+          <label class="lrd-field">계획일정 <input type="date" class="plan-date-input" value="${item.planDate||''}" data-idx="${idx}" /></label>
+          <label class="lrd-field">실행일정 <input type="date" class="exec-date-input" value="${item.execDate||''}" data-idx="${idx}" /></label>
+        </div>
       `;
       el.appendChild(row);
     });
     el.querySelectorAll('input[type=text]').forEach(inp => {
       inp.addEventListener('input', () => { entry[key][+inp.dataset.idx].content = inp.value; queueSave(); });
+    });
+    el.querySelectorAll('.plan-date-input').forEach(inp => {
+      inp.addEventListener('change', () => { entry[key][+inp.dataset.idx].planDate = inp.value; queueSave(); });
+    });
+    el.querySelectorAll('.exec-date-input').forEach(inp => {
+      inp.addEventListener('change', () => { entry[key][+inp.dataset.idx].execDate = inp.value; queueSave(); });
     });
     el.querySelectorAll('.row-check').forEach(cb => {
       cb.addEventListener('click', () => {
@@ -1813,7 +1826,7 @@
         const item = entry[key][idx];
         const nextDateStr = addDays(currentDate, 1);
         const nextEntry = allLogs[nextDateStr] ? JSON.parse(JSON.stringify(allLogs[nextDateStr])) : createEmptyEntry(nextDateStr);
-        nextEntry[key].push({ content:item.content, done:false });
+        nextEntry[key].push({ content:item.content, done:false, planDate:item.planDate||'', execDate:item.execDate||'' });
         allLogs[nextDateStr] = nextEntry;
         entry[key].splice(idx, 1);
         renderListRows(containerId, key);
@@ -2145,10 +2158,7 @@
       renderPlanView();
     }
     if(view === 'log'){
-      renderMissionWidget();
-      renderDopaPanel();
-      renderAllCalendars();
-      renderOngoingPlanList('logOngoingPlanList');
+      renderMindmapRecordList();
     }
     window.scrollTo(0, 0);
     document.querySelector('.main-content').scrollTop = 0;
@@ -2209,8 +2219,8 @@
     queueSave();
   });
 
-  $('addTodoRow').addEventListener('click', () => { entry.todos.push({content:'', done:false}); renderListRows('todoRows','todos'); renderDopaPanel(); queueSave(); });
-  $('addHabitRow').addEventListener('click', () => { entry.habits.push({content:'', done:false}); renderListRows('habitRows','habits'); renderDopaPanel(); queueSave(); });
+  $('addTodoRow').addEventListener('click', () => { entry.todos.push({content:'', done:false, planDate:'', execDate:''}); renderListRows('todoRows','todos'); renderDopaPanel(); queueSave(); });
+  $('addHabitRow').addEventListener('click', () => { entry.habits.push({content:'', done:false, planDate:'', execDate:''}); renderListRows('habitRows','habits'); renderDopaPanel(); queueSave(); });
 
   $('dateInput').addEventListener('change', e => setDate(e.target.value));
   $('todayBtn').addEventListener('click', () => setDate(todayStr()));
@@ -2258,6 +2268,61 @@
   renderCatTabs();
   $('catSearchInput').addEventListener('input', applyCatSearch);
   initBannerDrag();
+
+  // ================= 마인드맵 기록 (기록탭 ⇄ 인쇄탭 연동) =================
+  // 기록탭에서 떠오르는 생각을 짧은 단어/문장으로 자유롭게 입력하면, 인쇄탭의
+  // 머리모양 마인드맵에 하나씩 노드로 추가됩니다. 입력한 날짜를 함께 저장해서
+  // 인쇄탭의 일간/주간/연간 탭으로 기간을 좁혀볼 수 있습니다.
+  let mindmapWords = [];
+  async function loadMindmapWords(){
+    try{
+      const res = await window.storage.get('mindmap-words', false);
+      mindmapWords = res && res.value ? JSON.parse(res.value) : [];
+    }catch(e){ mindmapWords = []; }
+    if(!Array.isArray(mindmapWords)) mindmapWords = [];
+  }
+  async function persistMindmapWords(){
+    try{ await window.storage.set('mindmap-words', JSON.stringify(mindmapWords), false); }
+    catch(e){ console.error(e); hbToast('마인드맵 저장 실패: ' + ((e && e.message) || '알 수 없는 오류'), true); }
+  }
+  function renderMindmapRecordList(){
+    const wrap = $('mindmapWordList');
+    if(!wrap) return;
+    if(mindmapWords.length === 0){
+      wrap.innerHTML = '<div class="empty-hint">아직 적은 생각이 없어요 — 위에 단어를 적어보세요</div>';
+      return;
+    }
+    wrap.innerHTML = mindmapWords.slice().reverse().map(w => `
+      <span class="mm-word-chip" data-id="${w.id}">
+        <span class="mm-word-text">${escapeAttr(w.text)}</span>
+        <span class="mm-del" data-id="${w.id}" title="삭제">✕</span>
+      </span>
+    `).join('');
+    wrap.querySelectorAll('.mm-del').forEach(btn => {
+      btn.addEventListener('click', () => {
+        mindmapWords = mindmapWords.filter(w => w.id !== btn.dataset.id);
+        persistMindmapWords();
+        renderMindmapRecordList();
+      });
+    });
+  }
+  function addMindmapWordFromInput(){
+    const input = $('mindmapWordInput');
+    if(!input) return;
+    const v = input.value.trim();
+    if(!v) return;
+    mindmapWords.push({ id:'mm'+Date.now()+Math.random().toString(36).slice(2,6), text:v, date: currentDate || todayStr() });
+    persistMindmapWords();
+    input.value = '';
+    renderMindmapRecordList();
+  }
+  (function bindMindmapWordInput(){
+    const addBtn = $('mindmapWordAdd');
+    const input = $('mindmapWordInput');
+    if(!addBtn || !input) return;
+    addBtn.addEventListener('click', addMindmapWordFromInput);
+    input.addEventListener('keydown', (e) => { if(e.key === 'Enter'){ e.preventDefault(); addMindmapWordFromInput(); } });
+  })();
 
   // ================= PLAN VIEW =================
   let allPlans = { daily:{}, weekly:{}, monthly:{}, yearly:{} };
@@ -3015,6 +3080,44 @@
     return html;
   }
 
+  // ---------- 인쇄창: 오늘 습관 배너 (기록탭 습관과 연동) ----------
+  // 기록탭에서 입력한 "오늘 날짜"의 습관 목록을 그대로 보여주고, 여기서 체크를 토글하면
+  // allLogs(및 현재 기록탭이 오늘을 보고 있다면 entry)에 바로 반영되어 저장됩니다.
+  function renderReportTodayHabit(){
+    const today = todayStr();
+    const todayEntry = allLogs[today];
+    const habits = (todayEntry && todayEntry.habits) || [];
+    if(habits.length === 0){
+      return `<div class="report-empty">오늘 등록된 습관이 없어요 — 기록탭의 "🔁 습관"에서 추가해보세요</div>`;
+    }
+    return `<div class="report-checklist" id="reportTodayHabitList">` + habits.map((h, i) => `
+      <div class="rc-row">
+        <div class="row-check ${h.done?'done':''}" data-idx="${i}"></div>
+        <div class="rc-text ${h.done?'done':''}">${escapeAttr(h.content)||'(내용 없음)'}</div>
+        ${h.execDate ? `<span class="rc-cat">${escapeAttr(h.execDate)}</span>` : ''}
+      </div>`).join('') + `</div>`;
+  }
+  function bindReportTodayHabitEvents(){
+    const wrap = $('reportTodayHabitList');
+    if(!wrap) return;
+    wrap.querySelectorAll('.row-check').forEach(cb => {
+      cb.addEventListener('click', () => {
+        const i = +cb.dataset.idx;
+        const today = todayStr();
+        if(!allLogs[today]) allLogs[today] = createEmptyEntry(today);
+        if(!allLogs[today].habits[i]) return;
+        allLogs[today].habits[i].done = !allLogs[today].habits[i].done;
+        if(currentDate === today && entry.habits[i]){
+          entry.habits[i].done = allLogs[today].habits[i].done;
+        }
+        persist();
+        cb.classList.toggle('done');
+        cb.parentElement.querySelector('.rc-text').classList.toggle('done');
+        if(currentDate === today) renderListRows('habitRows', 'habits');
+      });
+    });
+  }
+
   function reportHeroShapes(){
     // 시인성을 위한 장식용 도형(순수 SVG, 외부 이미지 없음) — 테마 accent 색을 그대로 사용
     return `
@@ -3047,64 +3150,92 @@
     return `<svg class="rp-shape" viewBox="0 0 80 60" xmlns="http://www.w3.org/2000/svg">${REPORT_PANEL_SHAPES[i % REPORT_PANEL_SHAPES.length]}</svg>`;
   }
 
-  // ---------- 인쇄창: 마인드맵 배너 ----------
-  // 기록탭에 쌓인 일간/주간/연간 기록의 6개 카테고리(생각/건강/인간관계/자산투자/직업/취미)를
-  // 중심 노드에서 방사형으로 뻗어나가는 마인드맵으로 보여줍니다. 상단 탭으로 기간(일간/주간/연간)을
-  // 고르면, 그 기간 동안 기록탭에 실제로 입력된 카테고리는 강조 색으로, 비어있는 카테고리는
-  // 흐리게 표시해 한눈에 파악할 수 있게 합니다.
+  // ---------- 인쇄창: 마인드맵 배너 (사람 머리모양) ----------
+  // 기록탭의 "마인드맵 기록"에서 자유롭게 적은 단어들을 사람 머리 모양 SVG 안에
+  // 하나씩 말풍선 노드로 흩뿌려 보여줍니다. 상단 탭으로 기간(일간/주간/연간)을 고르면
+  // 그 기간 동안 기록탭에서 입력된 단어만 걸러서 보여줍니다.
   const REPORT_MINDMAP_COLORS = ['var(--teal)','var(--accent)','var(--purple)','var(--pink)','var(--green)','var(--yellow)'];
   const REPORT_MINDMAP_PERIODS = [
-    { key:'daily',  label:'일간', center:'오늘의', noteWord:'오늘' },
-    { key:'weekly', label:'주간', center:'이번주', noteWord:'이번 주' },
-    { key:'yearly', label:'연간', center:'올해',  noteWord:'올해' }
+    { key:'daily',  label:'일간', noteWord:'오늘' },
+    { key:'weekly', label:'주간', noteWord:'이번 주' },
+    { key:'yearly', label:'연간', noteWord:'올해' }
   ];
   let reportMindmapPeriod = 'daily';
-  function reportMindmapActiveChecker(period){
+  function mindmapWordsForPeriod(period){
     const today = todayStr();
     if(period === 'weekly'){
       const { start, end } = weekRangeOf(today);
-      return key => rangeHasCategory(start, end, key);
+      return mindmapWords.filter(w => w.date >= start && w.date <= end);
     }
     if(period === 'yearly'){
       const { start, end } = yearRangeOf(today);
-      return key => rangeHasCategory(start, end, key);
+      return mindmapWords.filter(w => w.date >= start && w.date <= end);
     }
-    const entry = allLogs[today];
-    return key => categoryHasContent(entry, key);
+    return mindmapWords.filter(w => w.date === today);
+  }
+  // 사람 머리(정면) 모양 순수 SVG — 얼굴/귀/머리카락/목-어깨 윤곽선만 그려서
+  // 그 안쪽 공간을 "생각이 떠오르는 자리"로 씁니다.
+  function reportHeadShapeSvg(){
+    return `
+      <path d="M108 252 Q108 222 119 209 L181 209 Q192 222 192 252 L214 296 L86 296 Z" fill="var(--paper-2)" stroke="var(--ink-soft)" stroke-width="1.5"/>
+      <ellipse cx="64" cy="152" rx="11" ry="17" fill="var(--card)" stroke="var(--ink-soft)" stroke-width="1.5"/>
+      <ellipse cx="236" cy="152" rx="11" ry="17" fill="var(--card)" stroke="var(--ink-soft)" stroke-width="1.5"/>
+      <path d="M150 38
+               C 202 38 230 78 230 132
+               C 230 194 200 226 150 226
+               C 100 226 70 194 70 132
+               C 70 78 98 38 150 38 Z"
+            fill="var(--card)" stroke="var(--ink-soft)" stroke-width="2"/>
+      <path d="M74 112 Q68 52 150 40 Q232 52 226 112 Q210 70 150 66 Q90 70 74 112 Z" fill="var(--ink)" opacity="0.88"/>
+    `;
+  }
+  // 단어 노드를 머리 안쪽 타원 영역에 균등하게 흩어 배치합니다 (골든 앵글 스파이럴).
+  function headWordPositions(n, cx, cy, rx, ry){
+    const positions = [];
+    if(n <= 0) return positions;
+    const goldenAngle = Math.PI * (3 - Math.sqrt(5));
+    for(let i=0;i<n;i++){
+      const t = n === 1 ? 0 : (i+0.5) / n;
+      const rr = Math.sqrt(t);
+      const theta = i * goldenAngle;
+      positions.push({
+        x: cx + rx * rr * Math.cos(theta),
+        y: cy + ry * rr * Math.sin(theta)
+      });
+    }
+    return positions;
   }
   function renderReportMindmap(period){
     period = period || 'daily';
     const meta = REPORT_MINDMAP_PERIODS.find(p => p.key === period) || REPORT_MINDMAP_PERIODS[0];
-    const isActive = reportMindmapActiveChecker(period);
-    const branches = TIMELINE_CATS.slice(0, 6);
-    const cx = 150, cy = 138, r = 96;
-    const nodeR = 30;
-    const n = branches.length;
-    let lines = '', nodes = '';
-    branches.forEach((b, i) => {
-      const angle = (Math.PI * 2 * i / n) - Math.PI / 2;
-      const x = cx + r * Math.cos(angle);
-      const y = cy + r * Math.sin(angle);
-      const active = isActive(b.key);
+    const words = mindmapWordsForPeriod(period).slice().sort((a,b) => (a.date||'').localeCompare(b.date||''));
+    const MAX_SHOW = 16;
+    const shown = words.slice(-MAX_SHOW);
+    const extra = words.length - shown.length;
+    const cx = 150, cy = 130, rx = 80, ry = 78;
+    const positions = headWordPositions(shown.length, cx, cy, rx, ry);
+    let nodes = '';
+    shown.forEach((w, i) => {
+      const { x, y } = positions[i];
       const color = REPORT_MINDMAP_COLORS[i % REPORT_MINDMAP_COLORS.length];
-      lines += `<line x1="${cx}" y1="${cy}" x2="${x}" y2="${y}" stroke="${active ? color : 'var(--line)'}" stroke-width="${active ? 2.5 : 1.5}" opacity="${active ? 0.85 : 0.5}"/>`;
+      const label = w.text.length > 7 ? w.text.slice(0,7)+'…' : w.text;
+      const boxW = Math.max(36, label.length * 8.5 + 14);
       nodes += `<g>
-        <circle cx="${x}" cy="${y}" r="${nodeR}" fill="${active ? color : 'var(--paper-2)'}" opacity="${active ? 0.22 : 1}" stroke="${active ? color : 'var(--line)'}" stroke-width="1.5"/>
-        <text x="${x}" y="${y - 3}" text-anchor="middle" font-size="14">${b.icon}</text>
-        <text x="${x}" y="${y + 13}" text-anchor="middle" font-size="8.5" font-family="'JetBrains Mono', monospace" font-weight="700" fill="var(--ink)">${b.label}</text>
+        <rect x="${(x-boxW/2).toFixed(1)}" y="${(y-11).toFixed(1)}" width="${boxW.toFixed(1)}" height="22" rx="11" fill="${color}" opacity="0.88" stroke="#fff" stroke-width="1"/>
+        <text x="${x.toFixed(1)}" y="${(y+4).toFixed(1)}" text-anchor="middle" font-size="10" font-family="'JetBrains Mono', monospace" font-weight="700" fill="#fff">${escapeAttr(label)}</text>
       </g>`;
     });
     const tabsHtml = `<div class="rmm-period-tabs">${REPORT_MINDMAP_PERIODS.map(p =>
       `<button type="button" class="rmm-period-tab${period===p.key?' active':''}" data-period="${p.key}">${p.label}</button>`
     ).join('')}</div>`;
-    return `${tabsHtml}<svg class="report-mindmap-svg" viewBox="0 0 300 276" xmlns="http://www.w3.org/2000/svg">
-      ${lines}
-      <circle cx="${cx}" cy="${cy}" r="36" fill="var(--ink)" />
-      <text x="${cx}" y="${cy - 4}" text-anchor="middle" font-size="11.5" font-weight="800" fill="#fff">${meta.center}</text>
-      <text x="${cx}" y="${cy + 12}" text-anchor="middle" font-size="12" font-weight="800" fill="#fff">기록</text>
+    const note = shown.length === 0
+      ? `아직 ${meta.noteWord} 적은 생각이 없어요 — 기록탭의 "🧠 마인드맵 기록"에서 단어를 적어보세요`
+      : `🧠 ${meta.noteWord} 기록탭에 적은 생각 ${words.length}개${extra>0 ? ` (최근 ${MAX_SHOW}개만 표시)` : ''}`;
+    return `${tabsHtml}<svg class="report-mindmap-svg" viewBox="0 0 300 300" xmlns="http://www.w3.org/2000/svg">
+      ${reportHeadShapeSvg()}
       ${nodes}
     </svg>
-    <div class="report-empty report-mindmap-note">● 색이 채워진 항목 = ${meta.noteWord} 해당 카테고리에 기록이 있음(기록탭 기준)</div>`;
+    <div class="report-empty report-mindmap-note">${note}</div>`;
   }
 
   // ---------- 인쇄창: 오늘 기록(기록 탭에 입력한 전체 내용) 요약 ----------
@@ -3216,8 +3347,8 @@
     const legend = entries.length ? entries.map(([k,v], i) => `
         <div class="donut-legend-row"><span class="dl-dot" style="background:${DONUT_COLORS[i%DONUT_COLORS.length]}"></span>${escapeAttr(k)} ${v}</div>
       `).join('') : `<div class="donut-legend-row" style="color:var(--ink-soft)">기록 없음</div>`;
-    return `<div class="donut-wrap">
-        <svg width="${size}" height="${size}" viewBox="0 0 ${size} ${size}">${segs}</svg>
+    return `<div class="donut-wrap" style="max-width:${size}px;">
+        <svg class="donut-svg" viewBox="0 0 ${size} ${size}">${segs}</svg>
         <div class="donut-center">${total}</div>
       </div>
       <div class="donut-legend">${legend}</div>`;
@@ -3275,7 +3406,7 @@
     large:  { label:'대형', short:'대', desc:'한 줄에 1개(전체 폭)' }
   };
   // 배너 기본 규격: 사용자의 요청대로 모든 배너는 소형을 기본값으로 합니다.
-  const REPORT_DEFAULT_SIZE = { hero:'small', stat:'small', mindmap:'small', goal:'small', time:'small', checklist:'small', logsum:'small', calendar:'small' };
+  const REPORT_DEFAULT_SIZE = { hero:'small', stat:'small', mindmap:'small', todayHabit:'small', goal:'small', time:'small', checklist:'small', logsum:'small', calendar:'small' };
   function reportBlock(pid, innerHtml, size){
     size = size || REPORT_DEFAULT_SIZE[pid] || 'small';
     const sizeButtons = Object.keys(REPORT_SIZE_PRESETS).map(key => {
@@ -3343,6 +3474,15 @@
           </div>
           ${renderReportMindmap(reportMindmapPeriod)}
         </div>`, sizeFor('mindmap'))}
+
+        ${reportBlock('todayHabit', `
+        <div class="report-panel">
+          ${reportPanelShape(1)}
+          <div class="rp-head">
+            <div class="rp-title">🔁 오늘 습관 <span style="font-weight:400;color:var(--ink-soft);font-size:10.5px;">— 기록탭 습관과 연동</span></div>
+          </div>
+          ${renderReportTodayHabit()}
+        </div>`, sizeFor('todayHabit'))}
 
         ${reportBlock('goal', `
         <div class="report-panel">
@@ -3429,6 +3569,7 @@
         renderReportView();
       });
     });
+    bindReportTodayHabitEvents();
   }
 
   // ================= 인쇄창 배너: 규격(소/중/대) 표준화 =================
@@ -3734,6 +3875,7 @@
   window.hbInit = async function(){
     await loadPlans();
     await loadEvents();
+    await loadMindmapWords();
     await loadAll();
     switchView('report');
   };
