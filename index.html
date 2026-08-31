@@ -603,7 +603,6 @@
   .report-panels{
     display:flex; flex-wrap:wrap; align-content:flex-start; align-items:flex-start;
     gap:var(--report-gap); margin-bottom:12px;
-    max-width:var(--report-page-w);
   }
   .report-block{
     box-sizing:border-box; overflow:visible; border-radius:14px;
@@ -914,22 +913,19 @@
         <span class="save-status" id="saveStatus"></span>
       </div>
 
-      <!-- 마인드맵 기록: 떠오르는 생각을 단어로 자유롭게 적으면 인쇄탭 머리모양 마인드맵에 하나씩 추가됩니다 -->
-      <div class="cat-section" id="logMindmapSection" style="margin-top:0;">
-        <div class="cat-title">🧠 마인드맵 기록 <span class="cnt">— 여기 적은 단어가 인쇄탭 마인드맵(머리모양)에 하나씩 추가돼요</span></div>
-        <div class="mindmap-add-row">
-          <input type="text" id="mindmapWordInput" placeholder="떠오르는 생각을 단어/짧은 문장으로 (예: 여행, 이직 고민)" />
-          <select id="mindmapWordRatio" class="mindmap-ratio-select" title="인쇄탭 마인드맵에서 이 단어가 표시될 크기 비율"></select>
-          <button type="button" class="add-row-btn" id="mindmapWordAdd">+ 추가</button>
-        </div>
-        <div class="mindmap-word-list" id="mindmapWordList"></div>
-      </div>
-
-      <div class="cat-tabs" id="catTabs"></div>
-
       <div class="log-banner-grid">
         <!-- 왼쪽 컬럼 -->
         <div class="log-col" id="logColLeft">
+          <!-- 마인드맵 기록: 떠오르는 생각을 단어로 자유롭게 적으면 인쇄탭 머리모양 마인드맵에 하나씩 추가됩니다 -->
+          <div class="cat-section" id="logMindmapSection" data-cat="mindmap" draggable="true">
+            <div class="cat-title">🧠 마인드맵 기록 <span class="cnt">— 여기 적은 단어가 인쇄탭 마인드맵(머리모양)에 하나씩 추가돼요</span><span class="drag-handle" title="끌어서 이동">⠿</span></div>
+            <div class="mindmap-add-row">
+              <input type="text" id="mindmapWordInput" placeholder="떠오르는 생각을 단어/짧은 문장으로 (예: 여행, 이직 고민)" />
+              <select id="mindmapWordRatio" class="mindmap-ratio-select" title="인쇄탭 마인드맵에서 이 단어가 표시될 크기 비율"></select>
+              <button type="button" class="add-row-btn" id="mindmapWordAdd">+ 추가</button>
+            </div>
+            <div class="mindmap-word-list" id="mindmapWordList"></div>
+          </div>
           <div class="log-dashed-group" data-cat="thoughts" draggable="true">
             <!-- 시간계획 입력 (구분을 먼저 고르고 내용을 적습니다) -->
             <div class="cat-section" data-cat="schedule">
@@ -1381,17 +1377,6 @@
 (function(){
   const MEAL_TYPES = ['아침','점심','저녁','간식','기타'];
   const WEEKDAYS = ['일','월','화','수','목','금','토'];
-
-  // 상단 기록탭: 💭생각(시간계획·할일·습관 포함) / ❤️건강 / 🤝인간관계 / 💰자산투자 / 💼직업 / 🎨취미
-  const CAT_TABS = [
-    {key:'all', label:'전체'},
-    {key:'thoughts', label:'💭 생각', cats:['thoughts','schedule','todos','habits']},
-    {key:'health', label:'❤️ 건강', cats:['health']},
-    {key:'relationships', label:'🤝 인간관계', cats:['relationships']},
-    {key:'assets', label:'💰 자산·투자', cats:['assets']},
-    {key:'career', label:'💼 직업', cats:['career']},
-    {key:'hobby', label:'🎨 취미', cats:['hobby']}
-  ];
 
   // 목록(리스트) 탭: 카테고리별로 지금까지 작성한 내용을 엑셀형식 표로 모아봅니다.
   const LIST_CATS = [
@@ -2232,23 +2217,6 @@
     });
   }
 
-  // ---------- Category tabs (기록 뷰) ----------
-  function renderCatTabs(){
-    const wrap = $('catTabs');
-    wrap.innerHTML = '';
-    CAT_TABS.forEach(c => {
-      const btn = document.createElement('div');
-      btn.className = 'cat-tab' + (currentCatTab === c.key ? ' active' : '');
-      btn.textContent = c.label;
-      btn.addEventListener('click', () => {
-        if(document.activeElement && typeof document.activeElement.blur === 'function') document.activeElement.blur();
-        currentCatTab = c.key;
-        applyCatTab(c.key);
-        window.scrollTo(0, 0);
-      });
-      wrap.appendChild(btn);
-    });
-  }
   // ---------- 배너 끌어서 이동 ----------
   function initBannerDrag(){
     ['logColLeft','logColRight'].forEach(colId => {
@@ -2284,15 +2252,9 @@
     });
   }
 
-  function applyCatTab(tab){
-    document.querySelectorAll('#catTabs .cat-tab').forEach((btn, i) => {
-      btn.classList.toggle('active', CAT_TABS[i].key === tab);
-    });
-    const tabDef = CAT_TABS.find(c => c.key === tab);
-    const cats = tabDef && tabDef.cats;
-    document.querySelectorAll('.cat-section').forEach(sec => {
-      sec.style.display = (tab === 'all' || (cats && cats.includes(sec.dataset.cat))) ? '' : 'none';
-    });
+  function applyCatTab(){
+    // 상단 구분 탭(전체/생각/건강/...)이 제거되어, 기록탭의 모든 배너를 항상 함께 보여줍니다.
+    document.querySelectorAll('.cat-section').forEach(sec => { sec.style.display = ''; });
     applyCatSearch();
   }
 
@@ -2527,7 +2489,6 @@
     hbToast(`${s}~${e} 사이 ${times.length}개 시간대를 실천으로 체크했어요`);
   });
 
-  renderCatTabs();
   initBannerDrag();
 
   // ================= 마인드맵 기록 (기록탭 ⇄ 인쇄탭 연동) =================
