@@ -531,13 +531,28 @@
   .report-block{
     box-sizing:border-box; overflow:visible; border-radius:14px;
     display:flex; flex-direction:column; min-width:0;
+    cursor:grab;
   }
+  .report-block:active{ cursor:grabbing; }
+  /* ---- 배너 끌어서 위치 이동(드래그 정렬) ---- */
+  .report-block.dragging{ opacity:0.45; }
+  .report-block.drag-over{ box-shadow:0 -3px 0 var(--accent) inset; }
   /* 소형 = 한 줄에 3개, 중형 = 한 줄에 2개, 대형 = 한 줄에 1개(전체 폭). */
   .report-block[data-size="small"]{ flex:0 0 calc((100% - 2*var(--report-gap)) / 3); width:calc((100% - 2*var(--report-gap)) / 3); }
   .report-block[data-size="medium"]{ flex:0 0 calc((100% - var(--report-gap)) / 2); width:calc((100% - var(--report-gap)) / 2); }
   .report-block[data-size="large"]{ flex:0 0 100%; width:100%; }
+  /* 달력 배너는 요일/날짜 그리드 + 일정 목록까지 담아야 해서 다른 배너와 내용 성격이
+     크게 다르므로, 소형/중형/대형의 기준 폭을 다른 배너와 별도로 상정합니다.
+     (소형=절반 폭, 중형·대형=전체 폭 — 다른 배너보다 한 단계씩 넉넉하게) */
+  .report-block[data-pid="calendar"][data-size="small"]{ flex:0 0 calc((100% - var(--report-gap)) / 2); width:calc((100% - var(--report-gap)) / 2); }
+  .report-block[data-pid="calendar"][data-size="medium"]{ flex:0 0 100%; width:100%; }
+  .report-block[data-pid="calendar"][data-size="large"]{ flex:0 0 100%; width:100%; }
   .report-block .rb-toolbar{
-    display:flex; align-items:center; justify-content:flex-end; margin-bottom:5px;
+    display:flex; align-items:center; justify-content:space-between; gap:6px; margin-bottom:5px;
+  }
+  .report-block .rb-drag-handle{
+    font-family:'JetBrains Mono', monospace; font-size:10.5px; font-weight:700; color:var(--ink-soft);
+    cursor:grab; letter-spacing:0.5px; user-select:none; white-space:nowrap;
   }
   .report-block .rb-size-toggle{ display:flex; gap:3px; }
   .report-block .rb-size-btn{
@@ -563,8 +578,10 @@
     display:flex; align-items:center; gap:2px; flex-wrap:wrap;
   }
   @media (max-width:700px){
-    /* 좁은 화면에서는 소형(3열)/중형(2열)도 한 줄에 넣기 어려우므로 세로로 쌓습니다. */
-    .report-block[data-size="small"], .report-block[data-size="medium"]{
+    /* 좁은 화면에서는 소형(3열)/중형(2열)도 한 줄에 넣기 어려우므로 세로로 쌓습니다.
+       달력 배너는 별도 크기 기준(절반 폭)을 갖지만, 좁은 화면에서는 마찬가지로 전체 폭으로 접습니다. */
+    .report-block[data-size="small"], .report-block[data-size="medium"],
+    .report-block[data-pid="calendar"]{
       flex:0 0 100%; width:100%;
     }
   }
@@ -666,6 +683,15 @@
   .report-empty{ font-size:11px; color:var(--ink-soft); font-family:'JetBrains Mono', monospace; padding:6px 0; }
 
   /* ---------- 인쇄창: 마인드맵 배너 ---------- */
+  /* 기록탭에 쌓인 일간/주간/연간 기록을 기준으로 마인드맵을 전환해 볼 수 있는 탭. */
+  .rmm-period-tabs{ display:flex; gap:5px; margin-bottom:8px; }
+  .rmm-period-tab{
+    font-family:'JetBrains Mono', monospace; font-size:10.5px; font-weight:700;
+    padding:4px 11px; border-radius:20px; border:1.5px solid var(--line); background:var(--card);
+    color:var(--ink-soft); cursor:pointer;
+  }
+  .rmm-period-tab.active{ background:var(--purple); border-color:var(--purple); color:#fff; }
+  .rmm-period-tab:hover:not(.active){ border-color:var(--purple); color:var(--purple); }
   .report-mindmap-svg{ width:100%; height:auto; display:block; }
   .report-mindmap-note{ margin-top:4px; }
 
@@ -711,7 +737,7 @@
   @media print{
     body{ background:#fff !important; }
     .side-tabs, .theme-picker, .nav-btn, .rp-nav, .save-status,
-    .report-layout-toolbar, .report-block .rb-toolbar{ display:none !important; }
+    .report-layout-toolbar, .report-block .rb-toolbar, .rmm-period-tabs{ display:none !important; }
     .app-shell{ display:block !important; max-width:100% !important; }
     .main-content{ padding:0 !important; }
     .report-panels{ max-width:100% !important; }
@@ -1317,6 +1343,19 @@
       if(d >= startDate && d <= endDate && categoryHasContent(allLogs[d], catKey)) return true;
     }
     return false;
+  }
+  // 기준 날짜가 속한 주(월~일)/연도의 시작일-종료일을 구합니다. (마인드맵 배너의 주간/연간 탭용)
+  function weekRangeOf(dateStr){
+    const d = new Date(dateStr + 'T00:00:00');
+    const mon = new Date(d);
+    mon.setDate(d.getDate() - ((d.getDay() + 6) % 7));
+    const sun = new Date(mon);
+    sun.setDate(mon.getDate() + 6);
+    return { start: toLocalISO(mon), end: toLocalISO(sun) };
+  }
+  function yearRangeOf(dateStr){
+    const y = dateStr.slice(0, 4);
+    return { start: y + '-01-01', end: y + '-12-31' };
   }
 
   function toLocalISO(d){
@@ -3009,11 +3048,34 @@
   }
 
   // ---------- 인쇄창: 마인드맵 배너 ----------
-  // 오늘 기록의 6개 카테고리(생각/건강/인간관계/자산투자/직업/취미)를 중심 노드에서
-  // 방사형으로 뻗어나가는 마인드맵으로 보여줍니다. 오늘 실제로 입력된 카테고리는
-  // 강조 색으로, 아직 비어있는 카테고리는 흐리게 표시해 한눈에 파악할 수 있게 합니다.
+  // 기록탭에 쌓인 일간/주간/연간 기록의 6개 카테고리(생각/건강/인간관계/자산투자/직업/취미)를
+  // 중심 노드에서 방사형으로 뻗어나가는 마인드맵으로 보여줍니다. 상단 탭으로 기간(일간/주간/연간)을
+  // 고르면, 그 기간 동안 기록탭에 실제로 입력된 카테고리는 강조 색으로, 비어있는 카테고리는
+  // 흐리게 표시해 한눈에 파악할 수 있게 합니다.
   const REPORT_MINDMAP_COLORS = ['var(--teal)','var(--accent)','var(--purple)','var(--pink)','var(--green)','var(--yellow)'];
-  function renderReportMindmap(entry){
+  const REPORT_MINDMAP_PERIODS = [
+    { key:'daily',  label:'일간', center:'오늘의', noteWord:'오늘' },
+    { key:'weekly', label:'주간', center:'이번주', noteWord:'이번 주' },
+    { key:'yearly', label:'연간', center:'올해',  noteWord:'올해' }
+  ];
+  let reportMindmapPeriod = 'daily';
+  function reportMindmapActiveChecker(period){
+    const today = todayStr();
+    if(period === 'weekly'){
+      const { start, end } = weekRangeOf(today);
+      return key => rangeHasCategory(start, end, key);
+    }
+    if(period === 'yearly'){
+      const { start, end } = yearRangeOf(today);
+      return key => rangeHasCategory(start, end, key);
+    }
+    const entry = allLogs[today];
+    return key => categoryHasContent(entry, key);
+  }
+  function renderReportMindmap(period){
+    period = period || 'daily';
+    const meta = REPORT_MINDMAP_PERIODS.find(p => p.key === period) || REPORT_MINDMAP_PERIODS[0];
+    const isActive = reportMindmapActiveChecker(period);
     const branches = TIMELINE_CATS.slice(0, 6);
     const cx = 150, cy = 138, r = 96;
     const nodeR = 30;
@@ -3023,7 +3085,7 @@
       const angle = (Math.PI * 2 * i / n) - Math.PI / 2;
       const x = cx + r * Math.cos(angle);
       const y = cy + r * Math.sin(angle);
-      const active = categoryHasContent(entry, b.key);
+      const active = isActive(b.key);
       const color = REPORT_MINDMAP_COLORS[i % REPORT_MINDMAP_COLORS.length];
       lines += `<line x1="${cx}" y1="${cy}" x2="${x}" y2="${y}" stroke="${active ? color : 'var(--line)'}" stroke-width="${active ? 2.5 : 1.5}" opacity="${active ? 0.85 : 0.5}"/>`;
       nodes += `<g>
@@ -3032,14 +3094,17 @@
         <text x="${x}" y="${y + 13}" text-anchor="middle" font-size="8.5" font-family="'JetBrains Mono', monospace" font-weight="700" fill="var(--ink)">${b.label}</text>
       </g>`;
     });
-    return `<svg class="report-mindmap-svg" viewBox="0 0 300 276" xmlns="http://www.w3.org/2000/svg">
+    const tabsHtml = `<div class="rmm-period-tabs">${REPORT_MINDMAP_PERIODS.map(p =>
+      `<button type="button" class="rmm-period-tab${period===p.key?' active':''}" data-period="${p.key}">${p.label}</button>`
+    ).join('')}</div>`;
+    return `${tabsHtml}<svg class="report-mindmap-svg" viewBox="0 0 300 276" xmlns="http://www.w3.org/2000/svg">
       ${lines}
       <circle cx="${cx}" cy="${cy}" r="36" fill="var(--ink)" />
-      <text x="${cx}" y="${cy - 4}" text-anchor="middle" font-size="12" font-weight="800" fill="#fff">오늘의</text>
+      <text x="${cx}" y="${cy - 4}" text-anchor="middle" font-size="11.5" font-weight="800" fill="#fff">${meta.center}</text>
       <text x="${cx}" y="${cy + 12}" text-anchor="middle" font-size="12" font-weight="800" fill="#fff">기록</text>
       ${nodes}
     </svg>
-    <div class="report-empty report-mindmap-note">● 색이 채워진 항목 = 오늘 해당 카테고리에 기록이 있음</div>`;
+    <div class="report-empty report-mindmap-note">● 색이 채워진 항목 = ${meta.noteWord} 해당 카테고리에 기록이 있음(기록탭 기준)</div>`;
   }
 
   // ---------- 인쇄창: 오늘 기록(기록 탭에 입력한 전체 내용) 요약 ----------
@@ -3217,8 +3282,9 @@
       const p = REPORT_SIZE_PRESETS[key];
       return `<button type="button" class="rb-size-btn${size===key?' active':''}" data-pid="${pid}" data-size="${key}" title="${p.label} — ${p.desc}">${p.short}</button>`;
     }).join('');
-    return `<div class="report-block" data-pid="${pid}" data-size="${size}">
+    return `<div class="report-block" data-pid="${pid}" data-size="${size}" draggable="true">
       <div class="rb-toolbar">
+        <span class="rb-drag-handle" title="끌어서 배너 위치를 옮길 수 있어요">⠿ 이동</span>
         <div class="rb-size-toggle">${sizeButtons}</div>
       </div>
       ${innerHtml}
@@ -3273,9 +3339,9 @@
         <div class="report-panel">
           ${reportPanelShape(2)}
           <div class="rp-head">
-            <div class="rp-title">🧠 오늘의 기록 마인드맵</div>
+            <div class="rp-title">🧠 기록 마인드맵</div>
           </div>
-          ${renderReportMindmap(allLogs[todayStr()])}
+          ${renderReportMindmap(reportMindmapPeriod)}
         </div>`, sizeFor('mindmap'))}
 
         ${reportBlock('goal', `
@@ -3338,12 +3404,15 @@
       <div class="footer-note">draft v0.8 · 인쇄창은 읽기 전용 요약이며, 실제 입력은 기록·계획 탭에서 합니다 · 인쇄 버튼(또는 Ctrl/Cmd+P) 클릭 시 이 화면 전체가 A4 기준으로 인쇄됩니다</div>
     `;
 
+    // 저장된 배너 순서가 있으면 먼저 적용한 뒤 나머지를 초기화합니다.
+    applyReportOrder();
     renderThemePicker();
     renderGoalChartPanel();
     bindCalNav('Report');
     bindDayEventAdd('Report');
     renderCalendar('Report');
     initReportBlockSizing();
+    initReportBannerDrag();
     // 모든 배너(특히 달력·오늘 시간계획처럼 내용 길이가 날마다 달라지는 배너)가
     // 같은 규격끼리는 같은 높이를 유지하면서도 내용이 잘리지 않도록, 렌더링 직후
     // 실제 내용 높이를 측정해 규격(소/중/대)별로 높이를 맞춥니다.
@@ -3352,6 +3421,13 @@
     $('rPrintBtn').addEventListener('click', () => window.print());
     $('rResetLayout').addEventListener('click', () => {
       if(confirm('모든 배너를 소형으로 되돌릴까요?')) resetReportSizes();
+    });
+    wrap.querySelectorAll('.rmm-period-tab').forEach(btn => {
+      btn.addEventListener('click', () => {
+        if(btn.dataset.period === reportMindmapPeriod) return;
+        reportMindmapPeriod = btn.dataset.period;
+        renderReportView();
+      });
     });
   }
 
@@ -3401,10 +3477,13 @@
     const groups = {};
     blocks.forEach(b => {
       const size = b.dataset.size || 'small';
-      (groups[size] = groups[size] || []).push(b);
+      // 달력 배너는 폭 기준부터 다른 배너와 별도로 상정하므로(위 CSS 참고),
+      // 높이 균일화도 다른 소/중/대 배너 그룹과 함께 묶지 않고 자기 자신의 내용 높이만 씁니다.
+      const groupKey = (b.dataset.pid === 'calendar') ? 'calendar' : size;
+      (groups[groupKey] = groups[groupKey] || []).push(b);
     });
-    Object.keys(groups).forEach(size => {
-      const groupBlocks = groups[size];
+    Object.keys(groups).forEach(key => {
+      const groupBlocks = groups[key];
       let maxH = 0;
       groupBlocks.forEach(b => { maxH = Math.max(maxH, b.scrollHeight); });
       groupBlocks.forEach(b => { b.style.height = maxH + 'px'; });
@@ -3423,6 +3502,95 @@
     equalizeReportBannerHeights();
     saveReportSizes();
   }
+  // ---------- 인쇄창 배너: 끌어서 위치 이동(드래그 정렬) ----------
+  // 배너 규격(소/중/대)과는 별개로, 각 배너를 원하는 순서로 옮길 수 있습니다.
+  // 순서는 배너 pid 배열로 저장해두고, 다음에 열 때도 그대로 복원합니다.
+  function getReportOrder(){
+    try{
+      const raw = localStorage.getItem('hb-report-order-v1');
+      return raw ? JSON.parse(raw) : null;
+    }catch(e){ return null; }
+  }
+  function saveReportOrder(){
+    const wrap = $('reportPanels');
+    if(!wrap) return;
+    const order = Array.from(wrap.querySelectorAll(':scope > .report-block')).map(b => b.dataset.pid);
+    try{ localStorage.setItem('hb-report-order-v1', JSON.stringify(order)); }catch(e){}
+  }
+  function applyReportOrder(){
+    const wrap = $('reportPanels');
+    if(!wrap) return;
+    const order = getReportOrder();
+    if(!order || !order.length) return;
+    order.forEach(pid => {
+      const node = wrap.querySelector(`:scope > .report-block[data-pid="${pid}"]`);
+      if(node) wrap.appendChild(node);
+    });
+  }
+  function initReportBannerDrag(){
+    const wrap = $('reportPanels');
+    if(!wrap) return;
+    let dragEl = null;
+    wrap.querySelectorAll(':scope > .report-block').forEach(node => {
+      node.addEventListener('dragstart', () => { dragEl = node; node.classList.add('dragging'); });
+      node.addEventListener('dragend', () => {
+        node.classList.remove('dragging');
+        wrap.querySelectorAll(':scope > .report-block').forEach(n => n.classList.remove('drag-over'));
+        saveReportOrder();
+        equalizeReportBannerHeights();
+      });
+      node.addEventListener('dragover', (e) => {
+        e.preventDefault();
+        if(!dragEl || dragEl === node) return;
+        node.classList.add('drag-over');
+        const rect = node.getBoundingClientRect();
+        const before = (e.clientX - rect.left) < rect.width / 2;
+        wrap.insertBefore(dragEl, before ? node : node.nextSibling);
+      });
+      node.addEventListener('dragleave', () => node.classList.remove('drag-over'));
+      node.addEventListener('drop', (e) => e.preventDefault());
+    });
+  }
+
+  // ---------- 인쇄: 모든 배너가 A4 한 페이지 안에 들어가도록 자동 축소 ----------
+  // 배너를 자유롭게 배치/크기 조절하다 보면 전체 내용이 A4 한 페이지 높이를 넘을 수 있습니다.
+  // 인쇄 직전에 실제 내용 높이를 측정해, 한 페이지 높이를 넘는 경우에만 전체 배너 묶음을
+  // 페이지 안에 들어갈 비율로 축소합니다(가로 폭은 원래 크기를 유지하도록 함께 보정).
+  const REPORT_PRINT_PAGE_W = 794;  // A4(210mm) 96dpi 환산 — --report-page-w 와 동일 기준
+  const REPORT_PRINT_PAGE_H = 1031; // A4(297mm) - 상하 여백(12mm×2) 96dpi 환산
+  function fitReportToOnePage(){
+    const wrap = $('reportPanels');
+    if(!wrap) return;
+    wrap.style.transform = '';
+    wrap.style.width = '';
+    wrap.style.height = '';
+    wrap.style.transformOrigin = '';
+    const naturalH = wrap.scrollHeight;
+    const scale = naturalH > REPORT_PRINT_PAGE_H ? Math.max(0.35, REPORT_PRINT_PAGE_H / naturalH) : 1;
+    if(scale < 1){
+      wrap.style.transformOrigin = 'top left';
+      wrap.style.transform = `scale(${scale})`;
+      // transform은 실제 레이아웃 공간을 줄이지 않으므로, 줄어든 만큼 폭/높이를 함께
+      // 보정해서(가로는 원래 크기 그대로, 세로는 축소된 실제 크기만큼) 인쇄 시 빈 여백 없이
+      // 한 페이지에 맞춰 이어지도록 합니다.
+      wrap.style.width = (100 / scale) + '%';
+      wrap.style.height = (naturalH * scale) + 'px';
+    }
+  }
+  function resetReportPrintFit(){
+    const wrap = $('reportPanels');
+    if(!wrap) return;
+    wrap.style.transform = '';
+    wrap.style.width = '';
+    wrap.style.height = '';
+    wrap.style.transformOrigin = '';
+  }
+  window.addEventListener('beforeprint', () => {
+    const reportView = $('reportView');
+    if(reportView && reportView.style.display !== 'none') fitReportToOnePage();
+  });
+  window.addEventListener('afterprint', resetReportPrintFit);
+
   function initReportBlockSizing(){
     const wrap = $('reportPanels');
     if(!wrap) return;
