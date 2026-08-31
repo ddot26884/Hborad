@@ -290,6 +290,25 @@
   /* 일기: 생각/질문/감상/키워드 각각의 "주제+내용" 묶음을 점선으로 구분 */
   .diary-subfield{ padding-bottom:8px; margin-bottom:8px; border-bottom:1px dashed var(--line); }
   .diary-subfield:last-child{ border-bottom:none; margin-bottom:0; padding-bottom:0; }
+  /* 생각 배너: 주제+생각 / 주제+질문 / 주제+감상 / 키워드 네 카드를 통일된 형태로 구분 */
+  .thought-subcard{
+    position:relative; padding:9px 10px 8px 12px; margin-bottom:8px;
+    background:var(--paper-2); border:1px solid var(--line); border-left:3px solid var(--teal);
+    border-radius:0 7px 7px 0;
+  }
+  .thought-subcard:last-child{ margin-bottom:0; }
+  .thought-subcard[data-kind="question"]{ border-left-color:var(--purple); }
+  .thought-subcard[data-kind="impression"]{ border-left-color:var(--pink); }
+  .thought-subcard[data-kind="keyword"]{ border-left-color:var(--yellow); }
+  .thought-subcard .field{ margin-bottom:6px; }
+  .thought-subcard .field:last-child{ margin-bottom:0; }
+  .ts-badge{
+    display:inline-block; font-family:'JetBrains Mono', monospace; font-weight:700; font-size:9.5px;
+    color:var(--teal); background:var(--teal-soft); border-radius:20px; padding:2px 8px; margin-bottom:6px; letter-spacing:0.3px;
+  }
+  .thought-subcard[data-kind="question"] .ts-badge{ color:var(--purple); background:var(--purple-soft); }
+  .thought-subcard[data-kind="impression"] .ts-badge{ color:var(--pink); background:var(--pink-soft); }
+  .thought-subcard[data-kind="keyword"] .ts-badge{ color:#B4870C; background:var(--yellow); background-color:#FFF3D2; }
   .field:last-child{ margin-bottom:0; }
   .field label{ font-size:10px; color:var(--ink-soft); font-family:'JetBrains Mono', monospace; letter-spacing:0.2px; }
   .field input[type=text], .field input[type=number], .field input[type=time], .field select, textarea{
@@ -313,6 +332,21 @@
   .score-btn.on{ background:var(--yellow); border-color:var(--safety-dark); color:var(--ink); }
 
   /* ---------- Time plan table ---------- */
+  /* ---------- 목록(리스트) 탭: 엑셀형식 표 ---------- */
+  .excel-scroll{ max-height:70vh; overflow:auto; border:1px solid var(--ink-soft); border-radius:7px; background:var(--card); }
+  table.excel-table{ width:100%; border-collapse:collapse; font-size:11.5px; white-space:nowrap; }
+  table.excel-table thead th{
+    position:sticky; top:0; background:var(--ink); color:#fff; font-family:'JetBrains Mono', monospace;
+    font-size:10px; padding:7px 8px; text-align:left; z-index:1; border-right:1px solid rgba(255,255,255,0.15);
+  }
+  table.excel-table td{
+    padding:6px 8px; border-bottom:1px solid var(--line); border-right:1px solid var(--line);
+    vertical-align:top; max-width:220px; white-space:normal; word-break:break-word;
+  }
+  table.excel-table td:first-child{ font-family:'JetBrains Mono', monospace; font-weight:700; color:var(--ink); white-space:nowrap; background:var(--paper-2); }
+  table.excel-table tbody tr:nth-child(even){ background:var(--paper); }
+  table.excel-table tbody tr:hover{ background:var(--teal-soft); }
+  .excel-empty{ padding:24px 10px; text-align:center; color:var(--ink-soft); font-size:12.5px; }
   .time-scroll{ max-height:320px; overflow-y:auto; border:1px solid var(--line); border-radius:6px; }
   table.timeplan{ width:100%; border-collapse:collapse; font-size:12px; }
   table.timeplan thead th{
@@ -845,6 +879,7 @@
     <div class="side-tab active" id="tabReportBtn"><span class="icon">📊</span>인쇄</div>
     <div class="side-tab" id="tabLogBtn"><span class="icon">📝</span>기록</div>
     <div class="side-tab" id="tabPlanBtn"><span class="icon">🎯</span>계획</div>
+    <div class="side-tab" id="tabListBtn"><span class="icon">📋</span>목록</div>
   </nav>
 
   <div class="main-content">
@@ -896,53 +931,58 @@
         <!-- 왼쪽 컬럼 -->
         <div class="log-col" id="logColLeft">
           <div class="log-dashed-group" data-cat="thoughts" draggable="true">
-            <!-- 시간계획 -->
+            <!-- 시간계획 입력 (구분을 먼저 고르고 내용을 적습니다) -->
             <div class="cat-section" data-cat="schedule">
-              <div class="cat-title">⏱ 시간계획 <span class="cnt">— 목록에서 시간을 골라 추가</span><span class="drag-handle" title="끌어서 이동">⠿</span></div>
-              <div class="bulk-edit-wrap">
-                <div class="be-row">
-                  <span class="be-hint">한 번에 여러 줄 입력 후 적용 — 줄마다 "HH:MM 내용" (구분은 |구분)</span>
-                </div>
-                <textarea id="timeplanBulkText" rows="3" placeholder="09:00 아침 식사|식사&#10;09:30 출근 이동|이동&#10;10:00 업무 시작|업무"></textarea>
-                <div style="margin-top:5px;text-align:right;">
-                  <button type="button" class="add-row-btn" id="timeplanBulkApply">⇩ 일괄 적용</button>
-                </div>
-              </div>
-              <div class="timeplan-add-row">
-                <select id="timeplanNewTime"></select>
-                <button type="button" class="add-row-btn" id="timeplanAddRow">+ 시간 추가</button>
-              </div>
+              <div class="cat-title">⏱ 시간계획 <span class="cnt">— 구분을 먼저 고르고 내용을 적어보세요</span><span class="drag-handle" title="끌어서 이동">⠿</span></div>
 
-              <!-- 시간계획: hh:mm ~ hh:mm 범위로 한번에 여러 시간(슬롯)에 계획 내용을 채워넣기 -->
+              <!-- 시간계획: hh:mm ~ hh:mm 범위에 "구분 → 내용" 순서로 한번에 채워넣기 -->
               <div class="time-range-row">
-                <span class="tr-label">⏱ 시간계획</span>
+                <span class="tr-label">⏱ 계획</span>
+                <select id="tpRangePlanCategory">
+                  <option value="">구분 선택</option>
+                  <option value="수면">수면</option><option value="업무">업무</option><option value="이동">이동</option>
+                  <option value="식사">식사</option><option value="운동">운동</option><option value="휴식">휴식</option>
+                  <option value="자기계발">자기계발</option><option value="기타">기타</option>
+                </select>
                 <input type="time" id="tpRangePlanStart" step="1800" />
                 <span class="tr-tilde">~</span>
                 <input type="time" id="tpRangePlanEnd" step="1800" />
                 <input type="text" id="tpRangePlanContent" placeholder="계획 내용" />
-                <input type="text" id="tpRangePlanCategory" list="categoryList" placeholder="구분" />
                 <button type="button" class="add-row-btn" id="tpRangePlanApply">+ 범위 계획 추가</button>
               </div>
-              <!-- 시간실천: hh:mm ~ hh:mm 범위를 지정하면 그 시간대 슬롯을 한번에 "실천"으로 체크 -->
-              <div class="time-range-row">
-                <span class="tr-label">✅ 시간실천</span>
-                <input type="time" id="tpRangeDoneStart" step="1800" />
-                <span class="tr-tilde">~</span>
-                <input type="time" id="tpRangeDoneEnd" step="1800" />
-                <button type="button" class="add-row-btn" id="tpRangeDoneApply">✓ 범위 실천 체크</button>
-              </div>
 
-              <div class="time-scroll">
-                <table class="timeplan">
-                  <thead><tr><th>시간 (00:00~24:00, 30분 단위)</th><th>구분</th><th>계획내용</th><th>실천여부</th><th></th></tr></thead>
-                  <tbody id="timeplanBody"></tbody>
-                </table>
+              <div class="timeplan-add-row">
+                <select id="timeplanNewTime"></select>
+                <button type="button" class="add-row-btn" id="timeplanAddRow">+ 시간 한 칸 추가</button>
               </div>
               <datalist id="categoryList">
                 <option value="수면"></option><option value="업무"></option><option value="이동"></option>
                 <option value="식사"></option><option value="운동"></option><option value="휴식"></option>
                 <option value="자기계발"></option><option value="기타"></option>
               </datalist>
+            </div>
+
+            <!-- 시간실천 입력: 계획과는 별도 배너에서 "실천 체크"만 반영합니다 -->
+            <div class="cat-section" data-cat="schedule">
+              <div class="cat-title">✅ 시간실천 <span class="cnt">— 실제로 실천한 시간대를 체크</span></div>
+              <div class="time-range-row">
+                <span class="tr-label">✅ 실천</span>
+                <input type="time" id="tpRangeDoneStart" step="1800" />
+                <span class="tr-tilde">~</span>
+                <input type="time" id="tpRangeDoneEnd" step="1800" />
+                <button type="button" class="add-row-btn" id="tpRangeDoneApply">✓ 범위 실천 체크</button>
+              </div>
+            </div>
+
+            <!-- 시간표 전체보기: 계획/실천이 함께 반영된 결과를 확인·수정하는 표 -->
+            <div class="cat-section" data-cat="schedule">
+              <div class="cat-title">🗓 오늘 시간표</div>
+              <div class="time-scroll">
+                <table class="timeplan">
+                  <thead><tr><th>시간 (00:00~24:00, 30분 단위)</th><th>구분</th><th>계획내용</th><th>실천여부</th><th></th></tr></thead>
+                  <tbody id="timeplanBody"></tbody>
+                </table>
+              </div>
             </div>
 
             <!-- 일기 -->
@@ -955,26 +995,30 @@
                   <button type="button" class="nav-btn" id="diaryTodayBtn">오늘</button>
                 </div>
               </div>
+              <div class="field"><label>주제</label><input type="text" id="referenceTopic" placeholder="오늘 일기의 주제 (예: 하루 마무리)" /></div>
               <div class="field"><label>오늘 일기 / 참고 작성</label><textarea id="referenceNote" rows="4" placeholder="오늘 하루 자유롭게 적어보세요. 메모 / 참고 링크 / 인용 등도 함께"></textarea></div>
             </div>
 
-            <!-- 생각 -->
+            <!-- 생각: 주제+생각 / 주제+질문 / 주제+감상 / 키워드 네 가지로 통일된 카드 형태로 구분 -->
             <div class="cat-section" data-cat="thoughts">
               <div class="cat-title">💭 생각</div>
-              <div class="diary-subfield">
+              <div class="thought-subcard" data-kind="thought">
+                <div class="ts-badge">생각</div>
                 <div class="field"><label>주제</label><input type="text" id="diaryThoughtsTopic" placeholder="이 생각의 주제 (예: 오늘의 고민)" /></div>
                 <div class="field"><label>생각</label><textarea id="diaryThoughts" rows="2" placeholder="오늘 든 생각을 적어보세요"></textarea></div>
               </div>
-              <div class="diary-subfield">
+              <div class="thought-subcard" data-kind="question">
+                <div class="ts-badge">질문</div>
                 <div class="field"><label>주제</label><input type="text" id="diaryQuestionsTopic" placeholder="이 질문의 주제 (예: 진로, 관계)" /></div>
                 <div class="field"><label>질문</label><textarea id="diaryQuestions" rows="2" placeholder="스스로에게 던지는 질문"></textarea></div>
               </div>
-              <div class="diary-subfield">
+              <div class="thought-subcard" data-kind="impression">
+                <div class="ts-badge">감상</div>
                 <div class="field"><label>주제</label><input type="text" id="diaryImpressionTopic" placeholder="이 감상의 주제 (예: 하루 마무리)" /></div>
                 <div class="field"><label>감상</label><textarea id="diaryImpression" rows="2" placeholder="오늘 하루에 대한 감상"></textarea></div>
               </div>
-              <div class="diary-subfield">
-                <div class="field"><label>주제</label><input type="text" id="diaryKeywordsTopic" placeholder="이 키워드 묶음의 주제" /></div>
+              <div class="thought-subcard" data-kind="keyword">
+                <div class="ts-badge">키워드</div>
                 <div class="field"><label>키워드</label><input type="text" id="diaryKeywords" placeholder="쉼표로 구분 (예: 성장, 피로, 뿌듯함)" /></div>
               </div>
             </div>
@@ -1091,23 +1135,23 @@
             </div>
             <div class="field"><label>메모</label><textarea id="hobbyMemo" rows="2" placeholder="느낀 점, 다음에 해보고 싶은 것"></textarea></div>
           </div>
+
+          <!-- 할일 (편집) — 위 배너들과 동일한 카드 크기/스타일로 통일 -->
+          <div class="cat-section" data-cat="todos" draggable="true">
+            <div class="cat-title">✅ 할일<span class="drag-handle" title="끌어서 이동">⠿</span></div>
+            <div class="row-hint">⇒ 버튼으로 다음날로 이월 · 계획일정/실행일정을 연월일로 각각 기입할 수 있어요</div>
+            <div class="list-rows" id="todoRows"></div>
+            <button class="add-row-btn" id="addTodoRow">+ 할일 추가</button>
+          </div>
+
+          <!-- 습관 (편집) — 위 배너들과 동일한 카드 크기/스타일로 통일 -->
+          <div class="cat-section" data-cat="habits" draggable="true">
+            <div class="cat-title">🔁 습관<span class="drag-handle" title="끌어서 이동">⠿</span></div>
+            <div class="row-hint">⇒ 버튼으로 다음날로 이월 · 계획일정/실행일정을 연월일로 각각 기입할 수 있어요</div>
+            <div class="list-rows" id="habitRows"></div>
+            <button class="add-row-btn" id="addHabitRow">+ 습관 추가</button>
+          </div>
         </div>
-      </div>
-
-      <!-- 할일 (편집) -->
-      <div class="cat-section" data-cat="tasks">
-        <div class="cat-title">✅ 할일</div>
-        <div class="row-hint">⇒ 버튼으로 다음날로 이월 · 계획일정/실행일정을 연월일로 각각 기입할 수 있어요</div>
-        <div class="list-rows" id="todoRows"></div>
-        <button class="add-row-btn" id="addTodoRow">+ 할일 추가</button>
-      </div>
-
-      <!-- 습관 (편집) -->
-      <div class="cat-section" data-cat="tasks">
-        <div class="cat-title">🔁 습관</div>
-        <div class="row-hint">⇒ 버튼으로 다음날로 이월 · 계획일정/실행일정을 연월일로 각각 기입할 수 있어요</div>
-        <div class="list-rows" id="habitRows"></div>
-        <button class="add-row-btn" id="addHabitRow">+ 습관 추가</button>
       </div>
 
       <div class="footer-note">draft v0.4 · 데이터는 이 계정에 개인 저장됩니다</div>
@@ -1210,6 +1254,21 @@
           </div>
         </div>
       </div>
+    </div>
+
+    <!-- ===== LIST VIEW (목록 · 엑셀형식 리스트) ===== -->
+    <div id="listView" style="display:none;">
+      <div class="header">
+        <div class="brand">
+          <div class="logo">hb<span>◆</span>rad</div>
+          <div class="tagline">목록 · 기록을 엑셀형식 표로 모아보기</div>
+        </div>
+      </div>
+
+      <div class="cat-tabs" id="listCatTabs"></div>
+      <div id="listTableWrap"></div>
+
+      <div class="footer-note">draft v0.4 · 기록 탭에 입력한 내용이 날짜순으로 정리됩니다</div>
     </div>
 
   </div>
@@ -1326,13 +1385,119 @@
   // 상단 기록탭: 💭생각(시간계획·할일·습관 포함) / ❤️건강 / 🤝인간관계 / 💰자산투자 / 💼직업 / 🎨취미
   const CAT_TABS = [
     {key:'all', label:'전체'},
-    {key:'thoughts', label:'💭 생각', cats:['thoughts','schedule','tasks']},
+    {key:'thoughts', label:'💭 생각', cats:['thoughts','schedule','todos','habits']},
     {key:'health', label:'❤️ 건강', cats:['health']},
     {key:'relationships', label:'🤝 인간관계', cats:['relationships']},
     {key:'assets', label:'💰 자산·투자', cats:['assets']},
     {key:'career', label:'💼 직업', cats:['career']},
     {key:'hobby', label:'🎨 취미', cats:['hobby']}
   ];
+
+  // 목록(리스트) 탭: 카테고리별로 지금까지 작성한 내용을 엑셀형식 표로 모아봅니다.
+  const LIST_CATS = [
+    {key:'thoughts', label:'💭 생각'},
+    {key:'health', label:'❤️ 건강'},
+    {key:'relationships', label:'🤝 인간'},
+    {key:'assets', label:'💰 자산'},
+    {key:'career', label:'💼 직업'},
+    {key:'hobby', label:'🎨 취미'}
+  ];
+  let currentListCat = 'thoughts';
+  // 카테고리별로 표에 보여줄 (열 이름, 값 추출 함수) 목록
+  const LIST_COLUMNS = {
+    thoughts: [
+      ['일기주제', e => e.referenceTopic || ''],
+      ['일기', e => e.reference || ''],
+      ['생각주제', e => (e.diary && e.diary.thoughtsTopic) || ''],
+      ['생각', e => (e.diary && e.diary.thoughts) || ''],
+      ['질문주제', e => (e.diary && e.diary.questionsTopic) || ''],
+      ['질문', e => (e.diary && e.diary.questions) || ''],
+      ['감상주제', e => (e.diary && e.diary.impressionTopic) || ''],
+      ['감상', e => (e.diary && e.diary.impression) || ''],
+      ['키워드', e => (e.diary && e.diary.keywords) || '']
+    ],
+    health: [
+      ['기상', e => e.wakeTime || ''],
+      ['취침', e => e.sleepTime || ''],
+      ['컨디션', e => e.condition || ''],
+      ['운동여부', e => e.exerciseYN || ''],
+      ['운동종류', e => e.exerciseType || ''],
+      ['운동강도', e => e.exerciseIntensity || ''],
+      ['체지방%', e => (e.health && e.health.body && e.health.body.fat) || ''],
+      ['골격근량', e => (e.health && e.health.body && e.health.body.muscle) || ''],
+      ['체중', e => (e.health && e.health.body && e.health.body.weight) || ''],
+      ['총평', e => (e.health && e.health.total) || ''],
+      ['부족영양', e => (e.health && e.health.deficient) || '']
+    ],
+    relationships: [
+      ['만난사람', e => (e.relationships && e.relationships.people) || ''],
+      ['관계메모', e => (e.relationships && e.relationships.memo) || ''],
+      ['감사표현', e => (e.relationships && e.relationships.gratitude) || ''],
+      ['만족도', e => (e.relationships && e.relationships.score) || '']
+    ],
+    assets: [
+      ['오늘지출', e => (e.assets && e.assets.expense) || ''],
+      ['오늘수입', e => (e.assets && e.assets.income) || ''],
+      ['총자산', e => (e.assets && e.assets.total) || ''],
+      ['투자메모', e => (e.assets && e.assets.memo) || ''],
+      ['다음액션', e => (e.assets && e.assets.nextAction) || '']
+    ],
+    career: [
+      ['업무요약', e => (e.career && e.career.summary) || ''],
+      ['성과이슈', e => (e.career && e.career.achievements) || ''],
+      ['배운점', e => (e.career && e.career.learned) || ''],
+      ['내일우선순위', e => (e.career && e.career.priority) || '']
+    ],
+    hobby: [
+      ['활동', e => (e.hobby && e.hobby.activity) || ''],
+      ['소요시간', e => (e.hobby && e.hobby.duration) || ''],
+      ['만족도', e => (e.hobby && e.hobby.satisfaction) || ''],
+      ['메모', e => (e.hobby && e.hobby.memo) || '']
+    ]
+  };
+  function renderListSubTabs(){
+    const wrap = $('listCatTabs');
+    if(!wrap) return;
+    wrap.innerHTML = '';
+    LIST_CATS.forEach(c => {
+      const btn = document.createElement('div');
+      btn.className = 'cat-tab' + (currentListCat === c.key ? ' active' : '');
+      btn.textContent = c.label;
+      btn.addEventListener('click', () => {
+        currentListCat = c.key;
+        renderListSubTabs();
+        renderListTable();
+      });
+      wrap.appendChild(btn);
+    });
+  }
+  function renderListTable(){
+    const wrap = $('listTableWrap');
+    if(!wrap) return;
+    const cols = LIST_COLUMNS[currentListCat] || [];
+    const dates = Object.keys(allLogs)
+      .filter(d => categoryHasContent(migrateEntry(allLogs[d]), currentListCat))
+      .sort((a,b) => b.localeCompare(a));
+    if(dates.length === 0){
+      wrap.innerHTML = `<div class="excel-empty">아직 이 카테고리에 작성된 기록이 없어요 — 기록 탭에서 입력해보세요</div>`;
+      return;
+    }
+    let html = `<div class="excel-scroll"><table class="excel-table"><thead><tr><th>날짜</th>`;
+    cols.forEach(([label]) => { html += `<th>${escapeAttr(label)}</th>`; });
+    html += `</tr></thead><tbody>`;
+    dates.forEach(d => {
+      const e = migrateEntry(allLogs[d]);
+      html += `<tr><td>${escapeAttr(fmtDateShort(d))}</td>`;
+      cols.forEach(([, getter]) => {
+        let v = '';
+        try{ v = getter(e); }catch(err){ v = ''; }
+        html += `<td>${escapeAttr(String(v))}</td>`;
+      });
+      html += `</tr>`;
+    });
+    html += `</tbody></table></div>`;
+    wrap.innerHTML = html;
+  }
 
   const PLAN_CATS = [
     {key:'thoughts', label:'💭 생각'},
@@ -1365,7 +1530,7 @@
     if(!e) return false;
     switch(catKey){
       case 'thoughts':
-        return !!(e.diary && (e.diary.thoughts||e.diary.thoughtsTopic||e.diary.questions||e.diary.questionsTopic||e.diary.impression||e.diary.impressionTopic||e.diary.keywords||e.diary.keywordsTopic)) || !!e.reference;
+        return !!(e.diary && (e.diary.thoughts||e.diary.thoughtsTopic||e.diary.questions||e.diary.questionsTopic||e.diary.impression||e.diary.impressionTopic||e.diary.keywords||e.diary.keywordsTopic)) || !!e.reference || !!e.referenceTopic;
       case 'health': {
         if(e.wakeTime || e.sleepTime || e.exerciseYN || e.exerciseType || e.condition) return true;
         const h = e.health || {};
@@ -1491,7 +1656,7 @@
       },
       todos: [], habits: [],
       diary: { thoughts:'', thoughtsTopic:'', questions:'', questionsTopic:'', impression:'', impressionTopic:'', keywords:'', keywordsTopic:'' },
-      reference: '',
+      reference: '', referenceTopic: '',
       relationships: { people:'', memo:'', gratitude:'', score:0 },
       assets: { expense:'', income:'', total:'', memo:'', nextAction:'' },
       career: { summary:'', achievements:'', learned:'', priority:'' },
@@ -1531,6 +1696,7 @@
     if(e.diary.questionsTopic === undefined) e.diary.questionsTopic = '';
     if(e.diary.impressionTopic === undefined) e.diary.impressionTopic = '';
     if(e.diary.keywordsTopic === undefined) e.diary.keywordsTopic = '';
+    if(e.referenceTopic === undefined) e.referenceTopic = '';
     return e;
   }
   function hasContent(e){
@@ -1546,7 +1712,7 @@
     if(e.todos && e.todos.length>0) return true;
     if(e.habits && e.habits.length>0) return true;
     if(e.diary && (e.diary.thoughts||e.diary.thoughtsTopic||e.diary.questions||e.diary.questionsTopic||e.diary.impression||e.diary.impressionTopic||e.diary.keywords||e.diary.keywordsTopic)) return true;
-    if(e.reference) return true;
+    if(e.reference || e.referenceTopic) return true;
     if(e.relationships && (e.relationships.people||e.relationships.memo||e.relationships.gratitude||e.relationships.score)) return true;
     if(e.assets && (e.assets.expense||e.assets.income||e.assets.total||e.assets.memo||e.assets.nextAction)) return true;
     if(e.career && (e.career.summary||e.career.achievements||e.career.learned||e.career.priority)) return true;
@@ -1640,8 +1806,8 @@
     $('diaryImpression').value = entry.diary.impression;
     $('diaryImpressionTopic').value = entry.diary.impressionTopic || '';
     $('diaryKeywords').value = entry.diary.keywords;
-    $('diaryKeywordsTopic').value = entry.diary.keywordsTopic || '';
     $('referenceNote').value = entry.reference;
+    $('referenceTopic').value = entry.referenceTopic || '';
     $('relPeople').value = entry.relationships.people;
     $('relMemo').value = entry.relationships.memo;
     $('relGratitude').value = entry.relationships.gratitude;
@@ -2206,9 +2372,11 @@
     $('reportView').style.display = view === 'report' ? '' : 'none';
     $('logView').style.display = view === 'log' ? '' : 'none';
     $('planView').style.display = view === 'plan' ? '' : 'none';
+    $('listView').style.display = view === 'list' ? '' : 'none';
     $('tabReportBtn').classList.toggle('active', view === 'report');
     $('tabLogBtn').classList.toggle('active', view === 'log');
     $('tabPlanBtn').classList.toggle('active', view === 'plan');
+    $('tabListBtn').classList.toggle('active', view === 'list');
     if(view === 'report'){
       renderReportView();
     }
@@ -2222,12 +2390,17 @@
     if(view === 'log'){
       renderMindmapRecordList();
     }
+    if(view === 'list'){
+      renderListSubTabs();
+      renderListTable();
+    }
     window.scrollTo(0, 0);
     document.querySelector('.main-content').scrollTop = 0;
   }
   $('tabReportBtn').addEventListener('click', () => switchView('report'));
   $('tabLogBtn').addEventListener('click', () => switchView('log'));
   $('tabPlanBtn').addEventListener('click', () => switchView('plan'));
+  $('tabListBtn').addEventListener('click', () => switchView('list'));
   bindCalNav('');
   bindCalNav('Log');
 
@@ -2248,7 +2421,7 @@
   $('diaryImpression').addEventListener('input', e => { entry.diary.impression = e.target.value; queueSave(); });
   $('diaryImpressionTopic').addEventListener('input', e => { entry.diary.impressionTopic = e.target.value; queueSave(); });
   $('diaryKeywords').addEventListener('input', e => { entry.diary.keywords = e.target.value; queueSave(); });
-  $('diaryKeywordsTopic').addEventListener('input', e => { entry.diary.keywordsTopic = e.target.value; queueSave(); });
+  $('referenceTopic').addEventListener('input', e => { entry.referenceTopic = e.target.value; queueSave(); });
   $('referenceNote').addEventListener('input', e => { entry.reference = e.target.value; queueSave(); });
 
   $('relPeople').addEventListener('input', e => { entry.relationships.people = e.target.value; queueSave(); });
@@ -2352,39 +2525,6 @@
     renderTimePlan();
     queueSave();
     hbToast(`${s}~${e} 사이 ${times.length}개 시간대를 실천으로 체크했어요`);
-  });
-
-  // ---------- 시간계획 일괄 입력 ----------
-  $('timeplanBulkApply').addEventListener('click', () => {
-    const raw = $('timeplanBulkText').value;
-    if(!raw.trim()) return;
-    const lines = raw.split('\n').map(l => l.trim()).filter(Boolean);
-    let applied = 0;
-    lines.forEach(line => {
-      const m = line.match(/^(\d{1,2}:\d{2})\s+(.*)$/);
-      if(!m) return;
-      const hm = m[1].length === 4 ? '0'+m[1] : m[1];
-      let rest = m[2];
-      let cat = '';
-      const bar = rest.indexOf('|');
-      if(bar >= 0){ cat = rest.slice(bar+1).trim(); rest = rest.slice(0, bar).trim(); }
-      const idx = entry.timePlan.findIndex(s => s.time === hm);
-      if(idx >= 0){
-        entry.timePlan[idx].content = rest;
-        if(cat) entry.timePlan[idx].category = cat;
-      } else {
-        entry.timePlan.push({ time:hm, content:rest, category:cat, done:false });
-      }
-      applied++;
-    });
-    if(applied > 0){
-      renderTimePlan();
-      queueSave();
-      $('timeplanBulkText').value = '';
-      hbToast(applied + '개 시간대에 반영했어요');
-    } else {
-      hbToast('형식을 확인해주세요 (예: 09:00 내용|구분)', true);
-    }
   });
 
   renderCatTabs();
