@@ -403,23 +403,26 @@
   .list-row input.due-input{ flex:0 0 128px; font-family:'JetBrains Mono', monospace; font-size:11.5px; padding:6px 7px; border:1.5px solid var(--line); border-radius:6px; background:var(--paper); }
   .list-row .row-dday{ flex-shrink:0; margin-left:0; }
   .ongoing-plan-section .report-empty{ padding:2px 0; }
-  /* ---------- 계획: 연간 365일 현황 그리드 (목표일 배너 상단, 오늘 강조) ---------- */
+  /* ---------- 계획: 연간 현황 세로막대 그래프 (목표일 배너 상단, 오늘이 속한 달 강조) ---------- */
   .year-grid-head{ display:flex; align-items:center; justify-content:space-between; margin-bottom:8px; flex-wrap:wrap; gap:4px; }
   .year-grid-head .yg-title{ font-family:'JetBrains Mono', monospace; font-size:11.5px; font-weight:700; color:var(--ink); }
   .year-grid-head .yg-today{ font-family:'JetBrains Mono', monospace; font-size:10.5px; font-weight:700; color:var(--safety-dark); background:var(--accent-soft); padding:2px 8px; border-radius:20px; }
-  .year-grid{ display:flex; flex-direction:column; gap:3px; margin-bottom:12px; padding-bottom:10px; border-bottom:1.5px dashed var(--line); }
-  .year-grid-row{ display:flex; align-items:center; gap:6px; }
-  .year-grid-mlabel{ flex-shrink:0; width:24px; font-family:'JetBrains Mono', monospace; font-size:9px; color:var(--ink-soft); }
-  .year-grid-days{ display:flex; gap:2px; flex-wrap:wrap; flex:1; }
-  .year-day-cell{
-    width:9px; height:9px; border-radius:2px; background:var(--paper-2); border:1px solid var(--line);
-    flex-shrink:0; box-sizing:border-box;
+  .year-grid{
+    display:flex; align-items:flex-end; gap:6px; height:150px;
+    margin-bottom:12px; padding:10px 4px 0; border-bottom:1.5px dashed var(--line);
   }
-  .year-day-cell.is-today{
-    width:13px; height:13px; border-radius:3px; background:var(--safety); border:1.5px solid var(--safety-dark);
-    box-shadow:0 0 0 2px var(--accent-soft); position:relative; z-index:1;
+  .year-bar-col{ flex:1; min-width:0; height:100%; display:flex; flex-direction:column; align-items:center; gap:5px; }
+  .year-bar-track{
+    flex:1; width:100%; max-width:22px; background:var(--paper-2); border:1px solid var(--line);
+    border-radius:5px 5px 3px 3px; display:flex; flex-direction:column-reverse; overflow:hidden; box-sizing:border-box;
   }
-  @media (max-width:700px){ .year-day-cell{ width:7px; height:7px; } .year-day-cell.is-today{ width:11px; height:11px; } }
+  .year-bar-fill{ width:100%; background:var(--teal); transition:height .2s ease; }
+  .year-bar-col.is-future .year-bar-fill{ background:transparent; }
+  .year-bar-col.is-current .year-bar-track{ border-color:var(--safety-dark); box-shadow:0 0 0 2px var(--accent-soft); }
+  .year-bar-col.is-current .year-bar-fill{ background:var(--safety); }
+  .year-bar-mlabel{ font-family:'JetBrains Mono', monospace; font-size:9px; color:var(--ink-soft); white-space:nowrap; }
+  .year-bar-col.is-current .year-bar-mlabel{ color:var(--safety-dark); font-weight:700; }
+  @media (max-width:700px){ .year-grid{ height:110px; gap:3px; } .year-bar-mlabel{ font-size:7.5px; } }
   /* ---------- 계획: 카테고리별 목표 카드에 개별 할일 추가 버튼 ---------- */
   .plan-cat-add-btn{ margin-top:7px; font-size:10.5px; padding:5px 10px; width:100%; }
   /* ---------- 계획: 할일 계획 / 습관 계획을 한 열(row)에 반절씩 배치 ---------- */
@@ -669,7 +672,9 @@
   .report-block .rb-drag-handle{
     font-family:'JetBrains Mono', monospace; font-size:10.5px; font-weight:700; color:var(--ink-soft);
     cursor:grab; letter-spacing:0.5px; user-select:none; white-space:nowrap;
+    opacity:0; transition:opacity .15s ease;
   }
+  .report-block:hover .rb-drag-handle, .report-block:focus-within .rb-drag-handle{ opacity:1; }
   .report-block .rb-size-toggle{ display:flex; gap:3px; opacity:0; transition:opacity .15s ease; }
   .report-block:hover .rb-size-toggle, .report-block:focus-within .rb-size-toggle{ opacity:1; }
   .report-block .rb-size-btn{
@@ -3122,7 +3127,7 @@
     }
     return units;
   }
-  // ---------- 계획: 연간 365(366)일 현황 그리드 — 오늘이 어디인지 한눈에 표시 ----------
+  // ---------- 계획: 연간 현황 세로막대 그래프 — 12개월을 막대로, 오늘이 속한 달을 강조 ----------
   function renderPlanYearGrid(){
     const el = $('planYearGrid');
     if(!el) return;
@@ -3131,24 +3136,24 @@
     const todayM = Number(today.slice(5,7));
     const todayD = Number(today.slice(8,10));
     const MLABELS = ['1월','2월','3월','4월','5월','6월','7월','8월','9월','10월','11월','12월'];
-    let rows = '';
+    let cols = '';
     for(let m=1; m<=12; m++){
       const daysInMonth = new Date(y, m, 0).getDate();
-      let cells = '';
-      for(let d=1; d<=daysInMonth; d++){
-        const isToday = (m === todayM && d === todayD);
-        cells += `<div class="year-day-cell${isToday?' is-today':''}" title="${y}년 ${m}월 ${d}일${isToday?' · 오늘':''}"></div>`;
-      }
-      rows += `<div class="year-grid-row"><div class="year-grid-mlabel mono">${MLABELS[m-1]}</div><div class="year-grid-days">${cells}</div></div>`;
+      let pct, stateClass, tip;
+      if(m < todayM){ pct = 100; stateClass = 'is-past'; tip = '지난 달'; }
+      else if(m === todayM){ pct = Math.round(todayD/daysInMonth*100); stateClass = 'is-current'; tip = `오늘 · ${todayD}/${daysInMonth}일`; }
+      else { pct = 0; stateClass = 'is-future'; tip = '다가올 달'; }
+      cols += `<div class="year-bar-col ${stateClass}" title="${y}년 ${MLABELS[m-1]} · ${tip}">
+        <div class="year-bar-track"><div class="year-bar-fill" style="height:${pct}%"></div></div>
+        <div class="year-bar-mlabel mono">${MLABELS[m-1]}</div>
+      </div>`;
     }
     el.innerHTML = `
       <div class="year-grid-head">
-        <span class="yg-title mono">🗓 ${y}년 연간 현황 (365일)</span>
+        <span class="yg-title mono">🗓 ${y}년 연간 현황</span>
         <span class="yg-today mono">오늘 · ${fmtDateShort(today)}</span>
       </div>
-      <div class="year-grid">${rows}</div>`;
-    const todayCell = el.querySelector('.year-day-cell.is-today');
-    if(todayCell && todayCell.scrollIntoView) todayCell.scrollIntoView({ block:'nearest', inline:'center' });
+      <div class="year-grid">${cols}</div>`;
   }
 
   function renderPlanTimeline(){
@@ -3840,13 +3845,9 @@
     medium: { label:'중형', short:'중', desc:'한 줄에 2개' },
     large:  { label:'대형', short:'대', desc:'한 줄에 1개(전체 폭)' }
   };
-  // 배너 기본 규격: 사용자의 요청대로 모든 배너는 소형을 기본값으로 합니다.
-  // 요청사항: 인쇄탭의 모든 배너는 "중형(medium)"이 기본값이고, 달력과 마인드맵만
-  // 예외적으로 별도 기본값(소형)을 씁니다.
-  // (테마 배너는 설정 탭으로 옮겼고, 대신 오늘의 완료 현황판(오늘 계획/오늘 습관/목표 진행
-  //  차트/오늘의 계획 체크리스트)과 인간관계 기록 모아보기가 설정 탭·인간관계 탭에서
-  //  다시 인쇄탭으로 옮겨왔습니다.)
-  const REPORT_DEFAULT_SIZE = { todayplan:'small', todayhabit:'medium', goalchart:'medium', todaychecklist:'large', logsum:'medium', timetable:'medium', diary:'medium', relationships:'medium', mindmap:'small', calendar:'small' };
+  // 배너 기본 규격: 인쇄탭의 모든 배너는 "중형(medium)"이 기본값이고, 달력과 마인드맵만
+  // 예외적으로 기존 그대로(소형)를 유지합니다.
+  const REPORT_DEFAULT_SIZE = { todayplan:'medium', todayhabit:'medium', goalchart:'medium', todaychecklist:'medium', logsum:'medium', timetable:'medium', diary:'medium', relationships:'medium', mindmap:'small', calendar:'small' };
   function reportBlock(pid, innerHtml, size){
     size = size || REPORT_DEFAULT_SIZE[pid] || 'small';
     const sizeButtons = Object.keys(REPORT_SIZE_PRESETS).map(key => {
@@ -4320,6 +4321,76 @@
       paper:'#F2F0EA', paper2:'#F2D9DA', grid:'#F2D9DA', card:'#FFFFFF',
       ink:'#945B2C', inkSoft:'#AF6F3D', line:'#E0C29F',
       accent:'#AF6F3D', dark:'#945B2C', soft:'#ECC8C9'
+    },
+    {
+      key:'t7', label:'라벤더 미스트',
+      swatch:['#B8A9E0','#F5F0FF','#8A6FC9','#D9CCF2','#3C3350'],
+      paper:'#F7F4FC', paper2:'#F0EAFA', grid:'#E8DFF5', card:'#FFFFFF',
+      ink:'#3C3350', inkSoft:'#7C6F94', line:'#D9CCF2',
+      accent:'#8A6FC9', dark:'#5F4A99', soft:'#E7DDF7'
+    },
+    {
+      key:'t8', label:'포레스트 그린',
+      swatch:['#2F5233','#5C8A55','#A3C586','#DDEBC9','#1B2E1E'],
+      paper:'#F3F7EE', paper2:'#EAF3E2', grid:'#DCEBCE', card:'#FFFFFF',
+      ink:'#2F5233', inkSoft:'#5C8A55', line:'#C7DDB4',
+      accent:'#5C8A55', dark:'#2F5233', soft:'#DCEBCE'
+    },
+    {
+      key:'t9', label:'선셋 코랄',
+      swatch:['#FF6F59','#FFA69E','#FFD5CC','#FFF3F0','#43291F'],
+      paper:'#FFF7F5', paper2:'#FFEDE9', grid:'#FFE0D9', card:'#FFFFFF',
+      ink:'#43291F', inkSoft:'#9C6B5C', line:'#FFCFC3',
+      accent:'#FF6F59', dark:'#D9503D', soft:'#FFDDD4'
+    },
+    {
+      key:'t10', label:'모노크롬 그레이',
+      swatch:['#2B2B2B','#5C5C5C','#8C8C8C','#C4C4C4','#F2F2F2'],
+      paper:'#F5F5F5', paper2:'#EDEDED', grid:'#E2E2E2', card:'#FFFFFF',
+      ink:'#2B2B2B', inkSoft:'#6E6E6E', line:'#D4D4D4',
+      accent:'#5C5C5C', dark:'#2B2B2B', soft:'#DCDCDC'
+    },
+    {
+      key:'t11', label:'체리 로즈',
+      swatch:['#9E1B32','#D6536D','#F2A6B7','#FBE0E6','#3A0D14'],
+      paper:'#FDF3F5', paper2:'#FBE6EA', grid:'#F7D2DA', card:'#FFFFFF',
+      ink:'#3A0D14', inkSoft:'#9E1B32', line:'#F2B8C4',
+      accent:'#D6536D', dark:'#9E1B32', soft:'#F9D6DE'
+    },
+    {
+      key:'t12', label:'민트 프레시',
+      swatch:['#0FA37F','#4FD1A5','#A6EAD1','#E1FBF0','#0A3D31'],
+      paper:'#F0FDF8', paper2:'#E3FAF0', grid:'#D2F5E6', card:'#FFFFFF',
+      ink:'#0A3D31', inkSoft:'#2D8067', line:'#BEEBDA',
+      accent:'#0FA37F', dark:'#0A3D31', soft:'#CFF3E5'
+    },
+    {
+      key:'t13', label:'머스타드 브라운',
+      swatch:['#7A5230','#B9843F','#E0B463','#F4E3BE','#3A2413'],
+      paper:'#FBF6EC', paper2:'#F5EAD2', grid:'#EDDCB5', card:'#FFFFFF',
+      ink:'#3A2413', inkSoft:'#7A5230', line:'#E0C79A',
+      accent:'#B9843F', dark:'#7A5230', soft:'#EFDBAE'
+    },
+    {
+      key:'t14', label:'인디고 나이트',
+      swatch:['#1B1F3B','#3B4784','#6E7FC2','#C2CBEF','#0B0D1E'],
+      paper:'#EEF0F9', paper2:'#E4E8F6', grid:'#D5DCF2', card:'#FFFFFF',
+      ink:'#1B1F3B', inkSoft:'#454E82', line:'#C2CBEF',
+      accent:'#3B4784', dark:'#1B1F3B', soft:'#D6DCF5'
+    },
+    {
+      key:'t15', label:'코코아 라떼',
+      swatch:['#5B3A29','#8C6248','#C29A76','#EAD9C4','#2E1D14'],
+      paper:'#FAF4EC', paper2:'#F2E5D5', grid:'#E7D3B9', card:'#FFFFFF',
+      ink:'#2E1D14', inkSoft:'#8C6248', line:'#DDBE9B',
+      accent:'#8C6248', dark:'#5B3A29', soft:'#EAD9C4'
+    },
+    {
+      key:'t16', label:'라임 시트러스',
+      swatch:['#8BC34A','#C6E86A','#EAF7C6','#4C7A1F','#2E4A11'],
+      paper:'#F7FBEC', paper2:'#EFF7D8', grid:'#E2F0BD', card:'#FFFFFF',
+      ink:'#2E4A11', inkSoft:'#598424', line:'#D3E9A0',
+      accent:'#8BC34A', dark:'#4C7A1F', soft:'#DFF0BB'
     }
   ];
   let currentThemeKey = 't3';
