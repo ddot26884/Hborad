@@ -55,22 +55,24 @@
   /* ---------- Shell / side tabs ---------- */
   .app-shell{ max-width:1080px; margin:0 auto; display:flex; align-items:flex-start; }
   .side-tabs{
-    display:flex; flex-direction:column; gap:6px; padding:18px 8px;
-    position:sticky; top:0; flex-shrink:0; width:80px;
+    display:flex; flex-direction:column; gap:8px; padding:18px 10px;
+    position:sticky; top:0; flex-shrink:0; width:104px;
   }
   /* 탭 박스 크기/위치는 active 여부와 무관하게 고정하고, 색상만 부드럽게 전환합니다.
      (이전 버전은 margin으로 활성 탭을 밀어내는 방식이라 클릭할 때마다 탭 전체가
-      좌우/상하로 살짝 움직이는 것처럼 보였습니다 — 이제는 자리 이동 없이 색만 바뀝니다.) */
+      좌우/상하로 살짝 움직이는 것처럼 보였습니다 — 이제는 자리 이동 없이 색만 바뀝니다.)
+     탭 개수가 늘어난 만큼(인쇄/기록/계획/목록/인간관계/설정) 한 탭당 크기를 더 키워서
+     눌러야 할 영역이 넉넉하도록 합니다. */
   .side-tab{
-    display:flex; flex-direction:column; align-items:center; gap:3px;
-    padding:11px 5px; border:1.5px solid transparent; border-right:none;
-    border-radius:8px 0 0 8px; background:var(--paper-2); cursor:pointer;
-    font-family:'JetBrains Mono', monospace; font-size:10px; font-weight:700; color:var(--ink-soft);
+    display:flex; flex-direction:column; align-items:center; gap:5px;
+    padding:16px 6px; border:1.5px solid transparent; border-right:none;
+    border-radius:10px 0 0 10px; background:var(--paper-2); cursor:pointer;
+    font-family:'JetBrains Mono', monospace; font-size:12px; font-weight:700; color:var(--ink-soft);
     box-sizing:border-box; position:relative;
     transition:background-color .16s ease, color .16s ease, border-color .16s ease;
   }
-  .side-tab .icon{ font-size:16px; transition:transform .16s ease; display:inline-flex; color:currentColor; }
-  .side-tab .icon svg{ width:17px; height:17px; display:block; }
+  .side-tab .icon{ font-size:20px; transition:transform .16s ease; display:inline-flex; color:currentColor; }
+  .side-tab .icon svg{ width:22px; height:22px; display:block; }
   .side-tab.active{
     background:var(--card); color:var(--ink);
     border-color:var(--ink-soft); border-right-color:var(--card);
@@ -88,7 +90,7 @@
   @media (max-width:700px){
     .app-shell{ flex-direction:column; }
     .side-tabs{ flex-direction:row; width:100%; padding:10px 10px 0; position:static; overflow-x:auto; }
-    .side-tab{ flex-direction:row; border-radius:8px 8px 0 0; border:1.5px solid transparent; border-bottom:none; }
+    .side-tab{ flex-direction:row; border-radius:8px 8px 0 0; border:1.5px solid transparent; border-bottom:none; padding:12px 14px; }
     .side-tab.active{ border-color:var(--ink-soft); border-bottom-color:var(--card); box-shadow:0 -2px 0 rgba(27,36,48,0.05); }
     .side-tab.active::before{ left:-1.5px; right:-1.5px; top:-1.5px; bottom:auto; width:auto; height:3px; border-radius:8px 8px 0 0; }
   }
@@ -713,6 +715,7 @@
   .report-hero .rh-title{ font-family:'JetBrains Mono', monospace; font-weight:800; font-size:19px; color:var(--ink); position:relative; z-index:1; }
   .report-hero .rh-sub{ font-size:11.5px; color:var(--ink-soft); margin-top:4px; max-width:70%; position:relative; z-index:1; }
   .report-hero .rh-date{ font-family:'JetBrains Mono', monospace; font-size:11px; color:var(--ink-soft); margin-top:10px; position:relative; z-index:1; }
+  .rd-diary-body{ font-size:12px; line-height:1.6; color:var(--ink); white-space:pre-wrap; }
 
   .theme-picker{ display:flex; align-items:center; gap:7px; flex-wrap:wrap; margin-top:12px; position:relative; z-index:1; }
   .theme-picker .tp-label{ font-family:'JetBrains Mono', monospace; font-size:10px; color:var(--ink-soft); margin-right:2px; }
@@ -811,6 +814,8 @@
   .rmm-period-tab:hover:not(.active){ border-color:var(--purple); color:var(--purple); }
   .report-mindmap-svg{ width:100%; height:auto; display:block; }
   .report-mindmap-note{ margin-top:4px; }
+  .rmm-word-chips{ display:flex; flex-wrap:wrap; gap:6px; margin-top:8px; }
+  .rmm-word-chip{ display:inline-block; border-radius:999px; color:#fff; font-family:'JetBrains Mono', monospace; font-weight:700; line-height:1.3; white-space:nowrap; }
 
   /* 인쇄창 달력: 이제 바깥 .report-block(달력 배너) 자체를 드래그로 크기 조절하므로,
      내부 달력은 배너 폭을 그대로 채웁니다. 기본 크기는 '오늘의 완료 현황판'과 동일(50%)하게 맞춥니다. */
@@ -925,6 +930,8 @@
     <div class="side-tab" id="tabLogBtn"><span class="icon"><svg viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M12.3 3.3a1.2 1.2 0 0 1 1.7 0l1.7 1.7a1.2 1.2 0 0 1 0 1.7L7.3 15.1l-3.6.6.6-3.6 8-8Z" stroke="currentColor" stroke-width="1.6" stroke-linejoin="round"/><path d="M10.8 4.8l2.4 2.4" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/></svg></span>기록</div>
     <div class="side-tab" id="tabPlanBtn"><span class="icon"><svg viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg"><circle cx="10" cy="10" r="6.3" stroke="currentColor" stroke-width="1.6"/><circle cx="10" cy="10" r="3.4" stroke="currentColor" stroke-width="1.6"/><circle cx="10" cy="10" r="0.9" fill="currentColor"/></svg></span>계획</div>
     <div class="side-tab" id="tabListBtn"><span class="icon"><svg viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M6.6 5.5h8.4M6.6 10h8.4M6.6 14.5h8.4" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/><circle cx="3.7" cy="5.5" r="0.95" fill="currentColor"/><circle cx="3.7" cy="10" r="0.95" fill="currentColor"/><circle cx="3.7" cy="14.5" r="0.95" fill="currentColor"/></svg></span>목록</div>
+    <div class="side-tab" id="tabRelBtn"><span class="icon"><svg viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg"><circle cx="7" cy="7" r="2.6" stroke="currentColor" stroke-width="1.6"/><circle cx="14" cy="8.5" r="2.1" stroke="currentColor" stroke-width="1.6"/><path d="M3 16c0.3-3 2-4.6 4-4.6s3.7 1.6 4 4.6" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/><path d="M11.7 12.2c1.7 0.2 2.9 1.6 3.3 3.8" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/></svg></span>인간관계</div>
+    <div class="side-tab" id="tabSettingsBtn"><span class="icon"><svg viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg"><circle cx="10" cy="10" r="2.6" stroke="currentColor" stroke-width="1.6"/><path d="M10 3.2v1.9M10 14.9v1.9M16.8 10h-1.9M5.1 10H3.2M14.8 5.2l-1.3 1.3M6.5 13.5l-1.3 1.3M14.8 14.8l-1.3-1.3M6.5 6.5L5.2 5.2" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/></svg></span>설정</div>
   </nav>
 
   <div class="main-content">
@@ -1038,7 +1045,7 @@
                 </div>
               </div>
               <div class="field"><label>주제</label><input type="text" id="referenceTopic" placeholder="오늘 일기의 주제 (예: 하루 마무리)" /></div>
-              <div class="field"><label>오늘 일기 / 참고 작성</label><textarea id="referenceNote" rows="4" placeholder="오늘 하루 자유롭게 적어보세요. 메모 / 참고 링크 / 인용 등도 함께"></textarea></div>
+              <div class="field"><label>오늘 일기 작성</label><textarea id="referenceNote" rows="4" placeholder="오늘 하루 자유롭게 적어보세요"></textarea></div>
             </div>
 
             <!-- 생각: 주제+생각 / 주제+질문 / 주제+감상 / 키워드 네 가지로 통일된 카드 형태로 구분 -->
@@ -1316,6 +1323,12 @@
       <div class="footer-note">draft v0.4 · 기록 탭에 입력한 내용이 날짜순으로 정리됩니다</div>
     </div>
 
+    <!-- ===== RELATIONSHIPS VIEW (인간관계 · 기록탭 인간관계와 연동) ===== -->
+    <div id="relationshipsView" style="display:none;"></div>
+
+    <!-- ===== SETTINGS VIEW (설정 · 오늘의 완료 현황판 + 배치 설정) ===== -->
+    <div id="settingsView" style="display:none;"></div>
+
   </div>
 </div>
 </div>
@@ -1531,6 +1544,91 @@
     });
     html += `</tbody></table></div>`;
     wrap.innerHTML = html;
+  }
+
+  // ================= 인간관계 탭 (기록탭 "🤝 인간관계"와 연동) =================
+  function renderRelationshipsTable(){
+    const wrap = $('relTableWrap');
+    if(!wrap) return;
+    const cols = LIST_COLUMNS.relationships;
+    const dates = Object.keys(allLogs)
+      .filter(d => categoryHasContent(migrateEntry(allLogs[d]), 'relationships'))
+      .sort((a,b) => b.localeCompare(a));
+    if(dates.length === 0){
+      wrap.innerHTML = `<div class="excel-empty">아직 인간관계 기록이 없어요 — 아래에서 오늘 기록을 입력해보세요</div>`;
+      return;
+    }
+    let html = `<div class="excel-scroll"><table class="excel-table"><thead><tr><th>날짜</th>`;
+    cols.forEach(([label]) => { html += `<th>${escapeAttr(label)}</th>`; });
+    html += `</tr></thead><tbody>`;
+    dates.forEach(d => {
+      const e = migrateEntry(allLogs[d]);
+      html += `<tr><td>${escapeAttr(fmtDateShort(d))}</td>`;
+      cols.forEach(([, getter]) => {
+        let v = '';
+        try{ v = getter(e); }catch(err){ v = ''; }
+        html += `<td>${escapeAttr(String(v))}</td>`;
+      });
+      html += `</tr>`;
+    });
+    html += `</tbody></table></div>`;
+    wrap.innerHTML = html;
+  }
+  function renderRelationshipsView(){
+    const wrap = $('relationshipsView');
+    if(!wrap) return;
+    wrap.innerHTML = `
+      <div class="header">
+        <div class="brand">
+          <div class="logo">hb<span>◆</span>rad</div>
+          <div class="tagline">인간관계 · 기록탭 "🤝 인간관계"와 연동</div>
+        </div>
+        <div class="date-tag">
+          <div class="d-label">DATE</div>
+          <div class="d-time mono" id="relDateLabel">--</div>
+        </div>
+      </div>
+      <div class="date-nav">
+        <button class="nav-btn" id="relPrevDay">◀</button>
+        <span class="bd-label mono" id="relDateShown">--</span>
+        <button class="nav-btn" id="relNextDay">▶</button>
+        <button class="nav-btn" id="relTodayBtn">오늘</button>
+      </div>
+      <div class="cat-section" data-cat="relationships">
+        <div class="cat-title">🤝 ${escapeAttr(currentDate)} 인간관계</div>
+        <div class="field"><label>만난 / 연락한 사람</label><input type="text" id="relPeople2" placeholder="예: 팀장님, 친구 OO" /></div>
+        <div class="field"><label>관계 메모</label><textarea id="relMemo2" rows="2" placeholder="오늘 있었던 대화, 갈등, 배려 등"></textarea></div>
+        <div class="field"><label>감사 표현</label><input type="text" id="relGratitude2" placeholder="고마움을 느끼거나 표현한 것" /></div>
+        <div class="field"><label>관계 만족도</label><div class="score-row" id="relScoreRow2"></div></div>
+      </div>
+      <div class="cat-section">
+        <div class="cat-title">🗂 인간관계 기록 모아보기</div>
+        <div id="relTableWrap"></div>
+      </div>
+      <div class="footer-note">draft v0.1 · 기록 탭의 "🤝 인간관계" 항목과 같은 데이터를 함께 씁니다</div>
+    `;
+    $('relDateLabel').textContent = fmtDateFull(currentDate);
+    $('relDateShown').textContent = currentDate;
+    $('relPeople2').value = entry.relationships.people;
+    $('relMemo2').value = entry.relationships.memo;
+    $('relGratitude2').value = entry.relationships.gratitude;
+    renderScoreRow('relScoreRow2', () => entry.relationships.score, v => { entry.relationships.score = v; });
+    $('relPeople2').addEventListener('input', e => {
+      entry.relationships.people = e.target.value; queueSave();
+      const f = $('relPeople'); if(f) f.value = e.target.value;
+    });
+    $('relMemo2').addEventListener('input', e => {
+      entry.relationships.memo = e.target.value; queueSave();
+      const f = $('relMemo'); if(f) f.value = e.target.value;
+    });
+    $('relGratitude2').addEventListener('input', e => {
+      entry.relationships.gratitude = e.target.value; queueSave();
+      const f = $('relGratitude'); if(f) f.value = e.target.value;
+    });
+    $('relPrevDay').addEventListener('click', () => { setDate(addDays(currentDate, -1)); renderRelationshipsView(); });
+    $('relNextDay').addEventListener('click', () => { setDate(addDays(currentDate, 1)); renderRelationshipsView(); });
+    $('relTodayBtn').addEventListener('click', () => { setDate(todayStr()); renderRelationshipsView(); });
+    renderRelationshipsTable();
   }
 
   const PLAN_CATS = [
@@ -1797,9 +1895,37 @@
     if(immediate){ persist(); } else { saveTimer = setTimeout(persist, 500); }
   }
 
+  // 저장된 기록이 없는 날짜를 열면, 완전히 빈 기록 대신 가장 최근에 저장된 이전 날짜의
+  // 기록을 그대로 이어받습니다("다음날에 수정하지 않으면 그대로 계속 똑같이 기록될것").
+  // 단, 그날그날 새로 확인해야 하는 "실천/완료 체크"만은 매일 다시 확인하도록 초기화합니다.
+  function findCarryForwardEntry(dateStr){
+    for(let i=1; i<=60; i++){
+      const d = addDays(dateStr, -i);
+      if(allLogs[d]) return JSON.parse(JSON.stringify(allLogs[d]));
+    }
+    return null;
+  }
   function setDate(dateStr){
     currentDate = dateStr;
-    entry = allLogs[dateStr] ? JSON.parse(JSON.stringify(allLogs[dateStr])) : createEmptyEntry(dateStr);
+    if(allLogs[dateStr]){
+      entry = JSON.parse(JSON.stringify(allLogs[dateStr]));
+    } else {
+      const carried = findCarryForwardEntry(dateStr);
+      if(carried){
+        entry = carried;
+        entry.date = dateStr;
+        entry.writeTime = '';
+        entry.lastEdited = '';
+        if(Array.isArray(entry.timePlan)) entry.timePlan.forEach(s => { s.done = false; });
+        if(Array.isArray(entry.habits)) entry.habits.forEach(h => { h.done = false; });
+        // 이어받은 기록은 곧바로 그 날짜의 기록으로 저장해서, 따로 수정하지 않아도
+        // 날짜별로 이미 기록되어 있는 것처럼 유지됩니다.
+        allLogs[dateStr] = entry;
+        persist();
+      } else {
+        entry = createEmptyEntry(dateStr);
+      }
+    }
     entry = migrateEntry(entry);
     if(!entry.relationships) entry.relationships = { people:'', memo:'', gratitude:'', score:0 };
     if(!entry.assets) entry.assets = { expense:'', income:'', total:'', memo:'', nextAction:'' };
@@ -2384,10 +2510,14 @@
     $('logView').style.display = view === 'log' ? '' : 'none';
     $('planView').style.display = view === 'plan' ? '' : 'none';
     $('listView').style.display = view === 'list' ? '' : 'none';
+    $('relationshipsView').style.display = view === 'relationships' ? '' : 'none';
+    $('settingsView').style.display = view === 'settings' ? '' : 'none';
     $('tabReportBtn').classList.toggle('active', view === 'report');
     $('tabLogBtn').classList.toggle('active', view === 'log');
     $('tabPlanBtn').classList.toggle('active', view === 'plan');
     $('tabListBtn').classList.toggle('active', view === 'list');
+    $('tabRelBtn').classList.toggle('active', view === 'relationships');
+    $('tabSettingsBtn').classList.toggle('active', view === 'settings');
     if(view === 'report'){
       renderReportView();
     }
@@ -2405,6 +2535,12 @@
       renderListSubTabs();
       renderListTable();
     }
+    if(view === 'relationships'){
+      renderRelationshipsView();
+    }
+    if(view === 'settings'){
+      renderSettingsView();
+    }
     window.scrollTo(0, 0);
     document.querySelector('.main-content').scrollTop = 0;
   }
@@ -2412,6 +2548,8 @@
   $('tabLogBtn').addEventListener('click', () => switchView('log'));
   $('tabPlanBtn').addEventListener('click', () => switchView('plan'));
   $('tabListBtn').addEventListener('click', () => switchView('list'));
+  $('tabRelBtn').addEventListener('click', () => switchView('relationships'));
+  $('tabSettingsBtn').addEventListener('click', () => switchView('settings'));
   bindCalNav('');
   bindCalNav('Log');
 
@@ -2597,10 +2735,10 @@
     const input = $('mindmapWordInput');
     const ratioSel = $('mindmapWordRatio');
     if(!addBtn || !input) return;
-    // 50% ~ 1% 순서로 선택지를 채워둡니다.
+    // 1% 단위 대신 10/20/30/40/50 다섯 단계로만 선택하도록 채워둡니다.
     if(ratioSel && ratioSel.options.length === 0){
       let opts = '';
-      for(let p=50; p>=1; p--){ opts += `<option value="${p}"${p===MINDMAP_DEFAULT_RATIO?' selected':''}>${p}%</option>`; }
+      for(let p=50; p>=10; p-=10){ opts += `<option value="${p}"${p===MINDMAP_DEFAULT_RATIO?' selected':''}>${p}%</option>`; }
       ratioSel.innerHTML = opts;
     }
     addBtn.addEventListener('click', addMindmapWordFromInput);
@@ -3544,42 +3682,25 @@
     }
     return positions;
   }
+  // 요청사항: 마인드맵 배너에서는 머리모양 이미지와 안내 설명 문구를 빼고,
+  // 기간 탭 + 단어 칩 목록만 크기(비율)에 따라 다르게 보여줍니다.
   function renderReportMindmap(period){
     period = period || 'daily';
-    const meta = REPORT_MINDMAP_PERIODS.find(p => p.key === period) || REPORT_MINDMAP_PERIODS[0];
     const words = mindmapWordsForPeriod(period).slice().sort((a,b) => (a.date||'').localeCompare(b.date||''));
-    const MAX_SHOW = 16;
-    const shown = words.slice(-MAX_SHOW);
-    const extra = words.length - shown.length;
-    const cx = 150, cy = 130, rx = 80, ry = 78;
-    const positions = headWordPositions(shown.length, cx, cy, rx, ry);
-    let nodes = '';
-    shown.forEach((w, i) => {
-      const { x, y } = positions[i];
-      const color = REPORT_MINDMAP_COLORS[i % REPORT_MINDMAP_COLORS.length];
-      const label = w.text.length > 7 ? w.text.slice(0,7)+'…' : w.text;
-      // 기록탭에서 고른 비율(1~50%)에 따라 노드 크기를 키우거나 줄입니다.
-      const ratio = Math.min(50, Math.max(1, w.ratio || MINDMAP_DEFAULT_RATIO));
-      const scale = 0.6 + (ratio / 50) * 1.0; // 1% → 0.62배, 50% → 1.6배
-      const fontSize = (10 * scale).toFixed(1);
-      const boxH = (22 * scale).toFixed(1);
-      const boxW = Math.max(36*scale, label.length * 8.5*scale + 14*scale);
-      nodes += `<g>
-        <rect x="${(x-boxW/2).toFixed(1)}" y="${(y-boxH/2).toFixed(1)}" width="${boxW.toFixed(1)}" height="${boxH}" rx="${(boxH/2).toFixed(1)}" fill="${color}" opacity="0.88" stroke="#fff" stroke-width="1"/>
-        <text x="${x.toFixed(1)}" y="${(y+fontSize*0.35).toFixed(1)}" text-anchor="middle" font-size="${fontSize}" font-family="'JetBrains Mono', monospace" font-weight="700" fill="#fff">${escapeAttr(label)}</text>
-      </g>`;
-    });
     const tabsHtml = `<div class="rmm-period-tabs">${REPORT_MINDMAP_PERIODS.map(p =>
       `<button type="button" class="rmm-period-tab${period===p.key?' active':''}" data-period="${p.key}">${p.label}</button>`
     ).join('')}</div>`;
-    const note = shown.length === 0
-      ? `아직 ${meta.noteWord} 적은 생각이 없어요 — 기록탭의 "🧠 마인드맵 기록"에서 단어를 적어보세요`
-      : `🧠 ${meta.noteWord} 기록탭에 적은 생각 ${words.length}개${extra>0 ? ` (최근 ${MAX_SHOW}개만 표시)` : ''}`;
-    return `${tabsHtml}<svg class="report-mindmap-svg" viewBox="0 0 300 300" xmlns="http://www.w3.org/2000/svg">
-      ${reportHeadShapeSvg()}
-      ${nodes}
-    </svg>
-    <div class="report-empty report-mindmap-note">${note}</div>`;
+    if(!words.length){
+      return `${tabsHtml}<div class="report-empty">기록탭의 "🧠 마인드맵 기록"에서 단어를 적어보세요</div>`;
+    }
+    const chips = words.map((w, i) => {
+      const color = REPORT_MINDMAP_COLORS[i % REPORT_MINDMAP_COLORS.length];
+      const ratio = Math.min(50, Math.max(10, w.ratio || MINDMAP_DEFAULT_RATIO));
+      const scale = 0.75 + (ratio / 50) * 0.85; // 10% → 작게, 50% → 크게
+      const fontSize = (11 * scale).toFixed(1);
+      return `<span class="rmm-word-chip" style="background:${color};font-size:${fontSize}px;padding:${(4*scale).toFixed(1)}px ${(9*scale).toFixed(1)}px;">${escapeAttr(w.text)}</span>`;
+    }).join('');
+    return `${tabsHtml}<div class="rmm-word-chips">${chips}</div>`;
   }
 
   // ---------- 인쇄창: 오늘 기록(기록 탭에 입력한 전체 내용) 요약 ----------
@@ -3601,17 +3722,7 @@
       lsItem('어제 다짐', e.scoreYesterday), lsItem('오늘 다짐', e.scoreToday)
     ].join('');
     if(basics){ html += `<div><div class="ls-group-title">🌤 오늘의 컨디션</div><div class="ls-items">${basics}</div></div>`; }
-
-    // 시간 계획표 (내용이 있는 슬롯만, 시간 순 정렬)
-    const filledSlots = (e.timePlan||[]).filter(s => s.content || s.category).slice().sort((a,b) => a.time.localeCompare(b.time));
-    if(filledSlots.length){
-      html += `<div><div class="ls-group-title">⏰ 시간 계획표</div><div class="ls-items">` +
-        filledSlots.map(s => `<div class="ls-timeplan-row${s.done?' done':''}">
-            <span class="tp-time">${escapeAttr(slotRangeLabel(s.time))}</span>
-            <span class="tp-content">${escapeAttr(s.content)||'(내용 없음)'}${s.done ? ' ✓실천' : ''}</span>
-            ${s.category ? `<span class="tp-cat-badge">${escapeAttr(s.category)}</span>` : ''}
-          </div>`).join('') + `</div></div>`;
-    }
+    // 시간 계획표는 별도의 "오늘 시간계획표" 배너(renderReportTimetable)로 분리되었습니다.
 
     // 건강 / 식단
     if(e.health){
@@ -3643,7 +3754,7 @@
       ].join('');
       if(diaryLines) html += `<div><div class="ls-group-title">📔 하루 정리</div><div class="ls-items">${diaryLines}</div></div>`;
     }
-    if(e.reference){ html += `<div><div class="ls-group-title">🔖 참고</div><div class="ls-items">${lsItem('메모', e.reference)}</div></div>`; }
+    // 일기(오늘 일기 작성 내용)는 별도의 "일기" 배너(renderReportDiary)로 분리되었습니다.
 
     // 인간관계 / 자산 / 커리어 / 취미
     if(e.relationships && (e.relationships.people||e.relationships.memo||e.relationships.gratitude||e.relationships.score)){
@@ -3673,6 +3784,50 @@
 
     html += `</div>`;
     return html;
+  }
+
+  // ---------- 인쇄창: 오늘 시간계획표 배너 (기록탭 시간계획과 연동) ----------
+  // 연속된 30분 슬롯이 같은 구분(카테고리)·같은 내용·같은 실천여부로 이어지면
+  // 01:00~05:30 처럼 하나의 범위로 묶어 한 줄로 표시합니다.
+  function groupTimetableSlots(filledSlots){
+    const groups = [];
+    filledSlots.forEach(s => {
+      const endLabel = slotRangeLabel(s.time).split('~')[1];
+      const last = groups[groups.length-1];
+      if(last){
+        const [lh,lm] = last.endTime.split(':').map(Number);
+        const [sh,sm] = s.time.split(':').map(Number);
+        if((lh*60+lm) === (sh*60+sm) && last.category === (s.category||'') && last.content === (s.content||'') && last.done === !!s.done){
+          last.endTime = endLabel;
+          return;
+        }
+      }
+      groups.push({ startTime:s.time, endTime:endLabel, category:s.category||'', content:s.content||'', done:!!s.done });
+    });
+    return groups;
+  }
+  function renderReportTimetable(e){
+    const filledSlots = e ? (e.timePlan||[]).filter(s => s.content || s.category).slice().sort((a,b) => a.time.localeCompare(b.time)) : [];
+    if(!filledSlots.length){
+      return `<div class="report-empty">오늘 기록탭 "⏱ 시간계획"에 입력된 내용이 아직 없어요.</div>`;
+    }
+    const groups = groupTimetableSlots(filledSlots);
+    return `<div class="ls-items">` + groups.map(g => `<div class="ls-timeplan-row${g.done?' done':''}">
+        <span class="tp-time">${escapeAttr(g.startTime+'~'+g.endTime)}</span>
+        <span class="tp-content">${escapeAttr(g.content)||'(내용 없음)'}${g.done ? ' ✓실천' : ''}</span>
+        ${g.category ? `<span class="tp-cat-badge">${escapeAttr(g.category)}</span>` : ''}
+      </div>`).join('') + `</div>`;
+  }
+
+  // ---------- 인쇄창: 일기 배너 (기록탭 "📔 일기"와 연동) ----------
+  function renderReportDiary(e){
+    if(!e || (!e.referenceTopic && !e.reference)){
+      return `<div class="report-empty">오늘 기록탭 "📔 일기"에 작성한 내용이 아직 없어요.</div>`;
+    }
+    return `<div class="log-summary">
+      ${e.referenceTopic ? `<div class="ls-group-title">${escapeAttr(e.referenceTopic)}</div>` : ''}
+      <div class="rd-diary-body">${escapeAttr(e.reference||'').replace(/\n/g,'<br>')}</div>
+    </div>`;
   }
 
   // ---------- 계획 vs 실제 원형(도넛) 차트 ----------
@@ -3753,7 +3908,9 @@
     large:  { label:'대형', short:'대', desc:'한 줄에 1개(전체 폭)' }
   };
   // 배너 기본 규격: 사용자의 요청대로 모든 배너는 소형을 기본값으로 합니다.
-  const REPORT_DEFAULT_SIZE = { hero:'small', stat:'small', mindmap:'small', todayHabit:'small', goal:'small', time:'small', checklist:'small', logsum:'small', calendar:'small' };
+  // 요청사항: 인쇄탭의 모든 배너는 "중형(medium)"이 기본값이고, 달력과 마인드맵만
+  // 예외적으로 별도 기본값(소형)을 씁니다. (오늘의 완료 현황판 관련 배너는 설정 탭으로 이동)
+  const REPORT_DEFAULT_SIZE = { hero:'small', logsum:'medium', timetable:'medium', diary:'medium', mindmap:'small', calendar:'small' };
   function reportBlock(pid, innerHtml, size){
     size = size || REPORT_DEFAULT_SIZE[pid] || 'small';
     const sizeButtons = Object.keys(REPORT_SIZE_PRESETS).map(key => {
@@ -3787,9 +3944,7 @@
 
       <div class="report-layout-toolbar">
         <button type="button" class="report-print-btn" id="rPrintBtn">🖨 인쇄</button>
-        <button type="button" class="report-print-btn report-save-btn" id="rSaveLayoutBtn">💾 배치 저장</button>
-        <button class="nav-btn ghost" id="rResetLayout">↺ 전체 소형으로</button>
-        <span class="report-size-legend">소=한 줄에 3개 · 중=한 줄에 2개 · 대=한 줄에 1개</span>
+        <span class="report-size-legend">배너 크기·배치는 설정 탭에서 관리해요</span>
         <span class="rlt-status" id="rLayoutStatus"></span>
       </div>
 
@@ -3799,56 +3954,10 @@
             ${reportBlock('hero', `
             <div class="report-hero">
               ${reportHeroShapes()}
-              <div class="rh-eyebrow">HBORAD · PRINT / SUMMARY</div>
-              <div class="rh-title">📊 오늘의 완료 현황판</div>
-              <div class="rh-sub">기록·계획을 굳이 넘겨보지 않아도, 여기서 목표 진행 상황을 한눈에 볼 수 있어요.</div>
-              <div class="rh-date mono">${fmtDateFull(todayStr())} · 오늘 체크리스트 ${todayPct}% 완료</div>
               <div class="theme-picker" id="themePicker">
                 <span class="tp-label">테마</span>
               </div>
             </div>`, sizeFor('hero'))}
-
-            ${reportBlock('stat', `
-            <div class="report-stat">
-              ${reportStatShape(0)}
-              <div class="rs-label">📝 오늘 계획</div>
-              <div class="rs-value">${dStats.done}/${dStats.total}</div>
-              <div class="rs-sub">일간 할일·습관 달성</div>
-            </div>`, sizeFor('stat'))}
-
-            ${reportBlock('todayHabit', `
-            <div class="report-panel">
-              ${reportPanelShape(1)}
-              <div class="rp-head">
-                <div class="rp-title">🔁 오늘 습관 <span style="font-weight:400;color:var(--ink-soft);font-size:10.5px;">— 기록탭 습관과 연동</span></div>
-              </div>
-              ${renderReportTodayHabit()}
-            </div>`, sizeFor('todayHabit'))}
-
-            ${reportBlock('goal', `
-            <div class="report-panel">
-              ${reportPanelShape(0)}
-              <div id="goalChartPanel"></div>
-            </div>`, sizeFor('goal'))}
-
-            ${reportBlock('time', `
-            <div class="report-panel">
-              ${reportPanelShape(1)}
-              <div class="rp-head">
-                <div class="rp-title">⏰ 오늘 시간계획 <span style="font-weight:400;color:var(--ink-soft);font-size:10.5px;">— 계획 vs 실제(실천) 구분</span></div>
-              </div>
-              ${renderTimePlanDonutPanel()}
-            </div>`, sizeFor('time'))}
-
-            ${reportBlock('checklist', `
-            <div class="report-panel">
-              ${reportPanelShape(2)}
-              <div class="rp-head">
-                <div class="rp-title">📅 오늘의 계획 체크리스트</div>
-                <span class="rp-pct-pill">${dStats.pct}%</span>
-              </div>
-              ${renderReportChecklist(allPlans.daily && allPlans.daily[todayStr()])}
-            </div>`, sizeFor('checklist'))}
 
             ${reportBlock('logsum', `
             <div class="report-panel">
@@ -3858,6 +3967,24 @@
               </div>
               ${renderReportLogSummary(allLogs[todayStr()])}
             </div>`, sizeFor('logsum'))}
+
+            ${reportBlock('timetable', `
+            <div class="report-panel">
+              ${reportPanelShape(1)}
+              <div class="rp-head">
+                <div class="rp-title">⏱ 오늘 시간계획표 <span style="font-weight:400;color:var(--ink-soft);font-size:10.5px;">— 기록탭 시간계획과 연동</span></div>
+              </div>
+              ${renderReportTimetable(allLogs[todayStr()])}
+            </div>`, sizeFor('timetable'))}
+
+            ${reportBlock('diary', `
+            <div class="report-panel">
+              ${reportPanelShape(2)}
+              <div class="rp-head">
+                <div class="rp-title">📔 일기 <span style="font-weight:400;color:var(--ink-soft);font-size:10.5px;">— 기록탭 일기와 연동</span></div>
+              </div>
+              ${renderReportDiary(allLogs[todayStr()])}
+            </div>`, sizeFor('diary'))}
           </div>
 
           <!-- 달력·마인드맵: 계획탭처럼 본문 오른쪽에 따로 배치, 내용이 잘리지 않도록 자동 높이 -->
@@ -3914,15 +4041,6 @@
     equalizeReportBannerHeights();
 
     $('rPrintBtn').addEventListener('click', () => window.print());
-    $('rSaveLayoutBtn').addEventListener('click', () => {
-      saveReportSizes();
-      saveReportOrder();
-      saveReportLayoutToServer();
-      showReportLayoutStatus('현재 배치를 저장했습니다 ✓');
-    });
-    $('rResetLayout').addEventListener('click', () => {
-      if(confirm('모든 배너를 소형으로 되돌릴까요?')) resetReportSizes();
-    });
     wrap.querySelectorAll('.rmm-period-tab').forEach(btn => {
       btn.addEventListener('click', () => {
         if(btn.dataset.period === reportMindmapPeriod) return;
@@ -3931,6 +4049,86 @@
       });
     });
     bindReportTodayHabitEvents();
+  }
+
+  // ================= 설정 탭: 오늘의 완료 현황판 + 인쇄탭 배너 배치 =================
+  // 원래 인쇄탭 첫머리에 있던 "오늘의 완료 현황판"(오늘 계획/오늘 습관/목표 진행 차트/
+  // 오늘의 계획 체크리스트)과, 인쇄탭 배너의 배치 저장·초기화 컨트롤을 설정 탭으로 옮겼습니다.
+  function renderSettingsView(){
+    const wrap = $('settingsView');
+    const dStats = planStatsFor('daily', todayStr());
+    wrap.innerHTML = `
+      <div class="header">
+        <div class="brand">
+          <div class="logo">hb<span>◆</span>rad</div>
+          <div class="tagline">설정 · 오늘의 완료 현황판 & 배너 배치</div>
+        </div>
+      </div>
+
+      <div class="report-layout-toolbar">
+        <button type="button" class="report-print-btn report-save-btn" id="sSaveLayoutBtn">💾 인쇄탭 배치 저장</button>
+        <button class="nav-btn ghost" id="sResetLayout">↺ 인쇄탭 배너 전체 소형으로</button>
+        <span class="report-size-legend">소=한 줄에 3개 · 중=한 줄에 2개 · 대=한 줄에 1개 (인쇄탭 배너 크기에 적용)</span>
+        <span class="rlt-status" id="sLayoutStatus"></span>
+      </div>
+
+      <div class="report-panels">
+        <div class="report-main" style="display:flex;flex-wrap:wrap;gap:var(--report-gap);align-items:flex-start;">
+          <div class="report-block" data-size="small" style="cursor:default;flex:0 0 calc((100% - 2*var(--report-gap))/3);width:calc((100% - 2*var(--report-gap))/3);min-height:var(--report-h-small);">
+            <div class="report-stat">
+              ${reportStatShape(0)}
+              <div class="rs-label">📝 오늘 계획</div>
+              <div class="rs-value">${dStats.done}/${dStats.total}</div>
+              <div class="rs-sub">일간 할일·습관 달성</div>
+            </div>
+          </div>
+          <div class="report-block" data-size="medium" style="cursor:default;flex:0 0 calc((100% - var(--report-gap))/2);width:calc((100% - var(--report-gap))/2);min-height:var(--report-h-medium);">
+            <div class="report-panel">
+              ${reportPanelShape(1)}
+              <div class="rp-head">
+                <div class="rp-title">🔁 오늘 습관 <span style="font-weight:400;color:var(--ink-soft);font-size:10.5px;">— 기록탭 습관과 연동</span></div>
+              </div>
+              ${renderReportTodayHabit()}
+            </div>
+          </div>
+          <div class="report-block" data-size="medium" style="cursor:default;flex:0 0 calc((100% - var(--report-gap))/2);width:calc((100% - var(--report-gap))/2);min-height:var(--report-h-medium);">
+            <div class="report-panel">
+              ${reportPanelShape(0)}
+              <div id="goalChartPanel"></div>
+            </div>
+          </div>
+          <div class="report-block" data-size="large" style="cursor:default;flex:0 0 100%;width:100%;min-height:var(--report-h-large);">
+            <div class="report-panel">
+              ${reportPanelShape(2)}
+              <div class="rp-head">
+                <div class="rp-title">📅 오늘의 계획 체크리스트</div>
+                <span class="rp-pct-pill">${dStats.pct}%</span>
+              </div>
+              ${renderReportChecklist(allPlans.daily && allPlans.daily[todayStr()])}
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="footer-note">draft v0.1 · 오늘의 완료 현황판과 인쇄탭 배너 배치 저장을 이곳에서 관리합니다</div>
+    `;
+    renderGoalChartPanel();
+    bindReportTodayHabitEvents();
+    $('sSaveLayoutBtn').addEventListener('click', () => {
+      saveReportSizes();
+      saveReportOrder();
+      saveReportLayoutToServer();
+      showSettingsLayoutStatus('현재 배치를 저장했습니다 ✓');
+    });
+    $('sResetLayout').addEventListener('click', () => {
+      if(confirm('인쇄탭의 모든 배너를 소형으로 되돌릴까요?')) resetReportSizes();
+    });
+  }
+  function showSettingsLayoutStatus(msg){
+    const el = $('sLayoutStatus');
+    if(!el) return;
+    el.textContent = msg;
+    setTimeout(() => { if(el.textContent === msg) el.textContent = ''; }, 2200);
   }
 
   // ================= 인쇄창 배너: 규격(소/중/대) 표준화 =================
