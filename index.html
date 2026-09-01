@@ -155,8 +155,9 @@
   .field input:disabled{ background:var(--paper-2); color:var(--ink-soft); cursor:not-allowed; }
 
   /* ---------- 계획입력 배너: 다른 배너보다 작은 사이즈로 표시 ---------- */
-  .cat-section.compact{ max-width:480px; padding:9px 10px; }
-  .cat-section.compact .cat-title{ font-size:11.5px; margin-bottom:6px; }
+  .cat-section.compact{ padding:8px 9px; }
+  .cat-section.compact .cat-title{ font-size:11px; margin-bottom:5px; }
+  .cat-section.compact .row-hint{ margin-bottom:4px; }
 
   /* ---------- Log view: 2-column banner layout ---------- */
   .log-banner-grid{ display:grid; grid-template-columns:1fr 1fr; gap:10px; align-items:start; }
@@ -511,6 +512,10 @@
   .plan-cat-grid{ display:block; }
   .plan-cat-select-row{ display:flex; align-items:center; gap:8px; margin-bottom:6px; }
   .plan-cat-select-row select{ flex:1; padding:7px 9px; border:1.5px solid var(--line); border-radius:6px; font-size:12.5px; font-family:'Noto Sans KR',sans-serif; background:var(--paper); font-weight:700; color:var(--teal); }
+  .plan-cat-new-row{ display:flex; gap:6px; margin-bottom:8px; }
+  .plan-cat-new-row input[type=text]{ flex:1; padding:7px 9px; border:1.5px solid var(--line); border-radius:6px; font-size:12.5px; background:var(--paper); min-width:0; }
+  .plan-cat-new-row input[type=number]{ width:110px; padding:7px 9px; border:1.5px solid var(--line); border-radius:6px; font-size:12.5px; background:var(--paper); flex-shrink:0; }
+  @media (max-width:700px){ .plan-cat-new-row{ flex-wrap:wrap; } .plan-cat-new-row input[type=number]{ width:90px; } }
   .plan-cat-item label{ display:flex; align-items:center; gap:5px; font-size:10.5px; color:var(--teal); font-family:'JetBrains Mono', monospace; font-weight:700; margin-bottom:3px; }
   .plan-cat-item textarea{ width:100%; padding:7px 9px; border:1.5px solid var(--line); border-radius:6px; font-size:12.5px; font-family:'Noto Sans KR',sans-serif; background:var(--paper); resize:vertical; }
   .plan-cat-item textarea:focus{ outline:2px solid var(--purple); outline-offset:1px; }
@@ -973,43 +978,43 @@
         <span class="save-status" id="saveStatus"></span>
       </div>
 
+      <!-- 타임라인 전체(연도/분기/월간/주간) — 4개 모두 전체 폭(한 열)을 사용하도록 2단 그리드 밖에 배치 -->
+      <div class="cat-section ongoing-plan-section" id="planOngoingSection">
+        <div class="cat-title">🗓 타임라인 연도별 <span class="cnt">— 클릭해서 연도 이동 · 오늘 위치 확인</span></div>
+        <div class="timeline-wrap">
+          <div class="timeline-track" id="planTimelineYearlyTrack"></div>
+        </div>
+        <div class="timeline-legend" id="planTimelineYearlyLegend"></div>
+        <div id="planOngoingList"></div>
+      </div>
+
+      <div class="cat-section">
+        <div class="cat-title">📍 타임라인 분기별 <span class="cnt">— 클릭해서 분기 이동 · 오늘 위치 확인</span></div>
+        <div class="timeline-wrap">
+          <div class="timeline-track" id="planTimelineQuarterlyTrack"></div>
+        </div>
+        <div class="timeline-legend" id="planTimelineQuarterlyLegend"></div>
+      </div>
+
+      <div class="cat-section">
+        <div class="cat-title">📍 타임라인 월간별 <span class="cnt">— 클릭해서 월 이동 · 오늘 위치 확인</span></div>
+        <div class="timeline-wrap">
+          <div class="timeline-track" id="planTimelineMonthlyTrack"></div>
+        </div>
+        <div class="timeline-legend" id="planTimelineMonthlyLegend"></div>
+      </div>
+
+      <div class="cat-section">
+        <div class="cat-title">📍 타임라인 주간별 <span class="cnt">— 클릭해서 주 이동 · 오늘 위치 확인</span></div>
+        <div class="timeline-wrap">
+          <div class="timeline-track" id="planTimelineWeeklyTrack"></div>
+        </div>
+        <div class="timeline-legend" id="planTimelineWeeklyLegend"></div>
+      </div>
+
       <div class="log-banner-grid">
         <!-- 왼쪽 컬럼 -->
         <div class="log-col" id="logColLeft">
-          <!-- 타임라인 전체(연도/분기/월간/주간) — 마인드맵 배너보다 위에 배치 -->
-          <div class="cat-section ongoing-plan-section" id="planOngoingSection">
-            <div class="cat-title">🗓 타임라인 연도별 <span class="cnt">— 클릭해서 연도 이동 · 오늘 위치 확인</span></div>
-            <div class="timeline-wrap">
-              <div class="timeline-track" id="planTimelineYearlyTrack"></div>
-            </div>
-            <div class="timeline-legend" id="planTimelineYearlyLegend"></div>
-            <div id="planOngoingList"></div>
-          </div>
-
-          <div class="cat-section">
-            <div class="cat-title">📍 타임라인 분기별 <span class="cnt">— 클릭해서 분기 이동 · 오늘 위치 확인</span></div>
-            <div class="timeline-wrap">
-              <div class="timeline-track" id="planTimelineQuarterlyTrack"></div>
-            </div>
-            <div class="timeline-legend" id="planTimelineQuarterlyLegend"></div>
-          </div>
-
-          <div class="cat-section">
-            <div class="cat-title">📍 타임라인 월간별 <span class="cnt">— 클릭해서 월 이동 · 오늘 위치 확인</span></div>
-            <div class="timeline-wrap">
-              <div class="timeline-track" id="planTimelineMonthlyTrack"></div>
-            </div>
-            <div class="timeline-legend" id="planTimelineMonthlyLegend"></div>
-          </div>
-
-          <div class="cat-section">
-            <div class="cat-title">📍 타임라인 주간별 <span class="cnt">— 클릭해서 주 이동 · 오늘 위치 확인</span></div>
-            <div class="timeline-wrap">
-              <div class="timeline-track" id="planTimelineWeeklyTrack"></div>
-            </div>
-            <div class="timeline-legend" id="planTimelineWeeklyLegend"></div>
-          </div>
-
           <!-- 마인드맵 기록: 떠오르는 생각을 단어로 자유롭게 적으면 인쇄탭 머리모양 마인드맵에 하나씩 추가됩니다 -->
           <div class="cat-section" id="logMindmapSection" data-cat="mindmap" draggable="true">
             <div class="cat-title">🧠 마인드맵 기록 <span class="cnt">— 여기 적은 단어가 인쇄탭 마인드맵(머리모양)에 하나씩 추가돼요</span><span class="drag-handle" title="끌어서 이동">⠿</span></div>
@@ -1249,13 +1254,13 @@
             <div class="list-rows" id="habitRows"></div>
             <button class="add-row-btn" id="addHabitRow">+ 습관 추가</button>
           </div>
-        </div>
-      </div>
 
-      <!-- ===== 계획 (구 계획탭 내용을 기록탭으로 이동) ===== -->
-      <div class="cat-section compact">
-        <div class="cat-title">📝 계획입력</div>
-        <div class="plan-cat-grid" id="planCatGrid"></div>
+          <!-- 계획입력 (구 계획탭 내용을 기록탭으로 이동) — 다른 배너들과 같은 컬럼에서 나란히 표시 -->
+          <div class="cat-section compact">
+            <div class="cat-title">📝 계획입력</div>
+            <div class="plan-cat-grid" id="planCatGrid"></div>
+          </div>
+        </div>
       </div>
 
       <div class="footer-note">draft v0.4 · 데이터는 이 계정에 개인 저장됩니다 (계획 데이터는 기록과 별도로 저장됩니다)</div>
@@ -2912,9 +2917,13 @@
           <span class="pt-label">시작일</span><input type="date" class="pt-date" data-cat="${c.key}" data-f="start" value="${t.start}" />
           <span class="pt-label">목표일</span><input type="date" class="pt-date" data-cat="${c.key}" data-f="end" value="${t.end}" />
         </div>
-        <div class="row-hint">이 카테고리의 계획을 한 줄씩 추가해보세요</div>
+        <div class="row-hint">계획 내용과 연도를 입력하고 추가 버튼을 눌러 등록하세요</div>
+        <div class="plan-cat-new-row">
+          <input type="text" id="planCatNewContent" placeholder="계획 내용" />
+          <input type="number" id="planCatNewYear" placeholder="연도 (예: 2026)" min="2000" max="2100" />
+          <button type="button" class="add-row-btn" id="planCatAddBtn">+ 추가</button>
+        </div>
         <div class="list-rows" id="planCatItemRows"></div>
-        <button type="button" class="add-row-btn" id="planCatAddBtn">+ 계획 추가</button>
       </div>`;
     renderGenericRows('planCatItemRows', plan.catPlans[c.key], false);
     $('planCatSelect').addEventListener('change', e => {
@@ -2922,9 +2931,17 @@
       renderPlanCatGrid();
     });
     $('planCatAddBtn').addEventListener('click', () => {
+      const contentInp = $('planCatNewContent');
+      const yearInp = $('planCatNewYear');
+      const contentVal = contentInp.value.trim();
+      const yearVal = yearInp.value.trim();
+      if(!contentVal){ contentInp.focus(); return; }
       const plan2 = getPlan();
-      plan2.catPlans[c.key].push({ content:'', done:false, due:'' });
+      plan2.catPlans[c.key].push({ content: contentVal, done:false, due: yearVal ? (yearVal + '-12-31') : '' });
       renderGenericRows('planCatItemRows', plan2.catPlans[c.key], false);
+      contentInp.value = '';
+      yearInp.value = '';
+      contentInp.focus();
       queuePlanSave();
     });
     wrap.querySelectorAll('input.pt-date').forEach(inp => {
@@ -4312,7 +4329,7 @@
       accent:'#8BC34A', dark:'#4C7A1F', soft:'#DFF0BB'
     }
   ];
-  let currentThemeKey = 't3';
+  let currentThemeKey = 't10';
 
   function applyTheme(key){
     const t = THEMES.find(x => x.key === key) || THEMES[0];
@@ -4360,8 +4377,8 @@
     });
   }
   (function initTheme(){
-    let saved = 't3';
-    try{ saved = localStorage.getItem('hb-theme') || 't3'; }catch(e){}
+    let saved = 't10';
+    try{ saved = localStorage.getItem('hb-theme') || 't10'; }catch(e){}
     applyTheme(saved);
   })();
 
