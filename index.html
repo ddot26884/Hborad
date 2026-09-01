@@ -506,7 +506,9 @@
   .plan-period-tab.active{ background:var(--purple); border-color:var(--purple); color:#fff; }
   .plan-nav{ display:flex; align-items:center; gap:8px; margin-bottom:12px; }
   .plan-nav .plan-label{ font-family:'JetBrains Mono', monospace; font-weight:700; font-size:14px; flex:1; text-align:center; }
-  .plan-cat-grid{ display:grid; grid-template-columns:repeat(2,1fr); gap:8px; }
+  .plan-cat-grid{ display:block; }
+  .plan-cat-select-row{ display:flex; align-items:center; gap:8px; margin-bottom:6px; }
+  .plan-cat-select-row select{ flex:1; padding:7px 9px; border:1.5px solid var(--line); border-radius:6px; font-size:12.5px; font-family:'Noto Sans KR',sans-serif; background:var(--paper); font-weight:700; color:var(--teal); }
   .plan-cat-item label{ display:flex; align-items:center; gap:5px; font-size:10.5px; color:var(--teal); font-family:'JetBrains Mono', monospace; font-weight:700; margin-bottom:3px; }
   .plan-cat-item textarea{ width:100%; padding:7px 9px; border:1.5px solid var(--line); border-radius:6px; font-size:12.5px; font-family:'Noto Sans KR',sans-serif; background:var(--paper); resize:vertical; }
   .plan-cat-item textarea:focus{ outline:2px solid var(--purple); outline-offset:1px; }
@@ -972,6 +974,40 @@
       <div class="log-banner-grid">
         <!-- 왼쪽 컬럼 -->
         <div class="log-col" id="logColLeft">
+          <!-- 타임라인 전체(연도/분기/월간/주간) — 마인드맵 배너보다 위에 배치 -->
+          <div class="cat-section ongoing-plan-section" id="planOngoingSection">
+            <div class="cat-title">🗓 타임라인 연도별 <span class="cnt">— 클릭해서 연도 이동 · 오늘 위치 확인</span></div>
+            <div class="timeline-wrap">
+              <div class="timeline-track" id="planTimelineYearlyTrack"></div>
+            </div>
+            <div class="timeline-legend" id="planTimelineYearlyLegend"></div>
+            <div id="planOngoingList"></div>
+          </div>
+
+          <div class="cat-section">
+            <div class="cat-title">📍 타임라인 분기별 <span class="cnt">— 클릭해서 분기 이동 · 오늘 위치 확인</span></div>
+            <div class="timeline-wrap">
+              <div class="timeline-track" id="planTimelineQuarterlyTrack"></div>
+            </div>
+            <div class="timeline-legend" id="planTimelineQuarterlyLegend"></div>
+          </div>
+
+          <div class="cat-section">
+            <div class="cat-title">📍 타임라인 월간별 <span class="cnt">— 클릭해서 월 이동 · 오늘 위치 확인</span></div>
+            <div class="timeline-wrap">
+              <div class="timeline-track" id="planTimelineMonthlyTrack"></div>
+            </div>
+            <div class="timeline-legend" id="planTimelineMonthlyLegend"></div>
+          </div>
+
+          <div class="cat-section">
+            <div class="cat-title">📍 타임라인 주간별 <span class="cnt">— 클릭해서 주 이동 · 오늘 위치 확인</span></div>
+            <div class="timeline-wrap">
+              <div class="timeline-track" id="planTimelineWeeklyTrack"></div>
+            </div>
+            <div class="timeline-legend" id="planTimelineWeeklyLegend"></div>
+          </div>
+
           <!-- 마인드맵 기록: 떠오르는 생각을 단어로 자유롭게 적으면 인쇄탭 머리모양 마인드맵에 하나씩 추가됩니다 -->
           <div class="cat-section" id="logMindmapSection" data-cat="mindmap" draggable="true">
             <div class="cat-title">🧠 마인드맵 기록 <span class="cnt">— 여기 적은 단어가 인쇄탭 마인드맵(머리모양)에 하나씩 추가돼요</span><span class="drag-handle" title="끌어서 이동">⠿</span></div>
@@ -1224,43 +1260,6 @@
 
       <div class="plan-layout">
         <div class="plan-main">
-
-          <!-- 타임라인 연도별: 목표일(D-day) 항목 + 연도 단위 타임라인(오늘 위치 확인) -->
-          <div class="cat-section ongoing-plan-section" id="planOngoingSection">
-            <div class="cat-title">🗓 타임라인 연도별 <span class="cnt">— 클릭해서 연도 이동 · 오늘 위치 확인</span></div>
-            <div class="timeline-wrap">
-              <div class="timeline-track" id="planTimelineYearlyTrack"></div>
-            </div>
-            <div class="timeline-legend" id="planTimelineYearlyLegend"></div>
-            <div id="planOngoingList"></div>
-          </div>
-
-          <!-- 타임라인 분기별 -->
-          <div class="cat-section">
-            <div class="cat-title">📍 타임라인 분기별 <span class="cnt">— 클릭해서 분기 이동 · 오늘 위치 확인</span></div>
-            <div class="timeline-wrap">
-              <div class="timeline-track" id="planTimelineQuarterlyTrack"></div>
-            </div>
-            <div class="timeline-legend" id="planTimelineQuarterlyLegend"></div>
-          </div>
-
-          <!-- 타임라인 월간별 -->
-          <div class="cat-section">
-            <div class="cat-title">📍 타임라인 월간별 <span class="cnt">— 클릭해서 월 이동 · 오늘 위치 확인</span></div>
-            <div class="timeline-wrap">
-              <div class="timeline-track" id="planTimelineMonthlyTrack"></div>
-            </div>
-            <div class="timeline-legend" id="planTimelineMonthlyLegend"></div>
-          </div>
-
-          <!-- 타임라인 주간별 -->
-          <div class="cat-section">
-            <div class="cat-title">📍 타임라인 주간별 <span class="cnt">— 클릭해서 주 이동 · 오늘 위치 확인</span></div>
-            <div class="timeline-wrap">
-              <div class="timeline-track" id="planTimelineWeeklyTrack"></div>
-            </div>
-            <div class="timeline-legend" id="planTimelineWeeklyLegend"></div>
-          </div>
 
           <div class="cat-section">
             <div class="cat-title">🎯 카테고리별 목표</div>
@@ -1588,6 +1587,8 @@
     {key:'career', label:'💼 직업'},
     {key:'hobby', label:'🎨 취미'}
   ];
+  // 카테고리별 목표 카드에서 현재 select로 선택된 카테고리(단일 통합 카드용)
+  let planCatSelectedKey = PLAN_CATS[0].key;
 
   const PLAN_PERIODS = [
     {key:'daily', label:'일간'},
@@ -2941,20 +2942,26 @@
   function renderPlanCatGrid(){
     const plan = getPlan();
     const wrap = $('planCatGrid');
-    wrap.innerHTML = '';
-    PLAN_CATS.forEach(c => {
-      const item = document.createElement('div');
-      item.className = 'plan-cat-item';
-      const t = plan.targets[c.key] || {start:'',end:''};
-      const badge = t.end ? `<span class="dday-badge">${ddayLabel(t.end)}</span>` : '';
-      item.innerHTML = `<label>${c.label}${badge}</label>
+    if(!PLAN_CATS.find(x => x.key === planCatSelectedKey)) planCatSelectedKey = PLAN_CATS[0].key;
+    const c = PLAN_CATS.find(x => x.key === planCatSelectedKey);
+    const t = plan.targets[c.key] || {start:'',end:''};
+    const badge = t.end ? `<span class="dday-badge">${ddayLabel(t.end)}</span>` : '';
+    wrap.innerHTML = `
+      <div class="plan-cat-item">
+        <div class="plan-cat-select-row">
+          <select id="planCatSelect">${PLAN_CATS.map(x => `<option value="${x.key}"${x.key===c.key?' selected':''}>${x.label}</option>`).join('')}</select>
+          ${badge}
+        </div>
         <div class="plan-target-row">
           <span class="pt-label">시작일</span><input type="date" class="pt-date" data-cat="${c.key}" data-f="start" value="${t.start}" />
           <span class="pt-label">목표일</span><input type="date" class="pt-date" data-cat="${c.key}" data-f="end" value="${t.end}" />
         </div>
-        <textarea rows="2" data-cat="${c.key}" placeholder="${c.label.replace(/^[^ ]+ /,'')} 목표">${escapeAttr(plan.categories[c.key])}</textarea>
-        <button type="button" class="add-row-btn plan-cat-add-btn" data-cat="${c.key}">+ 할일 추가</button>`;
-      wrap.appendChild(item);
+        <textarea rows="5" data-cat="${c.key}" placeholder="${c.label.replace(/^[^ ]+ /,'')} 목표 — 여기 적은 내용이 이 카테고리의 계획으로 저장됩니다">${escapeAttr(plan.categories[c.key])}</textarea>
+        <div class="row-hint">시작일 · 목표일을 지정하면 인쇄탭 달력에 이 카테고리의 일정으로 자동 표시돼요</div>
+      </div>`;
+    $('planCatSelect').addEventListener('change', e => {
+      planCatSelectedKey = e.target.value;
+      renderPlanCatGrid();
     });
     wrap.querySelectorAll('textarea[data-cat]').forEach(ta => {
       ta.addEventListener('input', () => { getPlan().categories[ta.dataset.cat] = ta.value; queuePlanSave(); });
@@ -2964,26 +2971,31 @@
         const plan2 = getPlan();
         plan2.targets[inp.dataset.cat][inp.dataset.f] = inp.value;
         queuePlanSave();
+        syncPlanCatTargetToCalendar(inp.dataset.cat);
         renderPlanCatGrid();
+        renderAllCalendars();
       });
     });
-    // 카테고리별 목표 카드에서 바로 "할일 계획" 목록에 그 카테고리의 할일을 추가합니다.
-    wrap.querySelectorAll('.plan-cat-add-btn').forEach(btn => {
-      btn.addEventListener('click', () => {
-        const plan2 = getPlan();
-        const catInfo = PLAN_CATS.find(c => c.key === btn.dataset.cat);
-        plan2.todos.push({ content:'', done:false, due:'', cat: btn.dataset.cat });
-        renderGenericRows('planTodoRows', plan2.todos, false);
-        queuePlanSave();
-        const rowsEl = $('planTodoRows');
-        if(rowsEl){
-          rowsEl.scrollIntoView({ behavior:'smooth', block:'center' });
-          const lastInput = rowsEl.querySelector('.list-row:last-child input[data-f="content"]');
-          if(lastInput) lastInput.focus();
-        }
-        hbToast(`✅ 할일 계획에 '${catInfo ? catInfo.label : ''}' 할일을 추가했어요`);
-      });
+  }
+  // 카테고리별 목표의 시작일/목표일을 인쇄탭(및 기록탭) 달력의 일정으로 자동 반영합니다.
+  // 같은 카테고리가 예전에 만들어둔 자동 일정은 지우고 최신 날짜로 다시 만들어서 중복되지 않게 합니다.
+  function syncPlanCatTargetToCalendar(catKey){
+    const plan = getPlan();
+    const c = PLAN_CATS.find(x => x.key === catKey);
+    if(!c) return;
+    const t = plan.targets[catKey] || {start:'',end:''};
+    Object.keys(allEvents).forEach(d => {
+      allEvents[d] = allEvents[d].filter(ev => ev.planCat !== catKey);
+      if(allEvents[d].length === 0) delete allEvents[d];
     });
+    const addEvent = (dateStr, title) => {
+      if(!dateStr) return;
+      if(!allEvents[dateStr]) allEvents[dateStr] = [];
+      allEvents[dateStr].push({ id:'evcat'+catKey+Date.now()+Math.random().toString(36).slice(2,4), time:'', title, planCat: catKey });
+    };
+    addEvent(t.start, `${c.label} 시작`);
+    addEvent(t.end, `${c.label} 목표일`);
+    queueEventSave();
   }
 
   function renderGenericRows(containerId, list, hasTarget){
@@ -4020,42 +4032,20 @@
       <div class="header">
         <div class="brand">
           <div class="logo">hb<span>◆</span>rad</div>
-          <div class="tagline">설정 · 테마 & 인쇄탭 배너 배치</div>
+          <div class="tagline">설정 · 테마</div>
         </div>
       </div>
 
-      <div class="report-layout-toolbar">
-        <button type="button" class="report-print-btn report-save-btn" id="sSaveLayoutBtn">💾 인쇄탭 배치 저장</button>
-        <button class="nav-btn ghost" id="sResetLayout">↺ 인쇄탭 배너 전체 소형으로</button>
-        <span class="report-size-legend">소=한 줄에 3개 · 중=한 줄에 2개 · 대=한 줄에 1개 (인쇄탭 배너 크기에 적용)</span>
-        <span class="rlt-status" id="sLayoutStatus"></span>
-      </div>
-
-      <div class="report-panels">
-        <div class="report-main" style="display:flex;flex-wrap:wrap;gap:var(--report-gap);align-items:flex-start;">
-          <div class="report-block" data-size="large" style="cursor:default;flex:0 0 100%;width:100%;min-height:var(--report-h-large);">
-            <div class="report-hero">
-              ${reportHeroShapes()}
-              <div class="theme-picker" id="themePicker">
-                <span class="tp-label">테마</span>
-              </div>
-            </div>
-          </div>
+      <div class="cat-section" style="max-width:360px;">
+        <div class="cat-title">🎨 테마</div>
+        <div class="theme-picker" id="themePicker">
+          <span class="tp-label">테마</span>
         </div>
       </div>
 
-      <div class="footer-note">draft v0.1 · 사이트 테마 선택과 인쇄탭 배너 배치 저장을 이곳에서 관리합니다</div>
+      <div class="footer-note">draft v0.2 · 사이트 테마 선택을 이곳에서 관리합니다</div>
     `;
     renderThemePicker();
-    $('sSaveLayoutBtn').addEventListener('click', () => {
-      saveReportSizes();
-      saveReportOrder();
-      saveReportLayoutToServer();
-      showSettingsLayoutStatus('현재 배치를 저장했습니다 ✓');
-    });
-    $('sResetLayout').addEventListener('click', () => {
-      if(confirm('인쇄탭의 모든 배너를 소형으로 되돌릴까요?')) resetReportSizes();
-    });
   }
   function showSettingsLayoutStatus(msg){
     const el = $('sLayoutStatus');
