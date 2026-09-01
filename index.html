@@ -152,6 +152,11 @@
   }
   .cat-title{ font-family:'JetBrains Mono', monospace; font-weight:700; font-size:13px; margin-bottom:8px; display:flex; align-items:center; gap:6px; }
   .cat-title .cnt{ font-weight:400; font-size:10px; color:var(--ink-soft); }
+  .field input:disabled{ background:var(--paper-2); color:var(--ink-soft); cursor:not-allowed; }
+
+  /* ---------- 계획입력 배너: 다른 배너보다 작은 사이즈로 표시 ---------- */
+  .cat-section.compact{ max-width:480px; padding:9px 10px; }
+  .cat-section.compact .cat-title{ font-size:11.5px; margin-bottom:6px; }
 
   /* ---------- Log view: 2-column banner layout ---------- */
   .log-banner-grid{ display:grid; grid-template-columns:1fr 1fr; gap:10px; align-items:start; }
@@ -425,10 +430,7 @@
   @media (max-width:700px){ .year-grid{ height:110px; gap:3px; } .year-bar-mlabel{ font-size:7.5px; } }
   /* ---------- 계획: 카테고리별 목표 카드에 개별 할일 추가 버튼 ---------- */
   .plan-cat-add-btn{ margin-top:7px; font-size:10.5px; padding:5px 10px; width:100%; }
-  /* ---------- 계획: 할일 계획 / 습관 계획을 한 열(row)에 반절씩 배치 ---------- */
-  .plan-todo-habit-row{ display:flex; gap:10px; align-items:flex-start; margin-bottom:10px; }
-  .plan-todo-habit-row .cat-section{ flex:1; min-width:0; margin-bottom:0; }
-  @media (max-width:700px){ .plan-todo-habit-row{ flex-direction:column; } }
+
   /* 기록탭 할일/습관 줄: 내용/체크 한 줄 + 계획일정·실행일정(연월일) 한 줄로 두 단 구성 */
   .list-row.has-dates{ display:flex; flex-direction:column; align-items:stretch; gap:5px; padding:6px 0 9px; border-bottom:1px dashed var(--line); }
   .list-row.has-dates:last-child{ border-bottom:none; padding-bottom:2px; }
@@ -1251,32 +1253,9 @@
       </div>
 
       <!-- ===== 계획 (구 계획탭 내용을 기록탭으로 이동) ===== -->
-      <div class="plan-nav">
-        <button class="nav-btn" id="planPrevBtn">◀</button>
-        <div class="plan-label mono" id="planLabel"></div>
-        <button class="nav-btn" id="planNextBtn">▶</button>
-        <button type="button" class="timeline-today-btn" id="planTimelineToday">오늘로</button>
-      </div>
-
-      <div class="cat-section">
+      <div class="cat-section compact">
         <div class="cat-title">📝 계획입력</div>
         <div class="plan-cat-grid" id="planCatGrid"></div>
-      </div>
-
-      <div class="plan-todo-habit-row">
-        <div class="cat-section">
-          <div class="cat-title">✅ 할일 계획</div>
-          <div class="row-hint">이 기간 동안 해야 할 일들을 적어보세요</div>
-          <div class="list-rows" id="planTodoRows"></div>
-          <button class="add-row-btn" id="planAddTodo">+ 할일 추가</button>
-        </div>
-
-        <div class="cat-section">
-          <div class="cat-title">🔁 습관 계획</div>
-          <div class="row-hint">목표 빈도를 함께 적어보세요 (예: 주 3회)</div>
-          <div class="list-rows" id="planHabitRows"></div>
-          <button class="add-row-btn" id="planAddHabit">+ 습관 목표 추가</button>
-        </div>
       </div>
 
       <div class="footer-note">draft v0.4 · 데이터는 이 계정에 개인 저장됩니다 (계획 데이터는 기록과 별도로 저장됩니다)</div>
@@ -1870,6 +1849,9 @@
     $('wakeTime').value = entry.wakeTime;
     $('sleepTime').value = entry.sleepTime;
     $('scoreYesterday').value = entry.scoreYesterday;
+    // 전일점수는 당일(오늘 날짜를 보고 있을 때)에는 수정할 수 없고, 전일(다른 날짜)로 이동해야 수정할 수 있습니다.
+    $('scoreYesterday').disabled = (currentDate === todayStr());
+    $('scoreYesterday').title = (currentDate === todayStr()) ? '전일점수는 당일에 수정할 수 없습니다. 전일로 이동해서 수정해주세요.' : '';
     $('scoreToday').value = entry.scoreToday;
     $('exerciseType').value = entry.exerciseType;
     $('exerciseIntensity').value = entry.exerciseIntensity;
@@ -2913,10 +2895,6 @@
     else if(planPeriod === 'monthly') setDate(addMonths(currentDate.slice(0,7), 1) + '-01');
     else setDate((Number(currentDate.slice(0,4)) + 1) + currentDate.slice(4));
   }
-  $('planPrevBtn').addEventListener('click', planPrev);
-  $('planNextBtn').addEventListener('click', planNext);
-  $('planTimelineToday').addEventListener('click', () => setDate(todayStr()));
-
   function renderPlanCatGrid(){
     const plan = getPlan();
     const wrap = $('planCatGrid');
@@ -3035,20 +3013,9 @@
     });
   }
 
-  $('planAddTodo').addEventListener('click', () => {
-    const plan = getPlan();
-    plan.todos.push({ content:'', done:false, due:'' });
-    renderGenericRows('planTodoRows', plan.todos, false);
-    queuePlanSave();
-  });
-  $('planAddHabit').addEventListener('click', () => {
-    const plan = getPlan();
-    plan.habits.push({ content:'', target:'', done:false, due:'' });
-    renderGenericRows('planHabitRows', plan.habits, true);
-    queuePlanSave();
-  });
-
   // 단기(일간·주간) / 장기(월간·연간) 진행률 배너는 제거되었습니다.
+  // 계획탭 하단의 할일 계획 / 습관 계획 배너와 상단 날짜이동 배너는 제거되었습니다
+  // (할일/습관은 기록탭의 ✅할일·🔁습관 배너에서 계속 입력할 수 있습니다).
 
   // ---------- 타임라인: 연도별/분기별/월간별/주간별 각각 고정된 단위로 오늘 위치를 확인하며, 클릭으로 날짜 이동 ----------
   function quarterStartMonth(mo){
@@ -3131,11 +3098,7 @@
   }
 
   function renderPlanView(){
-    $('planLabel').textContent = currentPlanLabel();
-    const plan = getPlan();
     renderPlanCatGrid();
-    renderGenericRows('planTodoRows', plan.todos, false);
-    renderGenericRows('planHabitRows', plan.habits, true);
     renderPlanTimelines();
     renderOngoingPlanList('planOngoingList');
   }
