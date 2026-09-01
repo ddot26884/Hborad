@@ -608,10 +608,20 @@
     /* 달력 배너는 다른 배너보다 한 단계 더 작게(최대한 작게) 고정합니다. */
     --report-h-cal-small:200px; --report-h-cal-medium:220px; --report-h-cal-large:250px;
   }
-  .report-panels{
-    display:flex; flex-wrap:wrap; align-content:flex-start; align-items:flex-start;
-    gap:var(--report-gap); margin-bottom:12px;
+  .report-panels{ margin-bottom:12px; }
+  /* 인쇄창 본문(좌: 일반 배너 흐름) + 오른쪽 사이드(달력·마인드맵) — 계획탭(.plan-layout)과 같은 구조 */
+  .report-layout{ display:flex; gap:var(--report-gap); align-items:flex-start; }
+  .report-main{
+    flex:1; min-width:0; display:flex; flex-wrap:wrap; align-content:flex-start; align-items:flex-start;
+    gap:var(--report-gap);
   }
+  .report-side{
+    width:300px; flex-shrink:0; display:flex; flex-direction:column;
+    gap:var(--report-gap); position:sticky; top:12px;
+  }
+  /* 달력·마인드맵은 이제 오른쪽 사이드에 단독 배치되므로 항상 전체 폭을 씁니다. */
+  .report-side .report-block{ width:100% !important; flex:0 0 100% !important; }
+  .report-side .rb-size-toggle{ display:none; }
   .report-block{
     box-sizing:border-box; overflow:visible; border-radius:14px;
     display:flex; flex-direction:column; min-width:0;
@@ -621,15 +631,13 @@
   /* ---- 배너 끌어서 위치 이동(드래그 정렬) ---- */
   .report-block.dragging{ opacity:0.45; }
   .report-block.drag-over{ box-shadow:0 -3px 0 var(--accent) inset; }
-  /* 소형 = 한 줄에 3개, 중형 = 한 줄에 2개, 대형 = 한 줄에 1개(전체 폭). */
-  .report-block[data-size="small"]{ flex:0 0 calc((100% - 2*var(--report-gap)) / 3); width:calc((100% - 2*var(--report-gap)) / 3); height:var(--report-h-small); }
-  .report-block[data-size="medium"]{ flex:0 0 calc((100% - var(--report-gap)) / 2); width:calc((100% - var(--report-gap)) / 2); height:var(--report-h-medium); }
-  .report-block[data-size="large"]{ flex:0 0 100%; width:100%; height:var(--report-h-large); }
-  /* 달력 배너는 다른 배너보다 폭도, 높이도 최대한 작게 고정합니다(소형/중형/대형 모두
-     기본 배너보다 한 단계 더 작은 폭을 씁니다). */
-  .report-block[data-pid="calendar"][data-size="small"]{ flex:0 0 calc((100% - 2*var(--report-gap)) / 3); width:calc((100% - 2*var(--report-gap)) / 3); height:var(--report-h-cal-small); }
-  .report-block[data-pid="calendar"][data-size="medium"]{ flex:0 0 calc((100% - var(--report-gap)) / 2); width:calc((100% - var(--report-gap)) / 2); height:var(--report-h-cal-medium); }
-  .report-block[data-pid="calendar"][data-size="large"]{ flex:0 0 100%; width:100%; height:var(--report-h-cal-large); }
+  /* 소형 = 한 줄에 3개, 중형 = 한 줄에 2개, 대형 = 한 줄에 1개(전체 폭).
+     내용이 잘리지 않도록 높이는 고정(height)이 아니라 최소 높이(min-height)만 규격으로 두고,
+     실제 높이는 내용에 맞춰 자유롭게 늘어납니다. */
+  .report-block[data-size="small"]{ flex:0 0 calc((100% - 2*var(--report-gap)) / 3); width:calc((100% - 2*var(--report-gap)) / 3); min-height:var(--report-h-small); }
+  .report-block[data-size="medium"]{ flex:0 0 calc((100% - var(--report-gap)) / 2); width:calc((100% - var(--report-gap)) / 2); min-height:var(--report-h-medium); }
+  .report-block[data-size="large"]{ flex:0 0 100%; width:100%; min-height:var(--report-h-large); }
+  .report-block[data-pid="calendar"]{ min-height:var(--report-h-cal-small); }
   .report-block .rb-toolbar{
     display:flex; align-items:center; justify-content:space-between; gap:6px; margin-bottom:5px;
   }
@@ -647,7 +655,7 @@
   .report-block .rb-size-btn:hover{ color:var(--accent-dark); border-color:var(--accent); }
   .report-block .rb-size-btn.active{ background:var(--ink); color:#fff; border-color:var(--ink); }
   .report-block > .report-hero, .report-block > .report-stat, .report-block > .report-panel{
-    margin-bottom:0; flex:1; box-sizing:border-box; height:100%; min-height:0; overflow-y:auto;
+    margin-bottom:0; flex:1; box-sizing:border-box; height:auto; min-height:0; overflow-y:visible;
   }
   .report-layout-toolbar{ display:flex; align-items:center; gap:8px; margin-bottom:10px; flex-wrap:wrap; }
   .report-layout-toolbar .rlt-status{ font-family:'JetBrains Mono', monospace; font-size:10px; color:var(--teal); }
@@ -664,12 +672,12 @@
     display:flex; align-items:center; gap:2px; flex-wrap:wrap;
   }
   @media (max-width:700px){
-    /* 좁은 화면에서는 소형(3열)/중형(2열)도 한 줄에 넣기 어려우므로 세로로 쌓습니다.
-       달력 배너는 별도 크기 기준(절반 폭)을 갖지만, 좁은 화면에서는 마찬가지로 전체 폭으로 접습니다. */
-    .report-block[data-size="small"], .report-block[data-size="medium"],
-    .report-block[data-pid="calendar"]{
+    /* 좁은 화면에서는 소형(3열)/중형(2열)도 한 줄에 넣기 어려우므로 세로로 쌓습니다. */
+    .report-block[data-size="small"], .report-block[data-size="medium"]{
       flex:0 0 100%; width:100%;
     }
+    .report-layout{ flex-direction:column; }
+    .report-side{ width:100%; position:static; }
   }
   .report-hero{
     position:relative; overflow:hidden; border-radius:14px; border:1.5px solid var(--ink-soft);
@@ -3711,99 +3719,106 @@
       </div>
 
       <div class="report-panels" id="reportPanels">
-        ${reportBlock('hero', `
-        <div class="report-hero">
-          ${reportHeroShapes()}
-          <div class="rh-eyebrow">HBORAD · PRINT / SUMMARY</div>
-          <div class="rh-title">📊 오늘의 완료 현황판</div>
-          <div class="rh-sub">기록·계획을 굳이 넘겨보지 않아도, 여기서 목표 진행 상황을 한눈에 볼 수 있어요.</div>
-          <div class="rh-date mono">${fmtDateFull(todayStr())} · 오늘 체크리스트 ${todayPct}% 완료</div>
-          <div class="theme-picker" id="themePicker">
-            <span class="tp-label">테마</span>
-          </div>
-        </div>`, sizeFor('hero'))}
+        <div class="report-layout">
+          <div class="report-main" id="reportMainPanels">
+            ${reportBlock('hero', `
+            <div class="report-hero">
+              ${reportHeroShapes()}
+              <div class="rh-eyebrow">HBORAD · PRINT / SUMMARY</div>
+              <div class="rh-title">📊 오늘의 완료 현황판</div>
+              <div class="rh-sub">기록·계획을 굳이 넘겨보지 않아도, 여기서 목표 진행 상황을 한눈에 볼 수 있어요.</div>
+              <div class="rh-date mono">${fmtDateFull(todayStr())} · 오늘 체크리스트 ${todayPct}% 완료</div>
+              <div class="theme-picker" id="themePicker">
+                <span class="tp-label">테마</span>
+              </div>
+            </div>`, sizeFor('hero'))}
 
-        ${reportBlock('stat', `
-        <div class="report-stat">
-          ${reportStatShape(0)}
-          <div class="rs-label">📝 오늘 계획</div>
-          <div class="rs-value">${dStats.done}/${dStats.total}</div>
-          <div class="rs-sub">일간 할일·습관 달성</div>
-        </div>`, sizeFor('stat'))}
+            ${reportBlock('stat', `
+            <div class="report-stat">
+              ${reportStatShape(0)}
+              <div class="rs-label">📝 오늘 계획</div>
+              <div class="rs-value">${dStats.done}/${dStats.total}</div>
+              <div class="rs-sub">일간 할일·습관 달성</div>
+            </div>`, sizeFor('stat'))}
 
-        ${reportBlock('mindmap', `
-        <div class="report-panel">
-          ${reportPanelShape(2)}
-          <div class="rp-head">
-            <div class="rp-title">🧠 기록 마인드맵</div>
-          </div>
-          ${renderReportMindmap(reportMindmapPeriod)}
-        </div>`, sizeFor('mindmap'))}
+            ${reportBlock('todayHabit', `
+            <div class="report-panel">
+              ${reportPanelShape(1)}
+              <div class="rp-head">
+                <div class="rp-title">🔁 오늘 습관 <span style="font-weight:400;color:var(--ink-soft);font-size:10.5px;">— 기록탭 습관과 연동</span></div>
+              </div>
+              ${renderReportTodayHabit()}
+            </div>`, sizeFor('todayHabit'))}
 
-        ${reportBlock('todayHabit', `
-        <div class="report-panel">
-          ${reportPanelShape(1)}
-          <div class="rp-head">
-            <div class="rp-title">🔁 오늘 습관 <span style="font-weight:400;color:var(--ink-soft);font-size:10.5px;">— 기록탭 습관과 연동</span></div>
-          </div>
-          ${renderReportTodayHabit()}
-        </div>`, sizeFor('todayHabit'))}
+            ${reportBlock('goal', `
+            <div class="report-panel">
+              ${reportPanelShape(0)}
+              <div id="goalChartPanel"></div>
+            </div>`, sizeFor('goal'))}
 
-        ${reportBlock('goal', `
-        <div class="report-panel">
-          ${reportPanelShape(0)}
-          <div id="goalChartPanel"></div>
-        </div>`, sizeFor('goal'))}
+            ${reportBlock('time', `
+            <div class="report-panel">
+              ${reportPanelShape(1)}
+              <div class="rp-head">
+                <div class="rp-title">⏰ 오늘 시간계획 <span style="font-weight:400;color:var(--ink-soft);font-size:10.5px;">— 계획 vs 실제(실천) 구분</span></div>
+              </div>
+              ${renderTimePlanDonutPanel()}
+            </div>`, sizeFor('time'))}
 
-        ${reportBlock('time', `
-        <div class="report-panel">
-          ${reportPanelShape(1)}
-          <div class="rp-head">
-            <div class="rp-title">⏰ 오늘 시간계획 <span style="font-weight:400;color:var(--ink-soft);font-size:10.5px;">— 계획 vs 실제(실천) 구분</span></div>
-          </div>
-          ${renderTimePlanDonutPanel()}
-        </div>`, sizeFor('time'))}
+            ${reportBlock('checklist', `
+            <div class="report-panel">
+              ${reportPanelShape(2)}
+              <div class="rp-head">
+                <div class="rp-title">📅 오늘의 계획 체크리스트</div>
+                <span class="rp-pct-pill">${dStats.pct}%</span>
+              </div>
+              ${renderReportChecklist(allPlans.daily && allPlans.daily[todayStr()])}
+            </div>`, sizeFor('checklist'))}
 
-        ${reportBlock('checklist', `
-        <div class="report-panel">
-          ${reportPanelShape(2)}
-          <div class="rp-head">
-            <div class="rp-title">📅 오늘의 계획 체크리스트</div>
-            <span class="rp-pct-pill">${dStats.pct}%</span>
+            ${reportBlock('logsum', `
+            <div class="report-panel">
+              ${reportPanelShape(0)}
+              <div class="rp-head">
+                <div class="rp-title">🗂 오늘의 전체 기록 <span style="font-weight:400;color:var(--ink-soft);font-size:10.5px;">— 기록 탭에 입력한 내용</span></div>
+              </div>
+              ${renderReportLogSummary(allLogs[todayStr()])}
+            </div>`, sizeFor('logsum'))}
           </div>
-          ${renderReportChecklist(allPlans.daily && allPlans.daily[todayStr()])}
-        </div>`, sizeFor('checklist'))}
 
-        ${reportBlock('logsum', `
-        <div class="report-panel">
-          ${reportPanelShape(0)}
-          <div class="rp-head">
-            <div class="rp-title">🗂 오늘의 전체 기록 <span style="font-weight:400;color:var(--ink-soft);font-size:10.5px;">— 기록 탭에 입력한 내용</span></div>
-          </div>
-          ${renderReportLogSummary(allLogs[todayStr()])}
-        </div>`, sizeFor('logsum'))}
+          <!-- 달력·마인드맵: 계획탭처럼 본문 오른쪽에 따로 배치, 내용이 잘리지 않도록 자동 높이 -->
+          <div class="report-side" id="reportSidePanels">
+            ${reportBlock('calendar', `
+            <div class="report-panel">
+              ${reportPanelShape(1)}
+              <div class="rp-head">
+                <div class="rp-title">🗓 달력</div>
+                <div class="rp-nav">
+                  <button class="nav-btn" id="calPrevMonthReport">◀</button>
+                  <div class="cal-title mono" id="calTitleReport"></div>
+                  <button class="nav-btn" id="calNextMonthReport">▶</button>
+                </div>
+              </div>
+              <div class="report-cal-shrink">
+                <div class="cal-grid" id="calWeekdaysReport"></div>
+                <div class="cal-grid" id="calDaysReport" style="margin-top:6px;"></div>
+                <div class="day-events">
+                  <div class="de-title" id="dayEventsTitleReport">일정</div>
+                  <div id="dayEventsListReport"></div>
+                  <div class="de-add-row"><button type="button" class="add-row-btn" id="dayEventAddReport">+ 일정 추가</button></div>
+                </div>
+              </div>
+            </div>`, sizeFor('calendar'))}
 
-        ${reportBlock('calendar', `
-        <div class="report-panel">
-          ${reportPanelShape(1)}
-          <div class="rp-head">
-            <div class="rp-title">🗓 달력</div>
-            <div class="rp-nav">
-              <button class="nav-btn" id="calPrevMonthReport">◀</button>
-              <div class="cal-title mono" id="calTitleReport"></div>
-              <button class="nav-btn" id="calNextMonthReport">▶</button>
-            </div>
+            ${reportBlock('mindmap', `
+            <div class="report-panel">
+              ${reportPanelShape(2)}
+              <div class="rp-head">
+                <div class="rp-title">🧠 기록 마인드맵</div>
+              </div>
+              ${renderReportMindmap(reportMindmapPeriod)}
+            </div>`, sizeFor('mindmap'))}
           </div>
-          <div class="report-cal-shrink">
-            <div class="cal-grid" id="calWeekdaysReport"></div>
-            <div class="cal-grid" id="calDaysReport" style="margin-top:6px;"></div>
-            <div class="day-events">
-              <div class="de-title" id="dayEventsTitleReport">일정</div>
-              <div id="dayEventsListReport"></div>
-              <div class="de-add-row"><button type="button" class="add-row-btn" id="dayEventAddReport">+ 일정 추가</button></div>
-            </div>
-          </div>
-        </div>`, sizeFor('calendar'))}
+        </div>
       </div>
 
       <div class="footer-note">draft v0.8 · 인쇄창은 읽기 전용 요약이며, 실제 입력은 기록·계획 탭에서 합니다 · 인쇄 버튼(또는 Ctrl/Cmd+P) 클릭 시 이 화면 전체가 A4 기준으로 인쇄됩니다</div>
@@ -3926,14 +3941,16 @@
       return raw ? JSON.parse(raw) : null;
     }catch(e){ return null; }
   }
+  // 달력·마인드맵은 오른쪽 사이드에 고정 배치되므로, 순서 저장/드래그 정렬은
+  // 본문 흐름(#reportMainPanels)의 배너에만 적용됩니다.
   function saveReportOrder(){
-    const wrap = $('reportPanels');
+    const wrap = $('reportMainPanels');
     if(!wrap) return;
     const order = Array.from(wrap.querySelectorAll(':scope > .report-block')).map(b => b.dataset.pid);
     try{ localStorage.setItem('hb-report-order-v1', JSON.stringify(order)); }catch(e){}
   }
   function applyReportOrder(){
-    const wrap = $('reportPanels');
+    const wrap = $('reportMainPanels');
     if(!wrap) return;
     const order = getReportOrder();
     if(!order || !order.length) return;
@@ -3943,7 +3960,7 @@
     });
   }
   function initReportBannerDrag(){
-    const wrap = $('reportPanels');
+    const wrap = $('reportMainPanels');
     if(!wrap) return;
     let dragEl = null;
     wrap.querySelectorAll(':scope > .report-block').forEach(node => {
