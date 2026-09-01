@@ -401,6 +401,29 @@
   .list-row input.due-input{ flex:0 0 128px; font-family:'JetBrains Mono', monospace; font-size:11.5px; padding:6px 7px; border:1.5px solid var(--line); border-radius:6px; background:var(--paper); }
   .list-row .row-dday{ flex-shrink:0; margin-left:0; }
   .ongoing-plan-section .report-empty{ padding:2px 0; }
+  /* ---------- 계획: 연간 365일 현황 그리드 (목표일 배너 상단, 오늘 강조) ---------- */
+  .year-grid-head{ display:flex; align-items:center; justify-content:space-between; margin-bottom:8px; flex-wrap:wrap; gap:4px; }
+  .year-grid-head .yg-title{ font-family:'JetBrains Mono', monospace; font-size:11.5px; font-weight:700; color:var(--ink); }
+  .year-grid-head .yg-today{ font-family:'JetBrains Mono', monospace; font-size:10.5px; font-weight:700; color:var(--safety-dark); background:var(--accent-soft); padding:2px 8px; border-radius:20px; }
+  .year-grid{ display:flex; flex-direction:column; gap:3px; margin-bottom:12px; padding-bottom:10px; border-bottom:1.5px dashed var(--line); }
+  .year-grid-row{ display:flex; align-items:center; gap:6px; }
+  .year-grid-mlabel{ flex-shrink:0; width:24px; font-family:'JetBrains Mono', monospace; font-size:9px; color:var(--ink-soft); }
+  .year-grid-days{ display:flex; gap:2px; flex-wrap:wrap; flex:1; }
+  .year-day-cell{
+    width:9px; height:9px; border-radius:2px; background:var(--paper-2); border:1px solid var(--line);
+    flex-shrink:0; box-sizing:border-box;
+  }
+  .year-day-cell.is-today{
+    width:13px; height:13px; border-radius:3px; background:var(--safety); border:1.5px solid var(--safety-dark);
+    box-shadow:0 0 0 2px var(--accent-soft); position:relative; z-index:1;
+  }
+  @media (max-width:700px){ .year-day-cell{ width:7px; height:7px; } .year-day-cell.is-today{ width:11px; height:11px; } }
+  /* ---------- 계획: 카테고리별 목표 카드에 개별 할일 추가 버튼 ---------- */
+  .plan-cat-add-btn{ margin-top:7px; font-size:10.5px; padding:5px 10px; width:100%; }
+  /* ---------- 계획: 할일 계획 / 습관 계획을 한 열(row)에 반절씩 배치 ---------- */
+  .plan-todo-habit-row{ display:flex; gap:10px; align-items:flex-start; margin-bottom:10px; }
+  .plan-todo-habit-row .cat-section{ flex:1; min-width:0; margin-bottom:0; }
+  @media (max-width:700px){ .plan-todo-habit-row{ flex-direction:column; } }
   /* 기록탭 할일/습관 줄: 내용/체크 한 줄 + 계획일정·실행일정(연월일) 한 줄로 두 단 구성 */
   .list-row.has-dates{ display:flex; flex-direction:column; align-items:stretch; gap:5px; padding:6px 0 9px; border-bottom:1px dashed var(--line); }
   .list-row.has-dates:last-child{ border-bottom:none; padding-bottom:2px; }
@@ -493,19 +516,19 @@
   }
 
   /* ---------- Plan view: timeline ---------- */
-  .timeline-wrap{ overflow-x:auto; padding-bottom:4px; }
-  .timeline-track{ display:flex; gap:6px; min-width:max-content; padding:4px 2px 2px; }
+  .timeline-wrap{ overflow-x:auto; padding-bottom:6px; }
+  .timeline-track{ display:flex; gap:9px; min-width:max-content; padding:6px 3px 3px; }
   .timeline-unit{
-    flex-shrink:0; width:64px; border:1.5px solid var(--line); border-radius:8px; background:var(--paper);
-    padding:6px 5px; cursor:pointer; text-align:center; display:flex; flex-direction:column; align-items:center; gap:4px;
+    flex-shrink:0; width:88px; border:1.5px solid var(--line); border-radius:10px; background:var(--paper);
+    padding:10px 8px; cursor:pointer; text-align:center; display:flex; flex-direction:column; align-items:center; gap:6px;
   }
   .timeline-unit:hover{ border-color:var(--purple); }
-  .timeline-unit.is-today{ box-shadow:0 0 0 2px var(--safety) inset; }
+  .timeline-unit.is-today{ box-shadow:0 0 0 2.5px var(--safety) inset; }
   .timeline-unit.is-selected{ background:var(--purple-soft); border-color:var(--purple); }
-  .timeline-unit .tu-label{ font-family:'JetBrains Mono', monospace; font-size:10px; font-weight:700; color:var(--ink); white-space:nowrap; }
-  .timeline-unit .tu-sub{ font-family:'JetBrains Mono', monospace; font-size:8.5px; color:var(--ink-soft); }
-  .timeline-dots{ display:grid; grid-template-columns:repeat(4,1fr); gap:2px; }
-  .timeline-dots .t-dot{ width:6px; height:6px; border-radius:50%; background:var(--line); }
+  .timeline-unit .tu-label{ font-family:'JetBrains Mono', monospace; font-size:13px; font-weight:700; color:var(--ink); white-space:nowrap; }
+  .timeline-unit .tu-sub{ font-family:'JetBrains Mono', monospace; font-size:10.5px; color:var(--ink-soft); }
+  .timeline-dots{ display:grid; grid-template-columns:repeat(4,1fr); gap:4px; }
+  .timeline-dots .t-dot{ width:9px; height:9px; border-radius:50%; background:var(--line); }
   .timeline-dots .t-dot.on{ background:var(--teal); }
   .timeline-legend{ display:flex; flex-wrap:wrap; gap:8px; margin-top:8px; }
   .timeline-legend .tl-item{ display:flex; align-items:center; gap:4px; font-size:10px; color:var(--ink-soft); font-family:'JetBrains Mono', monospace; }
@@ -1212,6 +1235,7 @@
           <!-- 목표일(D-day)을 지정한 할일/습관은 그 날짜가 지나기 전까지 매일 여기서도 계속 보입니다 -->
           <div class="cat-section ongoing-plan-section" id="planOngoingSection">
             <div class="cat-title">📌 진행 중인 목표일(D-day) 항목 <span class="cnt">— 아래 목록에서 목표일을 지정해보세요</span></div>
+            <div id="planYearGrid"></div>
             <div id="planOngoingList"></div>
           </div>
 
@@ -1229,18 +1253,20 @@
             <div class="plan-cat-grid" id="planCatGrid"></div>
           </div>
 
-          <div class="cat-section">
-            <div class="cat-title">✅ 할일 계획</div>
-            <div class="row-hint">이 기간 동안 해야 할 일들을 적어보세요</div>
-            <div class="list-rows" id="planTodoRows"></div>
-            <button class="add-row-btn" id="planAddTodo">+ 할일 추가</button>
-          </div>
+          <div class="plan-todo-habit-row">
+            <div class="cat-section">
+              <div class="cat-title">✅ 할일 계획</div>
+              <div class="row-hint">이 기간 동안 해야 할 일들을 적어보세요</div>
+              <div class="list-rows" id="planTodoRows"></div>
+              <button class="add-row-btn" id="planAddTodo">+ 할일 추가</button>
+            </div>
 
-          <div class="cat-section">
-            <div class="cat-title">🔁 습관 계획</div>
-            <div class="row-hint">목표 빈도를 함께 적어보세요 (예: 주 3회)</div>
-            <div class="list-rows" id="planHabitRows"></div>
-            <button class="add-row-btn" id="planAddHabit">+ 습관 목표 추가</button>
+            <div class="cat-section">
+              <div class="cat-title">🔁 습관 계획</div>
+              <div class="row-hint">목표 빈도를 함께 적어보세요 (예: 주 3회)</div>
+              <div class="list-rows" id="planHabitRows"></div>
+              <button class="add-row-btn" id="planAddHabit">+ 습관 목표 추가</button>
+            </div>
           </div>
 
           <div class="footer-note">draft v0.4 · 계획 데이터는 기록과 별도로 저장됩니다</div>
@@ -2859,7 +2885,8 @@
           <span class="pt-label">시작일</span><input type="date" class="pt-date" data-cat="${c.key}" data-f="start" value="${t.start}" />
           <span class="pt-label">목표일</span><input type="date" class="pt-date" data-cat="${c.key}" data-f="end" value="${t.end}" />
         </div>
-        <textarea rows="2" data-cat="${c.key}" placeholder="${c.label.replace(/^[^ ]+ /,'')} 목표">${escapeAttr(plan.categories[c.key])}</textarea>`;
+        <textarea rows="2" data-cat="${c.key}" placeholder="${c.label.replace(/^[^ ]+ /,'')} 목표">${escapeAttr(plan.categories[c.key])}</textarea>
+        <button type="button" class="add-row-btn plan-cat-add-btn" data-cat="${c.key}">+ 할일 추가</button>`;
       wrap.appendChild(item);
     });
     wrap.querySelectorAll('textarea[data-cat]').forEach(ta => {
@@ -2871,6 +2898,24 @@
         plan2.targets[inp.dataset.cat][inp.dataset.f] = inp.value;
         queuePlanSave();
         renderPlanCatGrid();
+      });
+    });
+    // 카테고리별 목표 카드에서 바로 "할일 계획" 목록에 그 카테고리의 할일을 추가합니다.
+    wrap.querySelectorAll('.plan-cat-add-btn').forEach(btn => {
+      btn.addEventListener('click', () => {
+        const plan2 = getPlan();
+        const catInfo = PLAN_CATS.find(c => c.key === btn.dataset.cat);
+        plan2.todos.push({ content:'', done:false, due:'', cat: btn.dataset.cat });
+        renderGenericRows('planTodoRows', plan2.todos, false);
+        renderPlanChart();
+        queuePlanSave();
+        const rowsEl = $('planTodoRows');
+        if(rowsEl){
+          rowsEl.scrollIntoView({ behavior:'smooth', block:'center' });
+          const lastInput = rowsEl.querySelector('.list-row:last-child input[data-f="content"]');
+          if(lastInput) lastInput.focus();
+        }
+        hbToast(`✅ 할일 계획에 '${catInfo ? catInfo.label : ''}' 할일을 추가했어요`);
       });
     });
   }
@@ -3006,6 +3051,35 @@
     }
     return units;
   }
+  // ---------- 계획: 연간 365(366)일 현황 그리드 — 오늘이 어디인지 한눈에 표시 ----------
+  function renderPlanYearGrid(){
+    const el = $('planYearGrid');
+    if(!el) return;
+    const today = todayStr();
+    const y = Number(today.slice(0,4));
+    const todayM = Number(today.slice(5,7));
+    const todayD = Number(today.slice(8,10));
+    const MLABELS = ['1월','2월','3월','4월','5월','6월','7월','8월','9월','10월','11월','12월'];
+    let rows = '';
+    for(let m=1; m<=12; m++){
+      const daysInMonth = new Date(y, m, 0).getDate();
+      let cells = '';
+      for(let d=1; d<=daysInMonth; d++){
+        const isToday = (m === todayM && d === todayD);
+        cells += `<div class="year-day-cell${isToday?' is-today':''}" title="${y}년 ${m}월 ${d}일${isToday?' · 오늘':''}"></div>`;
+      }
+      rows += `<div class="year-grid-row"><div class="year-grid-mlabel mono">${MLABELS[m-1]}</div><div class="year-grid-days">${cells}</div></div>`;
+    }
+    el.innerHTML = `
+      <div class="year-grid-head">
+        <span class="yg-title mono">🗓 ${y}년 연간 현황 (365일)</span>
+        <span class="yg-today mono">오늘 · ${fmtDateShort(today)}</span>
+      </div>
+      <div class="year-grid">${rows}</div>`;
+    const todayCell = el.querySelector('.year-day-cell.is-today');
+    if(todayCell && todayCell.scrollIntoView) todayCell.scrollIntoView({ block:'nearest', inline:'center' });
+  }
+
   function renderPlanTimeline(){
     const track = $('planTimelineTrack');
     if(!track) return;
@@ -3031,6 +3105,7 @@
     renderPlanPeriodTabs();
     $('planLabel').textContent = currentPlanLabel();
     const plan = getPlan();
+    renderPlanYearGrid();
     renderPlanCatGrid();
     renderGenericRows('planTodoRows', plan.todos, false);
     renderGenericRows('planHabitRows', plan.habits, true);
