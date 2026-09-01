@@ -738,7 +738,7 @@
     background:var(--card); border:1.5px solid var(--line); border-radius:10px; padding:11px 12px;
     box-shadow:1px 2px 0 rgba(27,36,48,0.05); display:flex; flex-direction:column; gap:3px;
   }
-  .report-stat .rs-label{ font-family:'JetBrains Mono', monospace; font-size:10px; color:var(--ink-soft); display:flex; align-items:center; gap:5px; }
+  .report-stat .rs-label{ font-family:'JetBrains Mono', monospace; font-weight:700; font-size:13px; color:var(--ink-soft); display:flex; align-items:center; gap:5px; }
   .report-stat .rs-value{ font-family:'JetBrains Mono', monospace; font-weight:800; font-size:20px; color:var(--accent-dark); }
   .report-stat .rs-sub{ font-size:10px; color:var(--ink-soft); }
 
@@ -3646,82 +3646,71 @@
     if(value === undefined || value === null || value === '') return '';
     return `<div class="ls-item"><span class="li-label">${escapeAttr(label)}</span><span class="li-value">${escapeAttr(value)}</span></div>`;
   }
-  function renderReportLogSummary(e){
-    if(!e || !hasContent(e)){
-      return `<div class="report-empty">오늘 기록 탭에 입력된 내용이 아직 없어요.</div>`;
-    }
-    let html = `<div class="log-summary">`;
-
-    // 컨디션 / 기상·취침 / 운동 / 다짐 점수
-    const basics = [
+  // 예전에는 이 내용들이 "전체 기록" 배너 하나에 모두 묶여 있었지만,
+  // 각 항목을 독립된 배너로 분리해서 보여줍니다.
+  function renderReportCondition(e){
+    const basics = e ? [
       lsItem('컨디션', e.condition ? e.condition + ' / 5' : ''),
       lsItem('기상', e.wakeTime), lsItem('취침', e.sleepTime),
       lsItem('운동', [e.exerciseYN, e.exerciseType, e.exerciseIntensity].filter(Boolean).join(' · ')),
       lsItem('어제 다짐', e.scoreYesterday), lsItem('오늘 다짐', e.scoreToday)
+    ].join('') : '';
+    if(!basics) return `<div class="report-empty">오늘 기록탭에 입력된 컨디션 정보가 아직 없어요.</div>`;
+    return `<div class="log-summary"><div class="ls-items">${basics}</div></div>`;
+  }
+  function renderReportHealth(e){
+    const h = e && e.health;
+    if(!h) return `<div class="report-empty">오늘 기록탭 "건강·식단"에 입력된 내용이 아직 없어요.</div>`;
+    const mealLines = (h.meals||[]).map(mm => {
+      const parts = ['carb:탄수화물','protein:단백질','fat:지방','sugar:당'].map(kv => {
+        const [k,label] = kv.split(':'); return mm[k] ? `${label} ${mm[k]}` : '';
+      }).filter(Boolean).join(', ');
+      const name = [mm.type, mm.content].filter(Boolean).join(' · ') || '식사';
+      return parts ? lsItem(name, parts) : '';
+    }).join('');
+    const suppLines = (h.supplements||[]).map(s => lsItem('영양제', [s.name, s.brand, s.nutrient, s.date].filter(Boolean).join(' · '))).join('');
+    const exLines = (h.exercises||[]).map(x => lsItem('운동루틴', [x.routine, x.part, x.method, x.weight&&(x.weight+'kg'), x.reps&&(x.reps+'회'), x.memo].filter(Boolean).join(' · '))).join('');
+    const bodyLine = (h.body && (h.body.fat||h.body.muscle||h.body.weight)) ? lsItem('체성분', [h.body.fat&&('체지방 '+h.body.fat+'%'), h.body.muscle&&('골격근량 '+h.body.muscle+'kg'), h.body.weight&&('체중 '+h.body.weight+'kg')].filter(Boolean).join(', ')) : '';
+    const healthExtra = [lsItem('총평', h.total), lsItem('부족한 것', h.deficient)].join('');
+    const lines = `${mealLines}${suppLines}${bodyLine}${exLines}${healthExtra}`;
+    if(!lines) return `<div class="report-empty">오늘 기록탭 "건강·식단"에 입력된 내용이 아직 없어요.</div>`;
+    return `<div class="log-summary"><div class="ls-items">${lines}</div></div>`;
+  }
+  function renderReportDailySummary(e){
+    if(!e || !e.diary) return `<div class="report-empty">오늘 기록탭 "하루 정리"에 입력된 내용이 아직 없어요.</div>`;
+    const diaryLabel = (base, topic) => topic ? `${base} · ${topic}` : base;
+    const diaryLines = [
+      lsItem(diaryLabel('생각', e.diary.thoughtsTopic), e.diary.thoughts),
+      lsItem(diaryLabel('질문', e.diary.questionsTopic), e.diary.questions),
+      lsItem(diaryLabel('소감', e.diary.impressionTopic), e.diary.impression),
+      lsItem(diaryLabel('키워드', e.diary.keywordsTopic), e.diary.keywords)
     ].join('');
-    if(basics){ html += `<div><div class="ls-group-title">🌤 오늘의 컨디션</div><div class="ls-items">${basics}</div></div>`; }
-    // 시간 계획표는 별도의 "오늘 시간계획표" 배너(renderReportTimetable)로 분리되었습니다.
-
-    // 건강 / 식단
-    if(e.health){
-      const h = e.health;
-      const mealLines = (h.meals||[]).map(mm => {
-        const parts = ['carb:탄수화물','protein:단백질','fat:지방','sugar:당'].map(kv => {
-          const [k,label] = kv.split(':'); return mm[k] ? `${label} ${mm[k]}` : '';
-        }).filter(Boolean).join(', ');
-        const name = [mm.type, mm.content].filter(Boolean).join(' · ') || '식사';
-        return parts ? lsItem(name, parts) : '';
-      }).join('');
-      const suppLines = (h.supplements||[]).map(s => lsItem('영양제', [s.name, s.brand, s.nutrient, s.date].filter(Boolean).join(' · '))).join('');
-      const exLines = (h.exercises||[]).map(x => lsItem('운동루틴', [x.routine, x.part, x.method, x.weight&&(x.weight+'kg'), x.reps&&(x.reps+'회'), x.memo].filter(Boolean).join(' · '))).join('');
-      const bodyLine = (h.body && (h.body.fat||h.body.muscle||h.body.weight)) ? lsItem('체성분', [h.body.fat&&('체지방 '+h.body.fat+'%'), h.body.muscle&&('골격근량 '+h.body.muscle+'kg'), h.body.weight&&('체중 '+h.body.weight+'kg')].filter(Boolean).join(', ')) : '';
-      const healthExtra = [lsItem('총평', h.total), lsItem('부족한 것', h.deficient)].join('');
-      if(mealLines || suppLines || exLines || bodyLine || healthExtra){
-        html += `<div><div class="ls-group-title">🍽 건강·식단</div><div class="ls-items">${mealLines}${suppLines}${bodyLine}${exLines}${healthExtra}</div></div>`;
-      }
-    }
-
-    // 하루 정리 / 일기
-    if(e.diary){
-      const diaryLabel = (base, topic) => topic ? `${base} · ${topic}` : base;
-      const diaryLines = [
-        lsItem(diaryLabel('생각', e.diary.thoughtsTopic), e.diary.thoughts),
-        lsItem(diaryLabel('질문', e.diary.questionsTopic), e.diary.questions),
-        lsItem(diaryLabel('소감', e.diary.impressionTopic), e.diary.impression),
-        lsItem(diaryLabel('키워드', e.diary.keywordsTopic), e.diary.keywords)
-      ].join('');
-      if(diaryLines) html += `<div><div class="ls-group-title">📔 하루 정리</div><div class="ls-items">${diaryLines}</div></div>`;
-    }
-    // 일기(오늘 일기 작성 내용)는 별도의 "일기" 배너(renderReportDiary)로 분리되었습니다.
-
-    // 인간관계 / 자산 / 커리어 / 취미
-    if(e.relationships && (e.relationships.people||e.relationships.memo||e.relationships.gratitude||e.relationships.score)){
-      const r = e.relationships;
-      html += `<div><div class="ls-group-title">🤝 인간관계</div><div class="ls-items">${
-        [lsItem('만난 사람', r.people), lsItem('메모', r.memo), lsItem('감사', r.gratitude), lsItem('점수', r.score?(r.score+' / 5'):'')].join('')
-      }</div></div>`;
-    }
-    if(e.assets && (e.assets.expense||e.assets.income||e.assets.total||e.assets.memo||e.assets.nextAction)){
-      const a = e.assets;
-      html += `<div><div class="ls-group-title">💰 자산·투자</div><div class="ls-items">${
-        [lsItem('지출', a.expense), lsItem('수입', a.income), lsItem('총자산', a.total), lsItem('메모', a.memo), lsItem('다음 행동', a.nextAction)].join('')
-      }</div></div>`;
-    }
-    if(e.career && (e.career.summary||e.career.achievements||e.career.learned||e.career.priority)){
-      const c = e.career;
-      html += `<div><div class="ls-group-title">💼 직업</div><div class="ls-items">${
-        [lsItem('요약', c.summary), lsItem('성과', c.achievements), lsItem('배운 점', c.learned), lsItem('우선순위', c.priority)].join('')
-      }</div></div>`;
-    }
-    if(e.hobby && (e.hobby.activity||e.hobby.duration||e.hobby.satisfaction||e.hobby.memo)){
-      const h = e.hobby;
-      html += `<div><div class="ls-group-title">🎨 취미</div><div class="ls-items">${
-        [lsItem('활동', h.activity), lsItem('시간', h.duration), lsItem('만족도', h.satisfaction?(h.satisfaction+' / 5'):''), lsItem('메모', h.memo)].join('')
-      }</div></div>`;
-    }
-
-    html += `</div>`;
-    return html;
+    if(!diaryLines) return `<div class="report-empty">오늘 기록탭 "하루 정리"에 입력된 내용이 아직 없어요.</div>`;
+    return `<div class="log-summary"><div class="ls-items">${diaryLines}</div></div>`;
+  }
+  function renderReportRelationshipsToday(e){
+    const r = e && e.relationships;
+    if(!r || !(r.people||r.memo||r.gratitude||r.score)) return `<div class="report-empty">오늘 기록탭 "인간관계"에 입력된 내용이 아직 없어요.</div>`;
+    const lines = [lsItem('만난 사람', r.people), lsItem('메모', r.memo), lsItem('감사', r.gratitude), lsItem('점수', r.score?(r.score+' / 5'):'')].join('');
+    return `<div class="log-summary"><div class="ls-items">${lines}</div></div>`;
+  }
+  function renderReportAssets(e){
+    const a = e && e.assets;
+    if(!a || !(a.expense||a.income||a.total||a.memo||a.nextAction)) return `<div class="report-empty">오늘 기록탭 "자산·투자"에 입력된 내용이 아직 없어요.</div>`;
+    const lines = [lsItem('지출', a.expense), lsItem('수입', a.income), lsItem('총자산', a.total), lsItem('메모', a.memo), lsItem('다음 행동', a.nextAction)].join('');
+    return `<div class="log-summary"><div class="ls-items">${lines}</div></div>`;
+  }
+  function renderReportCareer(e){
+    const c = e && e.career;
+    if(!c || !(c.summary||c.achievements||c.learned||c.priority)) return `<div class="report-empty">오늘 기록탭 "직업"에 입력된 내용이 아직 없어요.</div>`;
+    const lines = [lsItem('요약', c.summary), lsItem('성과', c.achievements), lsItem('배운 점', c.learned), lsItem('우선순위', c.priority)].join('');
+    return `<div class="log-summary"><div class="ls-items">${lines}</div></div>`;
+  }
+  function renderReportHobby(e){
+    const h = e && e.hobby;
+    if(!h || !(h.activity||h.duration||h.satisfaction||h.memo)) return `<div class="report-empty">오늘 기록탭 "취미"에 입력된 내용이 아직 없어요.</div>`;
+    const lines = [lsItem('활동', h.activity), lsItem('시간', h.duration), lsItem('만족도', h.satisfaction?(h.satisfaction+' / 5'):''), lsItem('메모', h.memo)].join('');
+    return `<div class="log-summary"><div class="ls-items">${lines}</div></div>`;
   }
 
   // ---------- 인쇄창: 오늘 시간계획표 배너 (기록탭 시간계획과 연동) ----------
@@ -3847,7 +3836,7 @@
   };
   // 배너 기본 규격: 인쇄탭의 모든 배너는 "중형(medium)"이 기본값이고, 달력과 마인드맵만
   // 예외적으로 기존 그대로(소형)를 유지합니다.
-  const REPORT_DEFAULT_SIZE = { todayplan:'medium', todayhabit:'medium', goalchart:'medium', todaychecklist:'medium', logsum:'medium', timetable:'medium', diary:'medium', relationships:'medium', mindmap:'small', calendar:'small' };
+  const REPORT_DEFAULT_SIZE = { todayplan:'medium', todayhabit:'medium', goalchart:'medium', todaychecklist:'medium', condition:'medium', health:'medium', dailysummary:'medium', relationships:'medium', assets:'medium', career:'medium', hobby:'medium', timetable:'medium', diary:'medium', mindmap:'small', calendar:'small' };
   function reportBlock(pid, innerHtml, size){
     size = size || REPORT_DEFAULT_SIZE[pid] || 'small';
     const sizeButtons = Object.keys(REPORT_SIZE_PRESETS).map(key => {
@@ -3915,20 +3904,74 @@
             <div class="report-panel">
               ${reportPanelShape(2)}
               <div class="rp-head">
-                <div class="rp-title">📅 오늘의 계획 체크리스트</div>
+                <div class="rp-title">📅 계획 체크리스트</div>
                 <span class="rp-pct-pill">${dStats.pct}%</span>
               </div>
               ${renderReportChecklist(allPlans.daily && allPlans.daily[todayStr()])}
             </div>`, sizeFor('todaychecklist'))}
 
-            ${reportBlock('logsum', `
+            ${reportBlock('condition', `
             <div class="report-panel">
               ${reportPanelShape(0)}
               <div class="rp-head">
-                <div class="rp-title">🗂 오늘의 전체 기록 <span style="font-weight:400;color:var(--ink-soft);font-size:10.5px;">— 기록 탭에 입력한 내용</span></div>
+                <div class="rp-title">🌤 컨디션 <span style="font-weight:400;color:var(--ink-soft);font-size:10.5px;">— 기록 탭에 입력한 내용</span></div>
               </div>
-              ${renderReportLogSummary(allLogs[todayStr()])}
-            </div>`, sizeFor('logsum'))}
+              ${renderReportCondition(allLogs[todayStr()])}
+            </div>`, sizeFor('condition'))}
+
+            ${reportBlock('health', `
+            <div class="report-panel">
+              ${reportPanelShape(1)}
+              <div class="rp-head">
+                <div class="rp-title">🍽 건강·식단 <span style="font-weight:400;color:var(--ink-soft);font-size:10.5px;">— 기록 탭에 입력한 내용</span></div>
+              </div>
+              ${renderReportHealth(allLogs[todayStr()])}
+            </div>`, sizeFor('health'))}
+
+            ${reportBlock('dailysummary', `
+            <div class="report-panel">
+              ${reportPanelShape(2)}
+              <div class="rp-head">
+                <div class="rp-title">📔 하루 정리 <span style="font-weight:400;color:var(--ink-soft);font-size:10.5px;">— 기록 탭에 입력한 내용</span></div>
+              </div>
+              ${renderReportDailySummary(allLogs[todayStr()])}
+            </div>`, sizeFor('dailysummary'))}
+
+            ${reportBlock('relationships', `
+            <div class="report-panel">
+              ${reportPanelShape(0)}
+              <div class="rp-head">
+                <div class="rp-title">🤝 인간관계 <span style="font-weight:400;color:var(--ink-soft);font-size:10.5px;">— 기록 탭에 입력한 내용</span></div>
+              </div>
+              ${renderReportRelationshipsToday(allLogs[todayStr()])}
+            </div>`, sizeFor('relationships'))}
+
+            ${reportBlock('assets', `
+            <div class="report-panel">
+              ${reportPanelShape(1)}
+              <div class="rp-head">
+                <div class="rp-title">💰 자산·투자 <span style="font-weight:400;color:var(--ink-soft);font-size:10.5px;">— 기록 탭에 입력한 내용</span></div>
+              </div>
+              ${renderReportAssets(allLogs[todayStr()])}
+            </div>`, sizeFor('assets'))}
+
+            ${reportBlock('career', `
+            <div class="report-panel">
+              ${reportPanelShape(2)}
+              <div class="rp-head">
+                <div class="rp-title">💼 직업 <span style="font-weight:400;color:var(--ink-soft);font-size:10.5px;">— 기록 탭에 입력한 내용</span></div>
+              </div>
+              ${renderReportCareer(allLogs[todayStr()])}
+            </div>`, sizeFor('career'))}
+
+            ${reportBlock('hobby', `
+            <div class="report-panel">
+              ${reportPanelShape(0)}
+              <div class="rp-head">
+                <div class="rp-title">🎨 취미 <span style="font-weight:400;color:var(--ink-soft);font-size:10.5px;">— 기록 탭에 입력한 내용</span></div>
+              </div>
+              ${renderReportHobby(allLogs[todayStr()])}
+            </div>`, sizeFor('hobby'))}
 
             ${reportBlock('timetable', `
             <div class="report-panel">
@@ -3947,15 +3990,6 @@
               </div>
               ${renderReportDiary(allLogs[todayStr()])}
             </div>`, sizeFor('diary'))}
-
-            ${reportBlock('relationships', `
-            <div class="report-panel">
-              ${reportPanelShape(0)}
-              <div class="rp-head">
-                <div class="rp-title">🗂 인간관계 기록 모아보기 <span style="font-weight:400;color:var(--ink-soft);font-size:10.5px;">— 기록탭 인간관계와 연동</span></div>
-              </div>
-              <div id="reportRelTableWrap"></div>
-            </div>`, sizeFor('relationships'))}
           </div>
 
           <!-- 달력·마인드맵: 계획탭처럼 본문 오른쪽에 따로 배치, 내용이 잘리지 않도록 자동 높이 -->
@@ -4000,7 +4034,6 @@
     // 저장된 배너 순서가 있으면 먼저 적용한 뒤 나머지를 초기화합니다.
     applyReportOrder();
     renderGoalChartPanel();
-    renderRelationshipsTable('reportRelTableWrap');
     bindCalNav('Report');
     bindDayEventAdd('Report');
     renderCalendar('Report');
@@ -4024,8 +4057,8 @@
 
   // ================= 설정 탭: 테마 선택 + 인쇄탭 배너 배치 =================
   // 원래 인쇄탭 첫머리에 있던 "테마" 배너를 설정 탭으로 옮겼고, 인쇄탭 배너의
-  // 배치 저장·초기화 컨트롤도 계속 이곳에서 관리합니다. (오늘의 완료 현황판과
-  // 인간관계 기록 모아보기는 다시 인쇄탭으로 옮겨졌습니다.)
+  // 배치 저장·초기화 컨트롤도 계속 이곳에서 관리합니다. (오늘의 완료 현황판은
+  // 다시 인쇄탭으로 옮겨졌습니다. 인간관계 기록 모아보기 배너는 인쇄탭에서 제거되었습니다.)
   function renderSettingsView(){
     const wrap = $('settingsView');
     wrap.innerHTML = `
