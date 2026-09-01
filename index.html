@@ -1258,62 +1258,28 @@
         <button type="button" class="timeline-today-btn" id="planTimelineToday">오늘로</button>
       </div>
 
-      <div class="plan-layout">
-        <div class="plan-main">
+      <div class="cat-section">
+        <div class="cat-title">📝 계획입력</div>
+        <div class="plan-cat-grid" id="planCatGrid"></div>
+      </div>
 
-          <div class="cat-section">
-            <div class="cat-title">🎯 카테고리별 목표</div>
-            <div class="plan-cat-grid" id="planCatGrid"></div>
-          </div>
-
-          <div class="plan-todo-habit-row">
-            <div class="cat-section">
-              <div class="cat-title">✅ 할일 계획</div>
-              <div class="row-hint">이 기간 동안 해야 할 일들을 적어보세요</div>
-              <div class="list-rows" id="planTodoRows"></div>
-              <button class="add-row-btn" id="planAddTodo">+ 할일 추가</button>
-            </div>
-
-            <div class="cat-section">
-              <div class="cat-title">🔁 습관 계획</div>
-              <div class="row-hint">목표 빈도를 함께 적어보세요 (예: 주 3회)</div>
-              <div class="list-rows" id="planHabitRows"></div>
-              <button class="add-row-btn" id="planAddHabit">+ 습관 목표 추가</button>
-            </div>
-          </div>
-
-          <div class="footer-note">draft v0.4 · 계획 데이터는 기록과 별도로 저장됩니다</div>
+      <div class="plan-todo-habit-row">
+        <div class="cat-section">
+          <div class="cat-title">✅ 할일 계획</div>
+          <div class="row-hint">이 기간 동안 해야 할 일들을 적어보세요</div>
+          <div class="list-rows" id="planTodoRows"></div>
+          <button class="add-row-btn" id="planAddTodo">+ 할일 추가</button>
         </div>
 
-        <!-- 달력: 계획 본문 오른쪽에 배치, 클릭해서 날짜 수정 -->
-        <div class="plan-side">
-          <div class="cat-section" id="calendarView">
-            <div class="cal-header">
-              <button class="nav-btn" id="calPrevMonth">◀</button>
-              <div class="cal-title mono" id="calTitle">2026년 8월</div>
-              <button class="nav-btn" id="calNextMonth">▶</button>
-            </div>
-            <div class="cal-legend">
-              <div class="cal-legend-item"><span class="cal-swatch filled"></span>작성함</div>
-              <div class="cal-legend-item"><span class="cal-swatch empty"></span>작성 안함</div>
-              <div class="cal-legend-item"><span style="width:13px;height:13px;border-radius:4px;border:1.5px solid var(--safety);"></span>오늘</div>
-            </div>
-            <div class="cal-grid" id="calWeekdays"></div>
-            <div class="cal-grid" id="calDays" style="margin-top:6px;"></div>
-
-            <!-- 구글 캘린더처럼: 선택한 날짜의 일정을 아래에서 바로 추가/수정 -->
-            <div class="day-events">
-              <div class="de-title" id="dayEventsTitle">일정</div>
-              <div id="dayEventsList"></div>
-              <div class="de-add-row">
-                <button type="button" class="add-row-btn" id="dayEventAdd">+ 일정 추가</button>
-              </div>
-            </div>
-          </div>
+        <div class="cat-section">
+          <div class="cat-title">🔁 습관 계획</div>
+          <div class="row-hint">목표 빈도를 함께 적어보세요 (예: 주 3회)</div>
+          <div class="list-rows" id="planHabitRows"></div>
+          <button class="add-row-btn" id="planAddHabit">+ 습관 목표 추가</button>
         </div>
       </div>
 
-      <div class="footer-note">draft v0.4 · 데이터는 이 계정에 개인 저장됩니다</div>
+      <div class="footer-note">draft v0.4 · 데이터는 이 계정에 개인 저장됩니다 (계획 데이터는 기록과 별도로 저장됩니다)</div>
     </div>
 
     <!-- ===== LIST VIEW (목록 · 엑셀형식 리스트) ===== -->
@@ -2697,6 +2663,7 @@
   function createEmptyPlan(){
     return {
       categories: { thoughts:'', health:'', relationships:'', assets:'', career:'', hobby:'' },
+      catPlans: { thoughts:[], health:[], relationships:[], assets:[], career:[], hobby:[] },
       targets: {
         thoughts:{start:'',end:''}, health:{start:'',end:''}, relationships:{start:'',end:''},
         assets:{start:'',end:''}, career:{start:'',end:''}, hobby:{start:'',end:''}
@@ -2790,7 +2757,8 @@
         PLAN_CATS.forEach(c => {
           const t = pl.targets[c.key];
           if(t && t.start && t.end && t.end >= t.start){
-            const firstLine = (pl.categories[c.key]||'').split('\n')[0].trim();
+            const items = (pl.catPlans && pl.catPlans[c.key]) || [];
+            const firstLine = items.length ? items[0].content : (pl.categories[c.key]||'').split('\n')[0].trim();
             ranges.push({
               id: period+'|'+key+'|'+c.key,
               label: c.label + (firstLine ? ' · ' + firstLine : ''),
@@ -2905,6 +2873,16 @@
         pl.targets[c.key] = { start:'', end: (typeof t === 'string' ? t : '') };
       }
     });
+    if(!pl.catPlans) pl.catPlans = {};
+    PLAN_CATS.forEach(c => {
+      if(!Array.isArray(pl.catPlans[c.key])) pl.catPlans[c.key] = [];
+      // 예전 방식(카테고리 하나에 텍스트 한 덩어리)으로 저장된 내용이 있고 아직 목록으로
+      // 옮겨지지 않았다면, 줄 단위로 나눠 항목 목록으로 한 번만 옮겨둡니다.
+      if(pl.catPlans[c.key].length === 0 && pl.categories && pl.categories[c.key] && pl.categories[c.key].trim()){
+        pl.catPlans[c.key] = pl.categories[c.key].split('\n').map(s => s.trim()).filter(Boolean)
+          .map(s => ({ content:s, done:false, due:'' }));
+      }
+    });
     return pl;
   }
   function getPlan(){
@@ -2956,15 +2934,20 @@
           <span class="pt-label">시작일</span><input type="date" class="pt-date" data-cat="${c.key}" data-f="start" value="${t.start}" />
           <span class="pt-label">목표일</span><input type="date" class="pt-date" data-cat="${c.key}" data-f="end" value="${t.end}" />
         </div>
-        <textarea rows="5" data-cat="${c.key}" placeholder="${c.label.replace(/^[^ ]+ /,'')} 목표 — 여기 적은 내용이 이 카테고리의 계획으로 저장됩니다">${escapeAttr(plan.categories[c.key])}</textarea>
-        <div class="row-hint">시작일 · 목표일을 지정하면 인쇄탭 달력에 이 카테고리의 일정으로 자동 표시돼요</div>
+        <div class="row-hint">이 카테고리의 계획을 한 줄씩 추가해보세요</div>
+        <div class="list-rows" id="planCatItemRows"></div>
+        <button type="button" class="add-row-btn" id="planCatAddBtn">+ 계획 추가</button>
       </div>`;
+    renderGenericRows('planCatItemRows', plan.catPlans[c.key], false);
     $('planCatSelect').addEventListener('change', e => {
       planCatSelectedKey = e.target.value;
       renderPlanCatGrid();
     });
-    wrap.querySelectorAll('textarea[data-cat]').forEach(ta => {
-      ta.addEventListener('input', () => { getPlan().categories[ta.dataset.cat] = ta.value; queuePlanSave(); });
+    $('planCatAddBtn').addEventListener('click', () => {
+      const plan2 = getPlan();
+      plan2.catPlans[c.key].push({ content:'', done:false, due:'' });
+      renderGenericRows('planCatItemRows', plan2.catPlans[c.key], false);
+      queuePlanSave();
     });
     wrap.querySelectorAll('input.pt-date').forEach(inp => {
       inp.addEventListener('change', () => {
@@ -3975,11 +3958,6 @@
               <div class="report-cal-shrink">
                 <div class="cal-grid" id="calWeekdaysReport"></div>
                 <div class="cal-grid" id="calDaysReport" style="margin-top:6px;"></div>
-                <div class="day-events">
-                  <div class="de-title" id="dayEventsTitleReport">일정</div>
-                  <div id="dayEventsListReport"></div>
-                  <div class="de-add-row"><button type="button" class="add-row-btn" id="dayEventAddReport">+ 일정 추가</button></div>
-                </div>
               </div>
             </div>`, sizeFor('calendar'))}
 
