@@ -933,7 +933,6 @@
   <nav class="side-tabs">
     <div class="side-tab active" id="tabReportBtn"><span class="icon"><svg viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M5 3.5h7l3 3V16a.5.5 0 0 1-.5.5h-9A.5.5 0 0 1 5 16V4a.5.5 0 0 1 0-.5Z" stroke="currentColor" stroke-width="1.6" stroke-linejoin="round"/><path d="M12 3.5V6a1 1 0 0 0 1 1h2.5" stroke="currentColor" stroke-width="1.6" stroke-linejoin="round"/><path d="M7.3 12v-2.2M10 12V8.3M12.7 12v-3.4" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/></svg></span>인쇄</div>
     <div class="side-tab" id="tabLogBtn"><span class="icon"><svg viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M12.3 3.3a1.2 1.2 0 0 1 1.7 0l1.7 1.7a1.2 1.2 0 0 1 0 1.7L7.3 15.1l-3.6.6.6-3.6 8-8Z" stroke="currentColor" stroke-width="1.6" stroke-linejoin="round"/><path d="M10.8 4.8l2.4 2.4" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/></svg></span>기록</div>
-    <div class="side-tab" id="tabPlanBtn"><span class="icon"><svg viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg"><circle cx="10" cy="10" r="6.3" stroke="currentColor" stroke-width="1.6"/><circle cx="10" cy="10" r="3.4" stroke="currentColor" stroke-width="1.6"/><circle cx="10" cy="10" r="0.9" fill="currentColor"/></svg></span>계획</div>
     <div class="side-tab" id="tabListBtn"><span class="icon"><svg viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M6.6 5.5h8.4M6.6 10h8.4M6.6 14.5h8.4" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/><circle cx="3.7" cy="5.5" r="0.95" fill="currentColor"/><circle cx="3.7" cy="10" r="0.95" fill="currentColor"/><circle cx="3.7" cy="14.5" r="0.95" fill="currentColor"/></svg></span>목록</div>
     <div class="side-tab" id="tabSettingsBtn"><span class="icon"><svg viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg"><circle cx="10" cy="10" r="2.6" stroke="currentColor" stroke-width="1.6"/><path d="M10 3.2v1.9M10 14.9v1.9M16.8 10h-1.9M5.1 10H3.2M14.8 5.2l-1.3 1.3M6.5 13.5l-1.3 1.3M14.8 14.8l-1.3-1.3M6.5 6.5L5.2 5.2" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/></svg></span>설정</div>
   </nav>
@@ -1215,18 +1214,7 @@
         </div>
       </div>
 
-      <div class="footer-note">draft v0.4 · 데이터는 이 계정에 개인 저장됩니다</div>
-    </div>
-
-    <!-- ===== PLAN VIEW ===== -->
-    <div id="planView" style="display:none;">
-      <div class="header">
-        <div class="brand">
-          <div class="logo">hb<span>◆</span>rad</div>
-          <div class="tagline">계획 · 일간/주간/월간/연간 목표</div>
-        </div>
-      </div>
-
+      <!-- ===== 계획 (구 계획탭 내용을 기록탭으로 이동) ===== -->
       <div class="plan-nav">
         <button class="nav-btn" id="planPrevBtn">◀</button>
         <div class="plan-label mono" id="planLabel"></div>
@@ -1298,7 +1286,7 @@
           <div class="footer-note">draft v0.4 · 계획 데이터는 기록과 별도로 저장됩니다</div>
         </div>
 
-        <!-- 달력: 별도 탭이 아닌 계획 본문 오른쪽에 배치, 클릭해서 날짜 수정 -->
+        <!-- 달력: 계획 본문 오른쪽에 배치, 클릭해서 날짜 수정 -->
         <div class="plan-side">
           <div class="cat-section" id="calendarView">
             <div class="cal-header">
@@ -1325,6 +1313,8 @@
           </div>
         </div>
       </div>
+
+      <div class="footer-note">draft v0.4 · 데이터는 이 계정에 개인 저장됩니다</div>
     </div>
 
     <!-- ===== LIST VIEW (목록 · 엑셀형식 리스트) ===== -->
@@ -1903,7 +1893,7 @@
     planMonth = dateStr.slice(0, 7);
     planYear = sy;
     renderAllCalendars();
-    if($('planView').style.display !== 'none') renderPlanView();
+    if($('logView').style.display !== 'none') renderPlanView();
   }
 
   function renderAll(){
@@ -2323,7 +2313,7 @@
     wrap.innerHTML = html;
 
     const goBtn = $('mwGoToPlan');
-    if(goBtn) goBtn.addEventListener('click', () => switchView('plan'));
+    if(goBtn) goBtn.addEventListener('click', () => switchView('log'));
 
     wrap.querySelectorAll('.mw-row .row-check').forEach(cb => {
       cb.addEventListener('click', () => {
@@ -2467,25 +2457,22 @@
     }
     $('reportView').style.display = view === 'report' ? '' : 'none';
     $('logView').style.display = view === 'log' ? '' : 'none';
-    $('planView').style.display = view === 'plan' ? '' : 'none';
     $('listView').style.display = view === 'list' ? '' : 'none';
     $('settingsView').style.display = view === 'settings' ? '' : 'none';
     $('tabReportBtn').classList.toggle('active', view === 'report');
     $('tabLogBtn').classList.toggle('active', view === 'log');
-    $('tabPlanBtn').classList.toggle('active', view === 'plan');
     $('tabListBtn').classList.toggle('active', view === 'list');
     $('tabSettingsBtn').classList.toggle('active', view === 'settings');
     if(view === 'report'){
       renderReportView();
     }
-    if(view === 'plan'){
-      // 계획 뷰 안에 달력이 함께 있으므로, 계획 뷰로 올 때마다 오늘/선택 날짜 기준으로 달력도 함께 갱신합니다.
+    if(view === 'log'){
+      // 계획 내용(구 계획탭)이 기록탭 안에 함께 있으므로, 기록 탭으로 올 때마다
+      // 오늘/선택 날짜 기준으로 달력·계획도 함께 갱신합니다.
       const [y,m] = currentDate.split('-').map(Number);
       calYear = y; calMonth = m-1;
       renderAllCalendars();
       renderPlanView();
-    }
-    if(view === 'log'){
       renderMindmapRecordList();
     }
     if(view === 'list'){
@@ -2500,7 +2487,6 @@
   }
   $('tabReportBtn').addEventListener('click', () => switchView('report'));
   $('tabLogBtn').addEventListener('click', () => switchView('log'));
-  $('tabPlanBtn').addEventListener('click', () => switchView('plan'));
   $('tabListBtn').addEventListener('click', () => switchView('list'));
   $('tabSettingsBtn').addEventListener('click', () => switchView('settings'));
   bindCalNav('');
