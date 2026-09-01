@@ -1101,65 +1101,73 @@
 
         <!-- 오른쪽 컬럼 -->
         <div class="log-col" id="logColRight">
-          <!-- 건강 -->
-          <div class="cat-section" data-cat="health" draggable="true">
-            <div class="cat-title">❤️ 건강<span class="drag-handle" title="끌어서 이동">⠿</span></div>
-
-            <div class="wake-sleep-row">
-              <div class="ws-box"><span class="ws-icon">🌅</span><div style="flex:1;"><div class="ws-label">기상시간</div><input type="time" id="wakeTime" /></div></div>
-              <div class="ws-box"><span class="ws-icon">🌙</span><div style="flex:1;"><div class="ws-label">취침시간</div><input type="time" id="sleepTime" /></div></div>
-            </div>
-
-            <div class="field-grid" style="margin-bottom:8px;">
-              <div class="field"><label>전일점수</label><input type="number" id="scoreYesterday" min="0" max="100" placeholder="0-100" /></div>
-              <div class="field"><label>오늘점수</label><input type="number" id="scoreToday" min="0" max="100" placeholder="0-100" /></div>
-            </div>
-            <div class="field">
-              <label>컨디션</label>
-              <div class="score-row" id="conditionRow"></div>
-            </div>
-            <div class="field-grid" style="margin-bottom:8px;">
+          <!-- 건강: 컨디션 / 운동 / 식사 / 영양제 / 체성분·총평 각각 별도 배너로 분리 -->
+          <div class="log-dashed-group" data-cat="health" draggable="true">
+            <div class="cat-section" data-cat="health">
+              <div class="cat-title">🌤 컨디션<span class="drag-handle" title="끌어서 이동">⠿</span></div>
+              <div class="wake-sleep-row">
+                <div class="ws-box"><span class="ws-icon">🌅</span><div style="flex:1;"><div class="ws-label">기상시간</div><input type="time" id="wakeTime" /></div></div>
+                <div class="ws-box"><span class="ws-icon">🌙</span><div style="flex:1;"><div class="ws-label">취침시간</div><input type="time" id="sleepTime" /></div></div>
+              </div>
+              <div class="field-grid" style="margin-bottom:8px;">
+                <div class="field"><label>전일점수</label><input type="number" id="scoreYesterday" min="0" max="100" placeholder="0-100" /></div>
+                <div class="field"><label>오늘점수</label><input type="number" id="scoreToday" min="0" max="100" placeholder="0-100" /></div>
+              </div>
               <div class="field">
-                <label>운동여부</label>
-                <div class="toggle-row">
-                  <button type="button" class="toggle-btn" id="exYes">예</button>
-                  <button type="button" class="toggle-btn" id="exNo">아니오</button>
+                <label>컨디션</label>
+                <div class="score-row" id="conditionRow"></div>
+              </div>
+            </div>
+
+            <div class="cat-section" data-cat="health">
+              <div class="cat-title">🏋️ 운동</div>
+              <div class="field-grid" style="margin-bottom:8px;">
+                <div class="field">
+                  <label>운동여부</label>
+                  <div class="toggle-row">
+                    <button type="button" class="toggle-btn" id="exYes">예</button>
+                    <button type="button" class="toggle-btn" id="exNo">아니오</button>
+                  </div>
+                </div>
+                <div class="field"><label>운동종류</label><input type="text" id="exerciseType" placeholder="예: 러닝, 웨이트" /></div>
+                <div class="field">
+                  <label>운동강도</label>
+                  <select id="exerciseIntensity">
+                    <option value="">선택</option><option value="낮음">낮음</option><option value="보통">보통</option><option value="높음">높음</option>
+                  </select>
                 </div>
               </div>
-              <div class="field"><label>운동종류</label><input type="text" id="exerciseType" placeholder="예: 러닝, 웨이트" /></div>
-              <div class="field">
-                <label>운동강도</label>
-                <select id="exerciseIntensity">
-                  <option value="">선택</option><option value="낮음">낮음</option><option value="보통">보통</option><option value="높음">높음</option>
-                </select>
+              <div class="sub-title">🏋️ 운동루틴</div>
+              <div class="row-hint">루틴 / 자극부위 / 방법 / 중량 / 회수 / 비고(추가 기입)</div>
+              <div class="field-rows" id="healthExerciseRows"></div>
+              <button type="button" class="add-row-btn" id="healthExerciseAdd">+ 운동루틴 추가</button>
+            </div>
+
+            <div class="cat-section" data-cat="health">
+              <div class="cat-title">🍽 식사</div>
+              <div class="row-hint">식사루틴 / 내용 / 탄수화물 / 단백질 / 지방 / 당 을 한 줄씩 기록</div>
+              <div class="field-rows" id="healthMealRows"></div>
+              <button type="button" class="add-row-btn" id="healthMealAdd">+ 식사 추가</button>
+            </div>
+
+            <div class="cat-section" data-cat="health">
+              <div class="cat-title">💊 영양제</div>
+              <div class="row-hint">조제 날짜 / 영양성분 / 브랜드 / 영양제 명칭</div>
+              <div class="field-rows" id="healthSuppRows"></div>
+              <button type="button" class="add-row-btn" id="healthSuppAdd">+ 영양제 추가</button>
+            </div>
+
+            <div class="cat-section" data-cat="health">
+              <div class="cat-title">📏 체성분 · 총평</div>
+              <div class="field-grid" style="margin-bottom:8px;">
+                <div class="field"><label>체지방(%)</label><input type="text" id="bodyFat" placeholder="예: 18.5" /></div>
+                <div class="field"><label>골격근량(kg)</label><input type="text" id="bodyMuscle" placeholder="예: 31.2" /></div>
+                <div class="field"><label>체중(kg)</label><input type="text" id="bodyWeight" placeholder="예: 68.4" /></div>
               </div>
-            </div>
-
-            <div class="sub-title">🍽 섭식 · 식사루틴</div>
-            <div class="row-hint">식사루틴 / 내용 / 탄수화물 / 단백질 / 지방 / 당 을 한 줄씩 기록</div>
-            <div class="field-rows" id="healthMealRows"></div>
-            <button type="button" class="add-row-btn" id="healthMealAdd">+ 식사 추가</button>
-
-            <div class="sub-title">💊 섭식 · 영양제</div>
-            <div class="row-hint">조제 날짜 / 영양성분 / 브랜드 / 영양제 명칭</div>
-            <div class="field-rows" id="healthSuppRows"></div>
-            <button type="button" class="add-row-btn" id="healthSuppAdd">+ 영양제 추가</button>
-
-            <div class="sub-title">📏 관리 · 체지방 / 골격근량 / 체중</div>
-            <div class="field-grid" style="margin-bottom:8px;">
-              <div class="field"><label>체지방(%)</label><input type="text" id="bodyFat" placeholder="예: 18.5" /></div>
-              <div class="field"><label>골격근량(kg)</label><input type="text" id="bodyMuscle" placeholder="예: 31.2" /></div>
-              <div class="field"><label>체중(kg)</label><input type="text" id="bodyWeight" placeholder="예: 68.4" /></div>
-            </div>
-
-            <div class="sub-title">🏋️ 관리 · 운동루틴</div>
-            <div class="row-hint">루틴 / 자극부위 / 방법 / 중량 / 회수 / 비고(추가 기입)</div>
-            <div class="field-rows" id="healthExerciseRows"></div>
-            <button type="button" class="add-row-btn" id="healthExerciseAdd">+ 운동루틴 추가</button>
-
-            <div class="field-grid" style="margin-top:6px;">
-              <div class="field"><label>총평</label><input type="text" id="healthTotal" placeholder="오늘 건강 총평 / 요약" /></div>
-              <div class="field"><label>부족영양</label><input type="text" id="healthDeficient" placeholder="부족한 영양소" /></div>
+              <div class="field-grid">
+                <div class="field"><label>총평</label><input type="text" id="healthTotal" placeholder="오늘 건강 총평 / 요약" /></div>
+                <div class="field"><label>부족영양</label><input type="text" id="healthDeficient" placeholder="부족한 영양소" /></div>
+              </div>
             </div>
           </div>
 
