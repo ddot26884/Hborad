@@ -302,25 +302,8 @@
   /* 일기: 생각/질문/감상/키워드 각각의 "주제+내용" 묶음을 점선으로 구분 */
   .diary-subfield{ padding-bottom:8px; margin-bottom:8px; border-bottom:1px dashed var(--line); }
   .diary-subfield:last-child{ border-bottom:none; margin-bottom:0; padding-bottom:0; }
-  /* 생각 배너: 주제+생각 / 주제+질문 / 주제+감상 / 키워드 네 카드를 통일된 형태로 구분 */
-  .thought-subcard{
-    position:relative; padding:9px 10px 8px 12px; margin-bottom:8px;
-    background:var(--paper-2); border:1px solid var(--line); border-left:3px solid var(--teal);
-    border-radius:0 7px 7px 0;
-  }
-  .thought-subcard:last-child{ margin-bottom:0; }
-  .thought-subcard[data-kind="question"]{ border-left-color:var(--purple); }
-  .thought-subcard[data-kind="impression"]{ border-left-color:var(--pink); }
-  .thought-subcard[data-kind="keyword"]{ border-left-color:var(--yellow); }
-  .thought-subcard .field{ margin-bottom:6px; }
-  .thought-subcard .field:last-child{ margin-bottom:0; }
-  .ts-badge{
-    display:inline-block; font-family:'JetBrains Mono', monospace; font-weight:700; font-size:9.5px;
-    color:var(--teal); background:var(--teal-soft); border-radius:20px; padding:2px 8px; margin-bottom:6px; letter-spacing:0.3px;
-  }
-  .thought-subcard[data-kind="question"] .ts-badge{ color:var(--purple); background:var(--purple-soft); }
-  .thought-subcard[data-kind="impression"] .ts-badge{ color:var(--pink); background:var(--pink-soft); }
-  .thought-subcard[data-kind="keyword"] .ts-badge{ color:#B4870C; background:var(--yellow); background-color:#FFF3D2; }
+  /* 생각 배너: 주제+생각 / 주제+질문 / 주제+감상 / 키워드 네 묶음을 다른 배너와 동일하게
+     point-dashed 구분선(.diary-subfield)만으로 나눕니다(색깔 카드/배지 없이 통일). */
   .field:last-child{ margin-bottom:0; }
   .field label{ font-size:10px; color:var(--ink-soft); font-family:'JetBrains Mono', monospace; letter-spacing:0.2px; }
   .field input[type=text], .field input[type=number], .field input[type=time], .field select, textarea{
@@ -412,26 +395,37 @@
   .list-row input.due-input{ flex:0 0 128px; font-family:'JetBrains Mono', monospace; font-size:11.5px; padding:6px 7px; border:1.5px solid var(--line); border-radius:6px; background:var(--paper); }
   .list-row .row-dday{ flex-shrink:0; margin-left:0; }
   .ongoing-plan-section .report-empty{ padding:2px 0; }
-  /* ---------- 계획: 연간 현황 세로막대 그래프 (목표일 배너 상단, 오늘이 속한 달 강조) ---------- */
+  /* ---------- 계획: 365일 진행률 히트맵 (목표일 배너 상단, 잔디밭 스타일로 하루하루의 기록 여부를 표시) ---------- */
   .year-grid-head{ display:flex; align-items:center; justify-content:space-between; margin-bottom:8px; flex-wrap:wrap; gap:4px; }
   .year-grid-head .yg-title{ font-family:'JetBrains Mono', monospace; font-size:11.5px; font-weight:700; color:var(--ink); display:inline-flex; align-items:center; gap:4px; }
   .year-grid-head .yg-today{ font-family:'JetBrains Mono', monospace; font-size:10.5px; font-weight:700; color:var(--safety-dark); background:var(--accent-soft); padding:2px 8px; border-radius:20px; }
-  .year-grid{
-    display:flex; align-items:flex-end; gap:6px; height:150px;
-    margin-bottom:12px; padding:10px 4px 0; border-bottom:1.5px dashed var(--line);
+  .year-heatmap-scroll{
+    overflow-x:auto; overflow-y:hidden; padding:2px 4px 12px; margin-bottom:6px; border-bottom:1.5px dashed var(--line);
   }
-  .year-bar-col{ flex:1; min-width:0; height:100%; display:flex; flex-direction:column; align-items:center; gap:5px; cursor:pointer; }
-  .year-bar-track{
-    flex:1; width:100%; max-width:22px; background:var(--paper-2); border:1px solid var(--line);
-    border-radius:5px 5px 3px 3px; display:flex; flex-direction:column-reverse; overflow:hidden; box-sizing:border-box;
+  .year-heatmap-grid{
+    display:grid; grid-template-rows:13px repeat(7, 11px); grid-auto-columns:11px; grid-auto-flow:column;
+    gap:3px; width:max-content;
   }
-  .year-bar-fill{ width:100%; background:var(--teal); transition:height .2s ease; }
-  .year-bar-col.is-future .year-bar-fill{ background:transparent; }
-  .year-bar-col.is-current .year-bar-track{ border-color:var(--safety-dark); box-shadow:0 0 0 2px var(--accent-soft); }
-  .year-bar-col.is-current .year-bar-fill{ background:var(--safety); }
-  .year-bar-mlabel{ font-family:'JetBrains Mono', monospace; font-size:9px; color:var(--ink-soft); white-space:nowrap; }
-  .year-bar-col.is-current .year-bar-mlabel{ color:var(--safety-dark); font-weight:700; }
-  @media (max-width:700px){ .year-grid{ height:110px; gap:3px; } .year-bar-mlabel{ font-size:7.5px; } }
+  .year-heatmap-month{
+    font-family:'JetBrains Mono', monospace; font-size:9px; color:var(--ink-soft); align-self:end; white-space:nowrap;
+  }
+  .year-heatmap-cell{
+    width:11px; height:11px; border-radius:3px; background:var(--paper-2); border:1px solid var(--line);
+    cursor:pointer; box-sizing:border-box;
+  }
+  .year-heatmap-cell.lvl-1{ background:var(--accent); opacity:.28; border-color:transparent; }
+  .year-heatmap-cell.lvl-2{ background:var(--accent); opacity:.52; border-color:transparent; }
+  .year-heatmap-cell.lvl-3{ background:var(--accent); opacity:.76; border-color:transparent; }
+  .year-heatmap-cell.lvl-4{ background:var(--accent); opacity:1; border-color:transparent; }
+  .year-heatmap-cell.is-future{ background:transparent; border-style:dashed; cursor:default; }
+  .year-heatmap-cell.is-today{ outline:1.5px solid var(--safety-dark); outline-offset:1px; }
+  .year-heatmap-legend{ display:flex; align-items:center; gap:5px; font-family:'JetBrains Mono', monospace; font-size:9.5px; color:var(--ink-soft); margin:-4px 0 12px; flex-wrap:wrap; }
+  .year-heatmap-legend .yhl-swatch{ width:11px; height:11px; border-radius:3px; background:var(--paper-2); border:1px solid var(--line); box-sizing:border-box; }
+  .year-heatmap-legend .yhl-swatch.lvl-1{ background:var(--accent); opacity:.28; border-color:transparent; }
+  .year-heatmap-legend .yhl-swatch.lvl-2{ background:var(--accent); opacity:.52; border-color:transparent; }
+  .year-heatmap-legend .yhl-swatch.lvl-3{ background:var(--accent); opacity:.76; border-color:transparent; }
+  .year-heatmap-legend .yhl-swatch.lvl-4{ background:var(--accent); opacity:1; border-color:transparent; }
+  @media (max-width:700px){ .year-heatmap-grid{ grid-template-rows:12px repeat(7, 10px); grid-auto-columns:10px; } .year-heatmap-cell{ width:10px; height:10px; } }
   /* ---------- 계획: 카테고리별 목표 카드에 개별 할일 추가 버튼 ---------- */
   .plan-cat-add-btn{ margin-top:7px; font-size:10.5px; padding:5px 10px; width:100%; }
 
@@ -743,8 +737,13 @@
   .report-hero .rh-date{ font-family:'JetBrains Mono', monospace; font-size:11px; color:var(--ink-soft); margin-top:10px; position:relative; z-index:1; }
   .rd-diary-body{ font-size:12px; line-height:1.6; color:var(--ink); white-space:pre-wrap; }
 
-  .theme-picker{ display:flex; align-items:center; gap:7px; flex-wrap:wrap; margin-top:12px; position:relative; z-index:1; }
+  .theme-picker{ display:flex; align-items:center; gap:7px; flex-wrap:wrap; margin-top:8px; position:relative; z-index:1; }
   .theme-picker .tp-label{ font-family:'JetBrains Mono', monospace; font-size:10px; color:var(--ink-soft); margin-right:2px; }
+  /* ---------- 설정탭 테마 배너: 정순/역순 전환 ---------- */
+  .theme-order-row{ display:flex; align-items:center; justify-content:space-between; gap:8px; flex-wrap:wrap; margin-top:4px; }
+  .theme-order-row .tp-label{ font-family:'JetBrains Mono', monospace; font-size:10px; color:var(--ink-soft); }
+  .theme-order-row .tp-label #themeOrderState{ color:var(--accent-dark); font-weight:700; }
+  #themeOrderToggle{ font-size:11px; padding:5px 9px; }
   .theme-swatch{
     width:26px; height:26px; border-radius:50%; border:2px solid var(--card); cursor:pointer;
     box-shadow:0 0 0 1.5px var(--line); position:relative; flex-shrink:0;
@@ -1008,12 +1007,23 @@
         <div id="planOngoingList"></div>
 
         <div class="plan-divider"></div>
-        <!-- 연간 한눈에 보기: 1년(12개월)을 한번에 볼 수 있는 월별 기록 현황 막대 차트 -->
+        <!-- 365일 진행률: 올해 하루하루의 기록 충실도를 잔디밭(히트맵) 형태로 한눈에 보여주는 차트 -->
         <div class="year-grid-head">
-          <span class="yg-title"><svg class="micon" viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg"><rect x="3.5" y="4.5" width="13" height="11.5" rx="1.5" stroke="currentColor" stroke-width="1.4"/><path d="M3.5 8h13M7 3v3M13 3v3" stroke="currentColor" stroke-width="1.4" stroke-linecap="round"/></svg> 연간 한눈에 보기</span>
+          <span class="yg-title"><svg class="micon" viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg"><rect x="3.5" y="4.5" width="13" height="11.5" rx="1.5" stroke="currentColor" stroke-width="1.4"/><path d="M3.5 8h13M7 3v3M13 3v3" stroke="currentColor" stroke-width="1.4" stroke-linecap="round"/></svg> 365일 진행률</span>
           <span class="yg-today" id="ygTodayBadge">--</span>
         </div>
-        <div class="year-grid" id="yearGlanceGrid"></div>
+        <div class="year-heatmap-scroll">
+          <div class="year-heatmap-grid" id="yearGlanceGrid"></div>
+        </div>
+        <div class="year-heatmap-legend">
+          <span>적음</span>
+          <span class="yhl-swatch"></span>
+          <span class="yhl-swatch lvl-1"></span>
+          <span class="yhl-swatch lvl-2"></span>
+          <span class="yhl-swatch lvl-3"></span>
+          <span class="yhl-swatch lvl-4"></span>
+          <span>많음</span>
+        </div>
 
         <div class="plan-divider"></div>
         <div class="plan-cat-grid" id="planCatGrid"></div>
@@ -1102,26 +1112,23 @@
             </div>
           </div>
 
-          <!-- 생각: 주제+생각 / 주제+질문 / 주제+감상 / 키워드 네 가지로 통일된 카드 형태로 구분. 다른 항목들과 묶이지 않고 독립된 배너로 분리 -->
+          <!-- 생각: 주제+생각 / 주제+질문 / 주제+감상 / 키워드 네 가지를, 다른 배너와 동일한 형태(점선 구분)로 나눕니다.
+               다른 항목들과 묶이지 않고 독립된 배너로 분리 -->
           <div class="cat-section" data-cat="thoughts-note" draggable="true">
             <div class="cat-title"><svg class="micon" viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M6.3 5.8c-2.4 0-4.1 1.7-4.1 3.8 0 1.6 1 2.9 2.5 3.5-.1.7-.4 1.4-.9 2 .9-.1 1.8-.5 2.6-1.1.4.1.9.1 1.3.1 3.5 0 5.8-2.1 5.8-4.5S10.1 5.8 6.7 5.8c-.2 0-.3 0-.4 0Z" stroke="currentColor" stroke-width="1.3" stroke-linejoin="round"/><circle cx="15.4" cy="15.3" r="1" fill="currentColor"/><circle cx="17.3" cy="17.2" r="0.6" fill="currentColor"/></svg> 생각<span class="drag-handle" title="끌어서 이동">⠿</span></div>
-            <div class="thought-subcard" data-kind="thought">
-              <div class="ts-badge">생각</div>
-              <div class="field"><label>주제</label><input type="text" id="diaryThoughtsTopic" placeholder="이 생각의 주제 (예: 오늘의 고민)" /></div>
+            <div class="diary-subfield">
+              <div class="field"><label>생각 주제</label><input type="text" id="diaryThoughtsTopic" placeholder="이 생각의 주제 (예: 오늘의 고민)" /></div>
               <div class="field"><label>생각</label><textarea id="diaryThoughts" rows="2" placeholder="오늘 든 생각을 적어보세요"></textarea></div>
             </div>
-            <div class="thought-subcard" data-kind="question">
-              <div class="ts-badge">질문</div>
-              <div class="field"><label>주제</label><input type="text" id="diaryQuestionsTopic" placeholder="이 질문의 주제 (예: 진로, 관계)" /></div>
+            <div class="diary-subfield">
+              <div class="field"><label>질문 주제</label><input type="text" id="diaryQuestionsTopic" placeholder="이 질문의 주제 (예: 진로, 관계)" /></div>
               <div class="field"><label>질문</label><textarea id="diaryQuestions" rows="2" placeholder="스스로에게 던지는 질문"></textarea></div>
             </div>
-            <div class="thought-subcard" data-kind="impression">
-              <div class="ts-badge">감상</div>
-              <div class="field"><label>주제</label><input type="text" id="diaryImpressionTopic" placeholder="이 감상의 주제 (예: 하루 마무리)" /></div>
+            <div class="diary-subfield">
+              <div class="field"><label>감상 주제</label><input type="text" id="diaryImpressionTopic" placeholder="이 감상의 주제 (예: 하루 마무리)" /></div>
               <div class="field"><label>감상</label><textarea id="diaryImpression" rows="2" placeholder="오늘 하루에 대한 감상"></textarea></div>
             </div>
-            <div class="thought-subcard" data-kind="keyword">
-              <div class="ts-badge">키워드</div>
+            <div class="diary-subfield">
               <div class="field"><label>키워드</label><input type="text" id="diaryKeywords" placeholder="쉼표로 구분 (예: 성장, 피로, 뿌듯함)" /></div>
             </div>
           </div>
@@ -3138,41 +3145,100 @@
     renderYearGlance();
   }
 
-  // ---------- 계획 배너의 날짜(기간) 영역: 1년을 한번에 볼 수 있는 월별 현황 차트 ----------
-  // currentDate가 속한 연도의 1~12월을 막대로 보여주고, 각 달의 막대 높이는
-  // "그 달에서 기록이 있는 날 수 / (지난 달이면 전체 일수, 이번 달이면 오늘까지의 일수)" 비율입니다.
-  // 아직 오지 않은 달은 빈 막대(is-future)로, 오늘이 속한 달은 강조(is-current) 표시합니다.
+  // ---------- 계획 배너의 날짜(기간) 영역: 365일(1년) 전체를 하루 단위 잔디밭(히트맵)으로 보는 진행률 차트 ----------
+  // currentDate가 속한 연도의 1/1~12/31을 하루 한 칸씩 표시합니다. 각 칸의 진하기는 그날 기록된
+  // 항목 수(컨디션/시간계획/건강/할일/습관/생각/일기/인간관계/자산/직업/취미 등)에 따라 0~4단계로 나뉘고,
+  // 아직 오지 않은 날은 빈 칸(is-future)으로, 오늘은 테두리로 강조(is-today) 표시합니다.
+  function dayFillScore(e){
+    if(!e) return 0;
+    let score = 0;
+    if(e.wakeTime || e.sleepTime || e.exerciseYN || e.exerciseType || e.scoreYesterday || e.scoreToday || e.condition) score++;
+    if(e.timePlan && e.timePlan.some(s => s.content || s.category || s.done)) score++;
+    if(e.health){
+      const h = e.health;
+      if((h.meals&&h.meals.length) || (h.supplements&&h.supplements.length) || (h.exercises&&h.exercises.length) || (h.body && (h.body.fat||h.body.muscle||h.body.weight)) || h.total || h.deficient) score++;
+    }
+    if(e.todos && e.todos.length>0) score++;
+    if(e.habits && e.habits.length>0) score++;
+    if(e.diary && (e.diary.thoughts||e.diary.thoughtsTopic||e.diary.questions||e.diary.questionsTopic||e.diary.impression||e.diary.impressionTopic||e.diary.keywords)) score++;
+    if(e.reference || e.referenceTopic) score++;
+    if(e.relationships && (e.relationships.people||e.relationships.memo||e.relationships.gratitude||e.relationships.score)) score++;
+    if(e.assets && (e.assets.expense||e.assets.income||e.assets.total||e.assets.memo||e.assets.nextAction)) score++;
+    if(e.career && (e.career.summary||e.career.achievements||e.career.learned||e.career.priority)) score++;
+    if(e.hobby && (e.hobby.activity||e.hobby.duration||e.hobby.satisfaction||e.hobby.memo)) score++;
+    return score; // 0~10
+  }
+  function dayFillLevel(score){
+    if(score <= 0) return 0;
+    if(score <= 2) return 1;
+    if(score <= 4) return 2;
+    if(score <= 6) return 3;
+    return 4;
+  }
+  const YG_MONTH_NAMES = ['1월','2월','3월','4월','5월','6월','7월','8월','9월','10월','11월','12월'];
   function renderYearGlance(){
     const grid = $('yearGlanceGrid');
     if(!grid) return;
     const cy = Number(currentDate.slice(0,4));
     const todayD = todayStr();
     const ty = Number(todayD.slice(0,4));
-    const tm = Number(todayD.slice(5,7));
-    const tDay = Number(todayD.slice(8,10));
-    const badge = $('ygTodayBadge');
-    if(badge) badge.textContent = '오늘 ' + fmtDateShort(todayD);
+
+    const jan1 = new Date(cy, 0, 1);
+    const isLeap = (cy % 4 === 0 && cy % 100 !== 0) || (cy % 400 === 0);
+    const totalDays = isLeap ? 366 : 365;
+    const startOffset = jan1.getDay(); // 0(일)~6(토): 1/1이 위치할 행
+
     grid.innerHTML = '';
-    for(let m = 1; m <= 12; m++){
-      const mm = String(m).padStart(2,'0');
-      const daysInMonth = new Date(cy, m, 0).getDate();
-      const isFuture = (cy > ty) || (cy === ty && m > tm);
-      const isCurrent = (cy === ty && m === tm);
-      const upto = isCurrent ? tDay : daysInMonth;
-      let filled = 0;
-      if(!isFuture){
-        for(let d = 1; d <= upto; d++){
-          const ds = cy + '-' + mm + '-' + String(d).padStart(2,'0');
-          if(hasContent(allLogs[ds])) filled++;
-        }
+    let elapsedDays = 0, filledDays = 0;
+    let lastMonthLabeled = -1;
+
+    for(let i = 0; i < totalDays; i++){
+      const d = new Date(cy, 0, 1 + i);
+      const ds = toLocalISO(d);
+      const col = Math.floor((i + startOffset) / 7);
+      const row = (i + startOffset) % 7;
+      const isFuture = ds > todayD;
+      const isToday = ds === todayD;
+
+      // 월이 바뀌는 첫 주(칸)에 월 라벨을 한 번씩 붙입니다.
+      if(d.getMonth() !== lastMonthLabeled){
+        lastMonthLabeled = d.getMonth();
+        const label = document.createElement('div');
+        label.className = 'year-heatmap-month';
+        label.style.gridColumn = String(col + 1);
+        label.style.gridRow = '1';
+        label.textContent = YG_MONTH_NAMES[d.getMonth()];
+        grid.appendChild(label);
       }
-      const pct = (!isFuture && upto > 0) ? Math.round(filled / upto * 100) : 0;
-      const col = document.createElement('div');
-      col.className = 'year-bar-col' + (isFuture ? ' is-future' : '') + (isCurrent ? ' is-current' : '');
-      col.title = m + '월 — 기록 ' + filled + '/' + upto + '일 (' + pct + '%)';
-      col.innerHTML = `<div class="year-bar-track"><div class="year-bar-fill" style="height:${pct}%"></div></div><div class="year-bar-mlabel">${m}월</div>`;
-      col.addEventListener('click', () => { setDate(cy + '-' + mm + '-01'); });
-      grid.appendChild(col);
+
+      let level = 0;
+      if(!isFuture){
+        elapsedDays++;
+        const score = dayFillScore(allLogs[ds]);
+        if(score > 0) filledDays++;
+        level = dayFillLevel(score);
+      }
+
+      const cell = document.createElement('div');
+      cell.className = 'year-heatmap-cell' + (level > 0 ? ' lvl-' + level : '') + (isFuture ? ' is-future' : '') + (isToday ? ' is-today' : '');
+      cell.style.gridColumn = String(col + 1);
+      cell.style.gridRow = String(row + 2);
+      cell.title = fmtDateShort(ds) + (isFuture ? ' — 아직 오지 않은 날' : ' — 기록 ' + dayFillScore(allLogs[ds]) + '개 항목');
+      if(!isFuture){
+        cell.addEventListener('click', () => { setDate(ds); });
+      }
+      grid.appendChild(cell);
+    }
+
+    const badge = $('ygTodayBadge');
+    if(badge){
+      const pct = elapsedDays > 0 ? Math.round(filledDays / elapsedDays * 100) : 0;
+      badge.textContent = '진행률 ' + pct + '% (' + filledDays + '/' + elapsedDays + '일)';
+    }
+    // 지난 해/미래 연도를 보고 있을 때는 스크롤을 오늘이 있는 위치(연말)로 자연스럽게 맞춥니다.
+    if(cy <= ty){
+      const scrollWrap = grid.parentElement;
+      if(scrollWrap) scrollWrap.scrollLeft = scrollWrap.scrollWidth;
     }
   }
 
@@ -4052,13 +4118,23 @@
 
       <div class="cat-section" style="max-width:360px;">
         <div class="cat-title"><svg class="micon" viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M10 3.5a6.5 6.5 0 1 0 0 13c1 0 1.5-.6 1.5-1.3 0-.4-.2-.7-.2-1.1 0-.7.6-1.1 1.3-1.1H14a3 3 0 0 0 3-3c0-3.6-3.1-6.5-7-6.5Z" stroke="currentColor" stroke-width="1.3" stroke-linejoin="round"/><circle cx="7.3" cy="8.6" r="0.9" fill="currentColor"/><circle cx="10" cy="7" r="0.9" fill="currentColor"/><circle cx="12.7" cy="8.6" r="0.9" fill="currentColor"/></svg> 테마</div>
-        <div class="theme-picker" id="themePicker">
-          <span class="tp-label">테마</span>
+        <div class="theme-order-row">
+          <span class="tp-label">테마 <span id="themeOrderState" class="mono"></span></span>
+          <button type="button" class="nav-btn ghost" id="themeOrderToggle">⇅ 역순으로 보기</button>
         </div>
+        <div class="theme-picker" id="themePicker"></div>
       </div>
 
       <div class="footer-note">draft v0.2 · 사이트 테마 선택을 이곳에서 관리합니다</div>
     `;
+    const orderBtn = $('themeOrderToggle');
+    if(orderBtn){
+      orderBtn.addEventListener('click', () => {
+        themeOrderReversed = !themeOrderReversed;
+        try{ localStorage.setItem('hb-theme-order', themeOrderReversed ? 'reversed' : 'normal'); }catch(e){}
+        renderThemePicker();
+      });
+    }
     renderThemePicker();
   }
   function showSettingsLayoutStatus(msg){
@@ -4386,6 +4462,10 @@
     }
   ];
   let currentThemeKey = 't10';
+  // 설정탭 테마 배너: 테마 목록을 원래 순서(정순) 그대로 볼지, 뒤집어서(역순) 볼지 전환하는 상태.
+  // 브라우저에 저장해두어 다음에 열어도 마지막으로 고른 정렬 방식을 그대로 씁니다.
+  let themeOrderReversed = false;
+  try{ themeOrderReversed = localStorage.getItem('hb-theme-order') === 'reversed'; }catch(e){}
 
   function applyTheme(key){
     const t = THEMES.find(x => x.key === key) || THEMES[0];
@@ -4413,10 +4493,16 @@
   function renderThemePicker(){
     const wrap = $('themePicker');
     if(!wrap) return;
+    // 정순/역순 상태 표시 텍스트와 버튼 라벨을 함께 갱신합니다.
+    const stateEl = $('themeOrderState');
+    if(stateEl) stateEl.textContent = themeOrderReversed ? '(역순)' : '(정순)';
+    const orderBtn = $('themeOrderToggle');
+    if(orderBtn) orderBtn.textContent = themeOrderReversed ? '⇅ 정순으로 보기' : '⇅ 역순으로 보기';
     // 매번 클릭할 때마다 새 스와치를 append만 하면 같은 목록이 계속 쌓여서
     // "색상표가 계속 추가되는" 현상이 생겼습니다. 항상 비우고 다시 그립니다.
     wrap.querySelectorAll('.theme-swatch').forEach(el => el.remove());
-    THEMES.forEach(t => {
+    const themeList = themeOrderReversed ? THEMES.slice().reverse() : THEMES;
+    themeList.forEach(t => {
       const dot = document.createElement('div');
       dot.className = 'theme-swatch' + (currentThemeKey === t.key ? ' active' : '');
       // 팔레트 5색을 그대로 파이 형태로 보여줘서, accent 색 하나만 보다
