@@ -351,6 +351,13 @@
     background:var(--card); color:var(--ink); cursor:pointer;
   }
   .excel-manage-btn:hover{ background:var(--safety); border-color:var(--safety-dark); color:#fff; }
+  /* 목록탭 "전체" 보기: 카테고리별 표를 제목과 함께 위아래로 이어서 보여줍니다. */
+  .excel-cat-block{ margin-bottom:18px; }
+  .excel-cat-block:last-child{ margin-bottom:0; }
+  .excel-cat-heading{
+    font-family:'JetBrains Mono', monospace; font-weight:700; font-size:12.5px;
+    color:var(--ink); margin-bottom:6px; padding-bottom:4px; border-bottom:1.5px solid var(--line);
+  }
   .time-scroll{ max-height:320px; overflow-y:auto; border:1px solid var(--line); border-radius:6px; }
   table.timeplan{ width:100%; border-collapse:collapse; font-size:12px; }
   table.timeplan thead th{
@@ -1466,7 +1473,10 @@
     const wrap = $('listCatTabs');
     if(!wrap) return;
     wrap.innerHTML = '';
-    LIST_CATS.forEach(c => {
+    // 맨 왼쪽에 "전체" 버튼을 추가해서, 카테고리별 표를 하나씩 보는 대신
+    // 모든 카테고리의 표를 한 번에 이어서 볼 수 있게 합니다.
+    const tabs = [{ key:'all', label:'전체' }, ...LIST_CATS];
+    tabs.forEach(c => {
       const btn = document.createElement('div');
       btn.className = 'cat-tab' + (currentListCat === c.key ? ' active' : '');
       btn.innerHTML = c.label;
@@ -1478,16 +1488,14 @@
       wrap.appendChild(btn);
     });
   }
-  function renderListTable(){
-    const wrap = $('listTableWrap');
-    if(!wrap) return;
-    const cols = LIST_COLUMNS[currentListCat] || [];
+  // 카테고리 하나에 대한 표 HTML을 만듭니다("전체" 보기에서는 이 함수를 카테고리마다 반복 호출합니다).
+  function buildCatTableMarkup(catKey){
+    const cols = LIST_COLUMNS[catKey] || [];
     const dates = Object.keys(allLogs)
-      .filter(d => categoryHasContent(migrateEntry(allLogs[d]), currentListCat))
+      .filter(d => categoryHasContent(migrateEntry(allLogs[d]), catKey))
       .sort((a,b) => b.localeCompare(a));
     if(dates.length === 0){
-      wrap.innerHTML = `<div class="excel-empty">아직 이 카테고리에 작성된 기록이 없어요 — 기록 탭에서 입력해보세요</div>`;
-      return;
+      return `<div class="excel-empty">아직 이 카테고리에 작성된 기록이 없어요 — 기록 탭에서 입력해보세요</div>`;
     }
     let html = `<div class="excel-scroll"><table class="excel-table"><thead><tr><th>날짜</th>`;
     cols.forEach(([label]) => { html += `<th>${escapeAttr(label)}</th>`; });
@@ -1501,20 +1509,40 @@
         try{ v = getter(e); }catch(err){ v = ''; }
         html += `<td>${escapeAttr(String(v))}</td>`;
       });
-      html += `<td class="excel-manage-col"><button type="button" class="excel-manage-btn" data-date="${escapeAttr(d)}">관리</button></td>`;
+      html += `<td class="excel-manage-col"><button type="button" class="excel-manage-btn" data-date="${escapeAttr(d)}" data-cat="${catKey}">관리</button></td>`;
       html += `</tr>`;
     });
     html += `</tbody></table></div>`;
-    wrap.innerHTML = html;
-    wrap.querySelectorAll('.excel-manage-btn').forEach(btn => {
+    return html;
+  }
+  // 표 안의 "관리" 단추 클릭을 한 번에 연결합니다(단일 카테고리 표/전체 보기 공용).
+  function bindListManageButtons(container){
+    container.querySelectorAll('.excel-manage-btn').forEach(btn => {
       btn.addEventListener('click', () => {
         const d = btn.dataset.date;
+        const catKey = btn.dataset.cat;
         if(!confirm(fmtDateShort(d) + ' 기록에서 이 카테고리 내용을 삭제할까요?')) return;
-        clearListCategoryContent(d, currentListCat);
+        clearListCategoryContent(d, catKey);
         renderListTable();
         persist();
       });
     });
+  }
+  function renderListTable(){
+    const wrap = $('listTableWrap');
+    if(!wrap) return;
+    if(currentListCat === 'all'){
+      // 전체 보기: 카테고리별 표를 제목과 함께 위에서 아래로 이어서 모두 보여줍니다.
+      let html = '';
+      LIST_CATS.forEach(c => {
+        html += `<div class="excel-cat-block"><div class="excel-cat-heading">${c.label}</div>${buildCatTableMarkup(c.key)}</div>`;
+      });
+      wrap.innerHTML = html;
+      bindListManageButtons(wrap);
+      return;
+    }
+    wrap.innerHTML = buildCatTableMarkup(currentListCat);
+    bindListManageButtons(wrap);
   }
   // 목록탭 "관리" 단추: 해당 날짜 기록에서 현재 보고 있는 카테고리의 내용만 비워서
   // (다른 카테고리 내용은 그대로 두고) 표에서 그 행이 사라지도록 합니다.
