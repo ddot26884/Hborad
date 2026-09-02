@@ -821,9 +821,11 @@
 
   .report-checklist{ display:flex; flex-direction:column; gap:5px; }
   .report-checklist .rc-row{ display:flex; align-items:center; gap:7px; font-size:12px; }
-  .report-checklist .rc-row .row-check{ width:17px; height:17px; flex-shrink:0; }
+  .report-checklist .rc-row .row-check{ width:17px; height:17px; flex-shrink:0; cursor:default; }
   .report-checklist .rc-row .rc-text.done{ text-decoration:line-through; color:var(--ink-soft); }
   .report-checklist .rc-cat{ font-family:'JetBrains Mono', monospace; font-size:9.5px; color:var(--accent-dark); background:var(--accent-soft); border-radius:5px; padding:1px 6px; flex-shrink:0; }
+  .report-checklist .ls-group-title{ font-family:'JetBrains Mono', monospace; font-weight:700; font-size:10.5px; color:var(--ink-soft); margin:8px 0 2px; }
+  .report-checklist .ls-group-title:first-child{ margin-top:0; }
 
   .report-empty{ font-size:11px; color:var(--ink-soft); font-family:'JetBrains Mono', monospace; padding:6px 0; }
 
@@ -3176,8 +3178,10 @@
     return 4;
   }
   const YG_MONTH_NAMES = ['1월','2월','3월','4월','5월','6월','7월','8월','9월','10월','11월','12월'];
-  function renderYearGlance(){
-    const grid = $('yearGlanceGrid');
+  function renderYearGlance(gridId, badgeId){
+    gridId = gridId || 'yearGlanceGrid';
+    badgeId = badgeId || 'ygTodayBadge';
+    const grid = $(gridId);
     if(!grid) return;
     const cy = Number(currentDate.slice(0,4));
     const todayD = todayStr();
@@ -3230,7 +3234,7 @@
       grid.appendChild(cell);
     }
 
-    const badge = $('ygTodayBadge');
+    const badge = $(badgeId);
     if(badge){
       const pct = elapsedDays > 0 ? Math.round(filledDays / elapsedDays * 100) : 0;
       badge.textContent = '진행률 ' + pct + '% (' + filledDays + '/' + elapsedDays + '일)';
@@ -3547,9 +3551,9 @@
     return html;
   }
 
-  // ---------- 인쇄창: 오늘 습관 배너 (기록탭 습관과 연동) ----------
-  // 기록탭에서 입력한 "오늘 날짜"의 습관 목록을 그대로 보여주고, 여기서 체크를 토글하면
-  // allLogs(및 현재 기록탭이 오늘을 보고 있다면 entry)에 바로 반영되어 저장됩니다.
+  // ---------- 인쇄창: 오늘 습관 배너 (기록탭 습관과 연동, 읽기 전용) ----------
+  // 기록탭에서 입력한 "오늘 날짜"의 습관 목록을 그대로 보여줍니다. 인쇄탭은 확인 전용이므로
+  // 여기서는 체크를 토글할 수 없고, 수정은 반드시 기록탭에서 합니다.
   function renderReportTodayHabit(){
     const today = todayStr();
     const todayEntry = allLogs[today];
@@ -3557,32 +3561,66 @@
     if(habits.length === 0){
       return `<div class="report-empty">오늘 등록된 습관이 없어요 — 기록탭의 "<svg class="micon" viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M5 8a5 5 0 0 1 8.5-3.5L15 6M15 6V3.3M15 6h-2.7" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"/><path d="M15 12a5 5 0 0 1-8.5 3.5L5 14M5 14v2.7M5 14h2.7" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"/></svg> 습관"에서 추가해보세요</div>`;
     }
-    return `<div class="report-checklist" id="reportTodayHabitList">` + habits.map((h, i) => `
+    return `<div class="report-checklist">` + habits.map(h => `
       <div class="rc-row">
-        <div class="row-check ${h.done?'done':''}" data-idx="${i}"></div>
+        <div class="row-check ${h.done?'done':''}"></div>
         <div class="rc-text ${h.done?'done':''}">${escapeAttr(h.content)||'(내용 없음)'}</div>
         ${h.execDate ? `<span class="rc-cat">${escapeAttr(h.execDate)}</span>` : ''}
       </div>`).join('') + `</div>`;
   }
-  function bindReportTodayHabitEvents(){
-    const wrap = $('reportTodayHabitList');
-    if(!wrap) return;
-    wrap.querySelectorAll('.row-check').forEach(cb => {
-      cb.addEventListener('click', () => {
-        const i = +cb.dataset.idx;
-        const today = todayStr();
-        if(!allLogs[today]) allLogs[today] = createEmptyEntry(today);
-        if(!allLogs[today].habits[i]) return;
-        allLogs[today].habits[i].done = !allLogs[today].habits[i].done;
-        if(currentDate === today && entry.habits[i]){
-          entry.habits[i].done = allLogs[today].habits[i].done;
-        }
-        persist();
-        cb.classList.toggle('done');
-        cb.parentElement.querySelector('.rc-text').classList.toggle('done');
-        if(currentDate === today) renderListRows('habitRows', 'habits');
+
+  // ---------- 인쇄창: 오늘 할일 배너 (기록탭 할일과 연동, 읽기 전용) ----------
+  function renderReportTodayTodo(){
+    const today = todayStr();
+    const todayEntry = allLogs[today];
+    const todos = (todayEntry && todayEntry.todos) || [];
+    if(todos.length === 0){
+      return `<div class="report-empty">오늘 등록된 할일이 없어요 — 기록탭의 "<svg class="micon" viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg"><circle cx="10" cy="10" r="6.5" stroke="currentColor" stroke-width="1.4"/><path d="M7 10.2l2 2 4-4.4" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg> 할일"에서 추가해보세요</div>`;
+    }
+    return `<div class="report-checklist">` + todos.map(t => `
+      <div class="rc-row">
+        <div class="row-check ${t.done?'done':''}"></div>
+        <div class="rc-text ${t.done?'done':''}">${escapeAttr(t.content)||'(내용 없음)'}</div>
+        ${t.execDate ? `<span class="rc-cat">${escapeAttr(t.execDate)}</span>` : ''}
+      </div>`).join('') + `</div>`;
+  }
+
+  // ---------- 인쇄창: 진행중인 계획·습관(D-day) 배너 (계획 배너와 연동, 읽기 전용) ----------
+  // renderOngoingPlanList는 이미 계획탭에서 쓰던 함수를 그대로 재사용합니다(읽기 전용 목록이라 그대로 안전).
+
+  // ---------- 인쇄창: 카테고리별 계획 목록 배너 (계획 배너 "카테고리별 목표"와 연동, 읽기 전용) ----------
+  // 일간/주간/월간/연간 어느 기간에 등록했든 상관없이, 카테고리(생각/건강/인간관계/자산투자/직업/취미)별로
+  // 등록된 계획 항목을 전부 모아서 보여줍니다. 목표일이 있으면 D-day도 함께 표시합니다.
+  function collectAllCatPlanItems(){
+    const byCat = {};
+    PLAN_CATS.forEach(c => { byCat[c.key] = []; });
+    ['daily','weekly','monthly','yearly'].forEach(period => {
+      const store = allPlans[period] || {};
+      Object.keys(store).forEach(key => {
+        const pl = normalizePlanTargets(store[key]);
+        PLAN_CATS.forEach(c => {
+          (pl.catPlans[c.key] || []).forEach(item => {
+            if((item.content||'').trim()) byCat[c.key].push({ content:item.content, due:item.due||'', done:!!item.done });
+          });
+        });
       });
     });
+    return byCat;
+  }
+  function renderReportCatPlans(){
+    const byCat = collectAllCatPlanItems();
+    const groups = PLAN_CATS.map(c => {
+      const items = byCat[c.key];
+      if(!items.length) return '';
+      return `<div class="ls-group-title">${escapeAttr(c.label)}</div>` + items.map(it => `
+        <div class="rc-row">
+          <div class="row-check ${it.done?'done':''}"></div>
+          <div class="rc-text ${it.done?'done':''}">${escapeAttr(it.content)}</div>
+          ${it.due ? `<span class="rd-date dday-badge">${ddayLabel(it.due)}</span>` : ''}
+        </div>`).join('');
+    }).filter(Boolean).join('');
+    if(!groups) return `<div class="report-empty">계획 배너 "카테고리별 목표"에 등록된 계획 항목이 아직 없어요.</div>`;
+    return `<div class="report-checklist">${groups}</div>`;
   }
 
   function reportHeroShapes(){
@@ -3888,7 +3926,7 @@
   };
   // 배너 기본 규격: 인쇄탭의 모든 배너는 "중형(medium)"이 기본값이고, 달력과 마인드맵만
   // 예외적으로 기존 그대로(소형)를 유지합니다.
-  const REPORT_DEFAULT_SIZE = { todayplan:'medium', todayhabit:'medium', goalchart:'medium', todaychecklist:'medium', condition:'medium', health:'medium', dailysummary:'medium', relationships:'medium', assets:'medium', career:'medium', hobby:'medium', timetable:'medium', diary:'medium', mindmap:'small', calendar:'small' };
+  const REPORT_DEFAULT_SIZE = { todayplan:'medium', todayhabit:'medium', todaytodo:'medium', goalchart:'medium', todaychecklist:'medium', ongoingplan:'medium', catplans:'medium', condition:'medium', health:'medium', dailysummary:'medium', relationships:'medium', assets:'medium', career:'medium', hobby:'medium', timetable:'medium', diary:'medium', yearheatmap:'large', mindmap:'small', calendar:'small' };
   function reportBlock(pid, innerHtml, size){
     size = size || REPORT_DEFAULT_SIZE[pid] || 'small';
     const sizeButtons = Object.keys(REPORT_SIZE_PRESETS).map(key => {
@@ -3946,11 +3984,59 @@
               ${renderReportTodayHabit()}
             </div>`, sizeFor('todayhabit'))}
 
+            ${reportBlock('todaytodo', `
+            <div class="report-panel">
+              ${reportPanelShape(2)}
+              <div class="rp-head">
+                <div class="rp-title"><svg class="micon" viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg"><circle cx="10" cy="10" r="6.5" stroke="currentColor" stroke-width="1.4"/><path d="M7 10.2l2 2 4-4.4" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg> 오늘 할일 <span class="title-note">— 기록탭 할일과 연동</span></div>
+              </div>
+              ${renderReportTodayTodo()}
+            </div>`, sizeFor('todaytodo'))}
+
             ${reportBlock('goalchart', `
             <div class="report-panel">
               ${reportPanelShape(0)}
               <div id="goalChartPanel"></div>
             </div>`, sizeFor('goalchart'))}
+
+            ${reportBlock('ongoingplan', `
+            <div class="report-panel">
+              ${reportPanelShape(1)}
+              <div class="rp-head">
+                <div class="rp-title"><svg class="micon" viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg"><rect x="3.5" y="4.5" width="13" height="11.5" rx="1.5" stroke="currentColor" stroke-width="1.4"/><path d="M3.5 8h13M7 3v3M13 3v3" stroke="currentColor" stroke-width="1.4" stroke-linecap="round"/></svg> 진행중인 계획·습관 <span class="title-note">— 계획 배너와 연동</span></div>
+              </div>
+              <div id="reportOngoingPlanList"></div>
+            </div>`, sizeFor('ongoingplan'))}
+
+            ${reportBlock('catplans', `
+            <div class="report-panel">
+              ${reportPanelShape(2)}
+              <div class="rp-head">
+                <div class="rp-title"><svg class="micon" viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg"><rect x="3.5" y="4.5" width="13" height="11.5" rx="1.5" stroke="currentColor" stroke-width="1.4"/><path d="M3.5 8h13M7 3v3M13 3v3" stroke="currentColor" stroke-width="1.4" stroke-linecap="round"/></svg> 카테고리별 계획 목록 <span class="title-note">— 계획 배너 "카테고리별 목표"와 연동</span></div>
+              </div>
+              ${renderReportCatPlans()}
+            </div>`, sizeFor('catplans'))}
+
+            ${reportBlock('yearheatmap', `
+            <div class="report-panel">
+              ${reportPanelShape(0)}
+              <div class="year-grid-head">
+                <span class="yg-title"><svg class="micon" viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg"><rect x="3.5" y="4.5" width="13" height="11.5" rx="1.5" stroke="currentColor" stroke-width="1.4"/><path d="M3.5 8h13M7 3v3M13 3v3" stroke="currentColor" stroke-width="1.4" stroke-linecap="round"/></svg> 365일 진행률 <span class="title-note">— 계획 배너와 연동</span></span>
+                <span class="yg-today" id="ygTodayBadgeReport">--</span>
+              </div>
+              <div class="year-heatmap-scroll">
+                <div class="year-heatmap-grid" id="yearGlanceGridReport"></div>
+              </div>
+              <div class="year-heatmap-legend">
+                <span>적음</span>
+                <span class="yhl-swatch"></span>
+                <span class="yhl-swatch lvl-1"></span>
+                <span class="yhl-swatch lvl-2"></span>
+                <span class="yhl-swatch lvl-3"></span>
+                <span class="yhl-swatch lvl-4"></span>
+                <span>많음</span>
+              </div>
+            </div>`, sizeFor('yearheatmap'))}
 
             ${reportBlock('todaychecklist', `
             <div class="report-panel">
@@ -4081,6 +4167,8 @@
     // 저장된 배너 순서가 있으면 먼저 적용한 뒤 나머지를 초기화합니다.
     applyReportOrder();
     renderGoalChartPanel();
+    renderOngoingPlanList('reportOngoingPlanList');
+    renderYearGlance('yearGlanceGridReport', 'ygTodayBadgeReport');
     bindCalNav('Report');
     bindDayEventAdd('Report');
     renderCalendar('Report');
@@ -4099,7 +4187,6 @@
         renderReportView();
       });
     });
-    bindReportTodayHabitEvents();
   }
 
   // ================= 설정 탭: 테마 선택 + 인쇄탭 배너 배치 =================
