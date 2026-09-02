@@ -2937,7 +2937,7 @@
         </div>
         <div class="list-rows" id="planCatItemRows"></div>
       </div>`;
-    renderGenericRows('planCatItemRows', plan.catPlans[c.key], false);
+    renderGenericRows('planCatItemRows', plan.catPlans[c.key], false, c.key);
     $('planCatSelect').addEventListener('change', e => {
       planCatSelectedKey = e.target.value;
       renderPlanCatGrid();
@@ -2950,11 +2950,13 @@
       if(!contentVal){ contentInp.focus(); return; }
       const plan2 = getPlan();
       plan2.catPlans[c.key].push({ content: contentVal, done:false, due: yearVal ? (yearVal + '-12-31') : '' });
-      renderGenericRows('planCatItemRows', plan2.catPlans[c.key], false);
+      renderGenericRows('planCatItemRows', plan2.catPlans[c.key], false, c.key);
       contentInp.value = '';
       yearInp.value = '';
       contentInp.focus();
       queuePlanSave();
+      syncCatPlanItemsToCalendar(c.key);
+      renderAllCalendars();
     });
     wrap.querySelectorAll('input.pt-date').forEach(inp => {
       inp.addEventListener('change', () => {
@@ -2988,7 +2990,34 @@
     queueEventSave();
   }
 
-  function renderGenericRows(containerId, list, hasTarget){
+  // 카테고리별 "계획 목록"(개별 항목)에 목표일(due)이 있으면, 인쇄탭·기록탭 달력에도
+  // 일정으로 함께 반영합니다. 항목이 추가/수정/삭제될 때마다 다시 불러 최신 상태로 맞춥니다.
+  function syncCatPlanItemsToCalendar(catKey){
+    const c = PLAN_CATS.find(x => x.key === catKey);
+    if(!c) return;
+    // 이 카테고리의 계획 항목으로 자동 생성됐던 기존 일정은 지우고 최신 목록으로 다시 만듭니다.
+    Object.keys(allEvents).forEach(d => {
+      allEvents[d] = allEvents[d].filter(ev => ev.planCatItem !== catKey);
+      if(allEvents[d].length === 0) delete allEvents[d];
+    });
+    ['daily','weekly','monthly','yearly'].forEach(period => {
+      const store = allPlans[period] || {};
+      Object.keys(store).forEach(key => {
+        const pl = normalizePlanTargets(store[key]);
+        (pl.catPlans[c.key] || []).forEach(item => {
+          if(!item.due || !(item.content || '').trim()) return;
+          if(!allEvents[item.due]) allEvents[item.due] = [];
+          allEvents[item.due].push({ id:'evcatitem'+catKey+Date.now()+Math.random().toString(36).slice(2,4), time:'', title:`${c.label}: ${item.content}`, planCatItem: catKey });
+        });
+      });
+    });
+    queueEventSave();
+  }
+  function syncAllCatPlanItemsToCalendar(){
+    PLAN_CATS.forEach(c => syncCatPlanItemsToCalendar(c.key));
+  }
+
+  function renderGenericRows(containerId, list, hasTarget, catKey){
     const el = $(containerId);
     el.innerHTML = '';
     if(list.length === 0){
@@ -3014,9 +3043,10 @@
         list[+inp.dataset.idx][inp.dataset.f] = inp.value;
         queuePlanSave();
         if(inp.dataset.f === 'due'){
-          renderGenericRows(containerId, list, hasTarget);
+          renderGenericRows(containerId, list, hasTarget, catKey);
           renderOngoingPlanList('planOngoingList');
           renderOngoingPlanList('logOngoingPlanList');
+          if(catKey){ syncCatPlanItemsToCalendar(catKey); renderAllCalendars(); }
         }
       });
     });
@@ -3034,10 +3064,11 @@
     el.querySelectorAll('.row-del').forEach(btn => {
       btn.addEventListener('click', () => {
         list.splice(+btn.dataset.idx, 1);
-        renderGenericRows(containerId, list, hasTarget);
+        renderGenericRows(containerId, list, hasTarget, catKey);
         renderOngoingPlanList('planOngoingList');
         renderOngoingPlanList('logOngoingPlanList');
         queuePlanSave();
+        if(catKey){ syncCatPlanItemsToCalendar(catKey); renderAllCalendars(); }
       });
     });
   }
@@ -3590,7 +3621,8 @@
 
   // ---------- 인쇄창: 카테고리별 계획 목록 배너 (계획 배너 "카테고리별 목표"와 연동, 읽기 전용) ----------
   // 일간/주간/월간/연간 어느 기간에 등록했든 상관없이, 카테고리(생각/건강/인간관계/자산투자/직업/취미)별로
-  // 등록된 계획 항목을 전부 모아서 보여줍니다. 목표일이 있으면 D-day도 함께 표시합니다.
+  // 등록된 계획 항목을 전부 모아서 보여줍니다. 목표일이 있으면 D-day도 함께 표시하고,
+  // syncCatPlanItemsToCalendar()를 통해 같은 목표일이 인쇄탭·기록탭 달력에도 일정으로 표시됩니다.
   function collectAllCatPlanItems(){
     const byCat = {};
     PLAN_CATS.forEach(c => { byCat[c.key] = []; });
@@ -3926,7 +3958,7 @@
   };
   // 배너 기본 규격: 인쇄탭의 모든 배너는 "중형(medium)"이 기본값이고, 달력과 마인드맵만
   // 예외적으로 기존 그대로(소형)를 유지합니다.
-  const REPORT_DEFAULT_SIZE = { todayplan:'medium', todayhabit:'medium', todaytodo:'medium', goalchart:'medium', todaychecklist:'medium', ongoingplan:'medium', catplans:'medium', condition:'medium', health:'medium', dailysummary:'medium', relationships:'medium', assets:'medium', career:'medium', hobby:'medium', timetable:'medium', diary:'medium', yearheatmap:'large', mindmap:'small', calendar:'small' };
+  const REPORT_DEFAULT_SIZE = { todayplan:'medium', todayhabit:'medium', todaytodo:'medium', goalchart:'medium', todaychecklist:'medium', ongoingplan:'medium', catplans:'medium', condition:'medium', health:'medium', dailysummary:'medium', relationships:'medium', assets:'medium', career:'medium', hobby:'medium', timetable:'medium', diary:'medium', mindmap:'small', calendar:'small' };
   function reportBlock(pid, innerHtml, size){
     size = size || REPORT_DEFAULT_SIZE[pid] || 'small';
     const sizeButtons = Object.keys(REPORT_SIZE_PRESETS).map(key => {
@@ -4012,31 +4044,10 @@
             <div class="report-panel">
               ${reportPanelShape(2)}
               <div class="rp-head">
-                <div class="rp-title"><svg class="micon" viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg"><rect x="3.5" y="4.5" width="13" height="11.5" rx="1.5" stroke="currentColor" stroke-width="1.4"/><path d="M3.5 8h13M7 3v3M13 3v3" stroke="currentColor" stroke-width="1.4" stroke-linecap="round"/></svg> 카테고리별 계획 목록 <span class="title-note">— 계획 배너 "카테고리별 목표"와 연동</span></div>
+                <div class="rp-title"><svg class="micon" viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg"><rect x="3.5" y="4.5" width="13" height="11.5" rx="1.5" stroke="currentColor" stroke-width="1.4"/><path d="M3.5 8h13M7 3v3M13 3v3" stroke="currentColor" stroke-width="1.4" stroke-linecap="round"/></svg> 카테고리별 계획 목록 <span class="title-note">— 계획 배너 "카테고리별 목표"와 연동, 목표일은 달력에도 표시</span></div>
               </div>
               ${renderReportCatPlans()}
             </div>`, sizeFor('catplans'))}
-
-            ${reportBlock('yearheatmap', `
-            <div class="report-panel">
-              ${reportPanelShape(0)}
-              <div class="year-grid-head">
-                <span class="yg-title"><svg class="micon" viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg"><rect x="3.5" y="4.5" width="13" height="11.5" rx="1.5" stroke="currentColor" stroke-width="1.4"/><path d="M3.5 8h13M7 3v3M13 3v3" stroke="currentColor" stroke-width="1.4" stroke-linecap="round"/></svg> 365일 진행률 <span class="title-note">— 계획 배너와 연동</span></span>
-                <span class="yg-today" id="ygTodayBadgeReport">--</span>
-              </div>
-              <div class="year-heatmap-scroll">
-                <div class="year-heatmap-grid" id="yearGlanceGridReport"></div>
-              </div>
-              <div class="year-heatmap-legend">
-                <span>적음</span>
-                <span class="yhl-swatch"></span>
-                <span class="yhl-swatch lvl-1"></span>
-                <span class="yhl-swatch lvl-2"></span>
-                <span class="yhl-swatch lvl-3"></span>
-                <span class="yhl-swatch lvl-4"></span>
-                <span>많음</span>
-              </div>
-            </div>`, sizeFor('yearheatmap'))}
 
             ${reportBlock('todaychecklist', `
             <div class="report-panel">
@@ -4168,7 +4179,6 @@
     applyReportOrder();
     renderGoalChartPanel();
     renderOngoingPlanList('reportOngoingPlanList');
-    renderYearGlance('yearGlanceGridReport', 'ygTodayBadgeReport');
     bindCalNav('Report');
     bindDayEventAdd('Report');
     renderCalendar('Report');
@@ -4577,6 +4587,43 @@
     root.setProperty('--safety-dark', t.dark);
     try{ localStorage.setItem('hb-theme', t.key); }catch(e){}
   }
+  // ---------- 색상 유틸: HEX ↔ HSL 변환 ----------
+  // 역순 보기에서 스와치 미리보기의 명도를 새로 지정할 때 사용합니다.
+  function hexToHsl(hex){
+    let h = hex.replace('#','');
+    if(h.length === 3) h = h.split('').map(ch => ch + ch).join('');
+    const r = parseInt(h.substr(0,2),16)/255, g = parseInt(h.substr(2,2),16)/255, b = parseInt(h.substr(4,2),16)/255;
+    const max = Math.max(r,g,b), min = Math.min(r,g,b);
+    let hh = 0, s = 0; const l = (max+min)/2;
+    if(max !== min){
+      const d = max - min;
+      s = l > 0.5 ? d/(2-max-min) : d/(max+min);
+      switch(max){
+        case r: hh = (g-b)/d + (g<b?6:0); break;
+        case g: hh = (b-r)/d + 2; break;
+        default: hh = (r-g)/d + 4;
+      }
+      hh *= 60;
+    }
+    return { h:hh, s:s*100, l:l*100 };
+  }
+  function hslToHex(h, s, l){
+    s/=100; l/=100;
+    const k = n => (n + h/30) % 12;
+    const a = s * Math.min(l, 1-l);
+    const f = n => l - a*Math.max(-1, Math.min(k(n)-3, Math.min(9-k(n), 1)));
+    const toHex = x => Math.round(x*255).toString(16).padStart(2,'0');
+    return `#${toHex(f(0))}${toHex(f(8))}${toHex(f(4))}`;
+  }
+  // 역순 보기를 선택하면 스와치 미리보기의 색 순서를 뒤집는 것뿐 아니라, 각 색상의 명도(밝기)도
+  // 이전과 다르게 새로 지정해서(밝은 색↔어두운 색 반전) "이전과 다른 색상표"임이 눈에 띄게 드러나도록 합니다.
+  function reorderedSwatch(colors){
+    return colors.slice().reverse().map(c => {
+      const { h, s, l } = hexToHsl(c);
+      const newL = Math.max(10, Math.min(90, 100 - l));
+      return hslToHex(h, s, newL);
+    });
+  }
   function renderThemePicker(){
     const wrap = $('themePicker');
     if(!wrap) return;
@@ -4594,8 +4641,10 @@
       dot.className = 'theme-swatch' + (currentThemeKey === t.key ? ' active' : '');
       // 팔레트 5색을 그대로 파이 형태로 보여줘서, accent 색 하나만 보다
       // 테마 전체 분위기(배경·글자·강조색)가 한눈에 시인성 있게 드러나도록 합니다.
-      const n = t.swatch.length;
-      const stops = t.swatch.map((c,i) => `${c} ${Math.round(i/n*360)}deg ${Math.round((i+1)/n*360)}deg`).join(', ');
+      // 역순 보기일 때는 색 순서만 뒤집지 않고, 명도까지 새로 지정한 색상표를 보여줍니다.
+      const swatchColors = themeOrderReversed ? reorderedSwatch(t.swatch) : t.swatch;
+      const n = swatchColors.length;
+      const stops = swatchColors.map((c,i) => `${c} ${Math.round(i/n*360)}deg ${Math.round((i+1)/n*360)}deg`).join(', ');
       dot.style.background = `conic-gradient(${stops})`;
       dot.title = t.label;
       dot.addEventListener('click', () => {
@@ -4615,6 +4664,7 @@
   window.hbInit = async function(){
     await loadPlans();
     await loadEvents();
+    syncAllCatPlanItemsToCalendar();
     await loadMindmapWords();
     await loadReportLayoutFromServer();
     await loadAll();
