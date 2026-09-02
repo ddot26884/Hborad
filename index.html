@@ -395,37 +395,30 @@
   .list-row input.due-input{ flex:0 0 128px; font-family:'JetBrains Mono', monospace; font-size:11.5px; padding:6px 7px; border:1.5px solid var(--line); border-radius:6px; background:var(--paper); }
   .list-row .row-dday{ flex-shrink:0; margin-left:0; }
   .ongoing-plan-section .report-empty{ padding:2px 0; }
-  /* ---------- 계획: 365일 진행률 히트맵 (목표일 배너 상단, 잔디밭 스타일로 하루하루의 기록 여부를 표시) ---------- */
+  /* ---------- 계획: 365일 진행률 (1일~365일 막대에 오늘 위치를 화살표로 표시) ---------- */
   .year-grid-head{ display:flex; align-items:center; justify-content:space-between; margin-bottom:8px; flex-wrap:wrap; gap:4px; }
   .year-grid-head .yg-title{ font-family:'JetBrains Mono', monospace; font-size:11.5px; font-weight:700; color:var(--ink); display:inline-flex; align-items:center; gap:4px; }
   .year-grid-head .yg-today{ font-family:'JetBrains Mono', monospace; font-size:10.5px; font-weight:700; color:var(--safety-dark); background:var(--accent-soft); padding:2px 8px; border-radius:20px; }
-  .year-heatmap-scroll{
-    overflow-x:auto; overflow-y:hidden; padding:2px 4px 12px; margin-bottom:6px; border-bottom:1.5px dashed var(--line);
-  }
-  .year-heatmap-grid{
-    display:grid; grid-template-rows:13px repeat(7, 11px); grid-auto-columns:11px; grid-auto-flow:column;
-    gap:3px; width:max-content;
-  }
-  .year-heatmap-month{
-    font-family:'JetBrains Mono', monospace; font-size:9px; color:var(--ink-soft); align-self:end; white-space:nowrap;
-  }
-  .year-heatmap-cell{
-    width:11px; height:11px; border-radius:3px; background:var(--paper-2); border:1px solid var(--line);
-    cursor:pointer; box-sizing:border-box;
-  }
-  .year-heatmap-cell.lvl-1{ background:var(--accent); opacity:.28; border-color:transparent; }
-  .year-heatmap-cell.lvl-2{ background:var(--accent); opacity:.52; border-color:transparent; }
-  .year-heatmap-cell.lvl-3{ background:var(--accent); opacity:.76; border-color:transparent; }
-  .year-heatmap-cell.lvl-4{ background:var(--accent); opacity:1; border-color:transparent; }
-  .year-heatmap-cell.is-future{ background:transparent; border-style:dashed; cursor:default; }
-  .year-heatmap-cell.is-today{ outline:1.5px solid var(--safety-dark); outline-offset:1px; }
-  .year-heatmap-legend{ display:flex; align-items:center; gap:5px; font-family:'JetBrains Mono', monospace; font-size:9.5px; color:var(--ink-soft); margin:-4px 0 12px; flex-wrap:wrap; }
-  .year-heatmap-legend .yhl-swatch{ width:11px; height:11px; border-radius:3px; background:var(--paper-2); border:1px solid var(--line); box-sizing:border-box; }
-  .year-heatmap-legend .yhl-swatch.lvl-1{ background:var(--accent); opacity:.28; border-color:transparent; }
-  .year-heatmap-legend .yhl-swatch.lvl-2{ background:var(--accent); opacity:.52; border-color:transparent; }
-  .year-heatmap-legend .yhl-swatch.lvl-3{ background:var(--accent); opacity:.76; border-color:transparent; }
-  .year-heatmap-legend .yhl-swatch.lvl-4{ background:var(--accent); opacity:1; border-color:transparent; }
-  @media (max-width:700px){ .year-heatmap-grid{ grid-template-rows:12px repeat(7, 10px); grid-auto-columns:10px; } .year-heatmap-cell{ width:10px; height:10px; } }
+  .yg-linear{ position:relative; padding:2px 2px 6px; margin-bottom:10px; }
+  .yg-linear-labels{ position:relative; height:14px; font-family:'JetBrains Mono', monospace; font-size:10.5px; color:var(--ink-soft); }
+  .yg-linear-label{ position:absolute; top:0; white-space:nowrap; }
+  .yg-linear-label.start{ left:0; }
+  .yg-linear-label.end{ right:0; }
+  .yg-linear-label.current{ transform:translateX(-50%); color:var(--accent); font-weight:700; }
+  .yg-linear-ticks{ position:relative; height:8px; }
+  .yg-linear-tick{ position:absolute; top:0; width:1px; height:8px; background:var(--line); }
+  .yg-linear-tick.start{ left:0; }
+  .yg-linear-tick.end{ left:100%; }
+  .yg-linear-tick.current{ background:var(--accent); }
+  .yg-linear-bar{ display:flex; width:100%; height:22px; border-radius:5px; overflow:hidden; background:var(--paper-2); border:1px solid var(--line); box-sizing:border-box; }
+  .yg-linear-seg{ flex:1; display:flex; align-items:center; justify-content:center; font-size:12px; line-height:1; font-family:'JetBrains Mono', monospace; }
+  .yg-linear-seg.filled{ color:var(--accent); }
+  .yg-linear-seg.empty{ color:var(--line); }
+  .yg-linear-seg.marker{ color:var(--safety-dark); font-weight:700; font-size:14px; }
+  .yg-linear-arrow-row{ position:relative; height:14px; margin-top:2px; }
+  .yg-linear-arrow{ position:absolute; top:0; transform:translateX(-50%); color:var(--safety-dark); font-size:13px; line-height:1; }
+  .yg-linear-current-row{ position:relative; height:16px; }
+  .yg-linear-current-text{ position:absolute; top:0; transform:translateX(-50%); font-family:'JetBrains Mono', monospace; font-size:10.5px; color:var(--safety-dark); font-weight:700; white-space:nowrap; }
   /* ---------- 계획: 카테고리별 목표 카드에 개별 할일 추가 버튼 ---------- */
   .plan-cat-add-btn{ margin-top:7px; font-size:10.5px; padding:5px 10px; width:100%; }
 
@@ -1000,6 +993,7 @@
           <button type="button" class="tp-tab" data-period="quarterly">분기별</button>
           <button type="button" class="tp-tab" data-period="monthly">월간별</button>
           <button type="button" class="tp-tab" data-period="weekly">주간별</button>
+          <button type="button" class="tp-tab" data-period="daily">일간별</button>
         </div>
 
         <div class="timeline-wrap">
@@ -1009,23 +1003,12 @@
         <div id="planOngoingList"></div>
 
         <div class="plan-divider"></div>
-        <!-- 365일 진행률: 올해 하루하루의 기록 충실도를 잔디밭(히트맵) 형태로 한눈에 보여주는 차트 -->
+        <!-- 365일 진행률: 1일~365일 막대에서 오늘이 몇 번째 날인지 화살표로 짚어 보여주는 차트 -->
         <div class="year-grid-head">
           <span class="yg-title"><svg class="micon" viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg"><rect x="3.5" y="4.5" width="13" height="11.5" rx="1.5" stroke="currentColor" stroke-width="1.4"/><path d="M3.5 8h13M7 3v3M13 3v3" stroke="currentColor" stroke-width="1.4" stroke-linecap="round"/></svg> 365일 진행률</span>
           <span class="yg-today" id="ygTodayBadge">--</span>
         </div>
-        <div class="year-heatmap-scroll">
-          <div class="year-heatmap-grid" id="yearGlanceGrid"></div>
-        </div>
-        <div class="year-heatmap-legend">
-          <span>적음</span>
-          <span class="yhl-swatch"></span>
-          <span class="yhl-swatch lvl-1"></span>
-          <span class="yhl-swatch lvl-2"></span>
-          <span class="yhl-swatch lvl-3"></span>
-          <span class="yhl-swatch lvl-4"></span>
-          <span>많음</span>
-        </div>
+        <div id="yearGlanceGrid"></div>
 
         <div class="plan-divider"></div>
         <div class="plan-cat-grid" id="planCatGrid"></div>
@@ -3119,6 +3102,16 @@
     }
     return units;
   }
+  function buildDailyTimelineUnits(){
+    const units = [];
+    for(let i=-4;i<=4;i++){
+      const ds = addDays(planDate, i);
+      const d = new Date(ds+'T00:00:00');
+      units.push({ start:ds, end:ds, label:(d.getMonth()+1)+'/'+d.getDate(), sub:'('+WEEKDAYS[d.getDay()]+')',
+        isToday: todayStr()===ds, isSelected: ds===planDate, onClick: () => setDate(ds) });
+    }
+    return units;
+  }
   function buildWeeklyTimelineUnits(){
     const units = [];
     for(let i=-4;i<=4;i++){
@@ -3154,7 +3147,8 @@
     yearly: buildYearlyTimelineUnits,
     quarterly: buildQuarterlyTimelineUnits,
     monthly: buildMonthlyTimelineUnits,
-    weekly: buildWeeklyTimelineUnits
+    weekly: buildWeeklyTimelineUnits,
+    daily: buildDailyTimelineUnits
   };
   let planTimelinePeriod = 'monthly';
   function renderPlanTimelines(){
@@ -3178,37 +3172,11 @@
     renderYearGlance();
   }
 
-  // ---------- 계획 배너의 날짜(기간) 영역: 365일(1년) 전체를 하루 단위 잔디밭(히트맵)으로 보는 진행률 차트 ----------
-  // currentDate가 속한 연도의 1/1~12/31을 하루 한 칸씩 표시합니다. 각 칸의 진하기는 그날 기록된
-  // 항목 수(컨디션/시간계획/건강/할일/습관/생각/일기/인간관계/자산/직업/취미 등)에 따라 0~4단계로 나뉘고,
-  // 아직 오지 않은 날은 빈 칸(is-future)으로, 오늘은 테두리로 강조(is-today) 표시합니다.
-  function dayFillScore(e){
-    if(!e) return 0;
-    let score = 0;
-    if(e.wakeTime || e.sleepTime || e.exerciseYN || e.exerciseType || e.scoreYesterday || e.scoreToday || e.condition) score++;
-    if(e.timePlan && e.timePlan.some(s => s.content || s.category || s.done)) score++;
-    if(e.health){
-      const h = e.health;
-      if((h.meals&&h.meals.length) || (h.supplements&&h.supplements.length) || (h.exercises&&h.exercises.length) || (h.body && (h.body.fat||h.body.muscle||h.body.weight)) || h.total || h.deficient) score++;
-    }
-    if(e.todos && e.todos.length>0) score++;
-    if(e.habits && e.habits.length>0) score++;
-    if(e.diary && (e.diary.thoughts||e.diary.thoughtsTopic||e.diary.questions||e.diary.questionsTopic||e.diary.impression||e.diary.impressionTopic||e.diary.keywords)) score++;
-    if(e.reference || e.referenceTopic) score++;
-    if(e.relationships && (e.relationships.people||e.relationships.memo||e.relationships.gratitude||e.relationships.score)) score++;
-    if(e.assets && (e.assets.expense||e.assets.income||e.assets.total||e.assets.memo||e.assets.nextAction)) score++;
-    if(e.career && (e.career.summary||e.career.achievements||e.career.learned||e.career.priority)) score++;
-    if(e.hobby && (e.hobby.activity||e.hobby.duration||e.hobby.satisfaction||e.hobby.memo)) score++;
-    return score; // 0~10
-  }
-  function dayFillLevel(score){
-    if(score <= 0) return 0;
-    if(score <= 2) return 1;
-    if(score <= 4) return 2;
-    if(score <= 6) return 3;
-    return 4;
-  }
-  const YG_MONTH_NAMES = ['1월','2월','3월','4월','5월','6월','7월','8월','9월','10월','11월','12월'];
+  // ---------- 계획 배너의 날짜(기간) 영역: 365일(1년) 진행 상황을 1일~365일 막대로 보여주는 차트 ----------
+  // currentDate가 속한 연도의 1/1~12/31(또는 12/31)을 하나의 막대로 두고, 오늘이 그 중 몇 번째
+  // 날인지(경과일)를 막대 위 화살표(↑)와 표식(●)으로 짚어 보여줍니다. 지난 날은 ■(채움),
+  // 아직 오지 않은 날은 □(빈칸)로 표시됩니다.
+  const YG_SEGMENTS = 60; // 막대를 표시할 칸 수(1년 365일을 이 칸 수에 비례해 나눠 표시)
   function renderYearGlance(gridId, badgeId){
     gridId = gridId || 'yearGlanceGrid';
     badgeId = badgeId || 'ygTodayBadge';
@@ -3216,64 +3184,57 @@
     if(!grid) return;
     const cy = Number(currentDate.slice(0,4));
     const todayD = todayStr();
-    const ty = Number(todayD.slice(0,4));
 
-    const jan1 = new Date(cy, 0, 1);
     const isLeap = (cy % 4 === 0 && cy % 100 !== 0) || (cy % 400 === 0);
     const totalDays = isLeap ? 366 : 365;
-    const startOffset = jan1.getDay(); // 0(일)~6(토): 1/1이 위치할 행
+    const jan1Str = cy + '-01-01';
+    const dec31Str = cy + '-12-31';
 
-    grid.innerHTML = '';
-    let elapsedDays = 0, filledDays = 0;
-    let lastMonthLabeled = -1;
+    // 경과일: 보고 있는 연도가 지난 해면 365(366)일 전부 경과, 미래 해면 0일 경과로 취급합니다.
+    let elapsedDays;
+    if(todayD < jan1Str) elapsedDays = 0;
+    else if(todayD > dec31Str) elapsedDays = totalDays;
+    else elapsedDays = Math.round((new Date(todayD+'T00:00:00') - new Date(jan1Str+'T00:00:00')) / 86400000) + 1;
 
-    for(let i = 0; i < totalDays; i++){
-      const d = new Date(cy, 0, 1 + i);
-      const ds = toLocalISO(d);
-      const col = Math.floor((i + startOffset) / 7);
-      const row = (i + startOffset) % 7;
-      const isFuture = ds > todayD;
-      const isToday = ds === todayD;
+    // 화면에 보여줄 칸(YG_SEGMENTS) 중 오늘 위치에 해당하는 칸 인덱스
+    const markerIndex = totalDays > 1
+      ? Math.min(YG_SEGMENTS - 1, Math.max(0, Math.round((elapsedDays - 1) / (totalDays - 1) * (YG_SEGMENTS - 1))))
+      : 0;
+    const markerPct = ((markerIndex + 0.5) / YG_SEGMENTS * 100).toFixed(2);
+    const currentDayLabel = Math.max(1, elapsedDays);
 
-      // 월이 바뀌는 첫 주(칸)에 월 라벨을 한 번씩 붙입니다.
-      if(d.getMonth() !== lastMonthLabeled){
-        lastMonthLabeled = d.getMonth();
-        const label = document.createElement('div');
-        label.className = 'year-heatmap-month';
-        label.style.gridColumn = String(col + 1);
-        label.style.gridRow = '1';
-        label.textContent = YG_MONTH_NAMES[d.getMonth()];
-        grid.appendChild(label);
-      }
-
-      let level = 0;
-      if(!isFuture){
-        elapsedDays++;
-        const score = dayFillScore(allLogs[ds]);
-        if(score > 0) filledDays++;
-        level = dayFillLevel(score);
-      }
-
-      const cell = document.createElement('div');
-      cell.className = 'year-heatmap-cell' + (level > 0 ? ' lvl-' + level : '') + (isFuture ? ' is-future' : '') + (isToday ? ' is-today' : '');
-      cell.style.gridColumn = String(col + 1);
-      cell.style.gridRow = String(row + 2);
-      cell.title = fmtDateShort(ds) + (isFuture ? ' — 아직 오지 않은 날' : ' — 기록 ' + dayFillScore(allLogs[ds]) + '개 항목');
-      if(!isFuture){
-        cell.addEventListener('click', () => { setDate(ds); });
-      }
-      grid.appendChild(cell);
+    let segHtml = '';
+    for(let i = 0; i < YG_SEGMENTS; i++){
+      if(i < markerIndex) segHtml += `<span class="yg-linear-seg filled">■</span>`;
+      else if(i === markerIndex) segHtml += `<span class="yg-linear-seg marker" title="오늘 · ${currentDayLabel}일째">●</span>`;
+      else segHtml += `<span class="yg-linear-seg empty">□</span>`;
     }
+
+    grid.innerHTML = `
+      <div class="yg-linear">
+        <div class="yg-linear-labels">
+          <span class="yg-linear-label start">1일</span>
+          <span class="yg-linear-label current" style="left:${markerPct}%;">${currentDayLabel}일</span>
+          <span class="yg-linear-label end">${totalDays}일</span>
+        </div>
+        <div class="yg-linear-ticks">
+          <span class="yg-linear-tick start"></span>
+          <span class="yg-linear-tick current" style="left:${markerPct}%;"></span>
+          <span class="yg-linear-tick end"></span>
+        </div>
+        <div class="yg-linear-bar">${segHtml}</div>
+        <div class="yg-linear-arrow-row">
+          <span class="yg-linear-arrow" style="left:${markerPct}%;">↑</span>
+        </div>
+        <div class="yg-linear-current-row">
+          <span class="yg-linear-current-text" style="left:${markerPct}%;">현재 ${currentDayLabel}일</span>
+        </div>
+      </div>`;
 
     const badge = $(badgeId);
     if(badge){
-      const pct = elapsedDays > 0 ? Math.round(filledDays / elapsedDays * 100) : 0;
-      badge.textContent = '진행률 ' + pct + '% (' + filledDays + '/' + elapsedDays + '일)';
-    }
-    // 지난 해/미래 연도를 보고 있을 때는 스크롤을 오늘이 있는 위치(연말)로 자연스럽게 맞춥니다.
-    if(cy <= ty){
-      const scrollWrap = grid.parentElement;
-      if(scrollWrap) scrollWrap.scrollLeft = scrollWrap.scrollWidth;
+      const pct = totalDays > 0 ? Math.round(elapsedDays / totalDays * 100) : 0;
+      badge.textContent = currentDayLabel + '/' + totalDays + '일 (' + pct + '%)';
     }
   }
 
@@ -3618,42 +3579,7 @@
 
   // ---------- 인쇄창: 진행중인 계획·습관(D-day) 배너 (계획 배너와 연동, 읽기 전용) ----------
   // renderOngoingPlanList는 이미 계획탭에서 쓰던 함수를 그대로 재사용합니다(읽기 전용 목록이라 그대로 안전).
-
-  // ---------- 인쇄창: 카테고리별 계획 목록 배너 (계획 배너 "카테고리별 목표"와 연동, 읽기 전용) ----------
-  // 일간/주간/월간/연간 어느 기간에 등록했든 상관없이, 카테고리(생각/건강/인간관계/자산투자/직업/취미)별로
-  // 등록된 계획 항목을 전부 모아서 보여줍니다. 목표일이 있으면 D-day도 함께 표시하고,
-  // syncCatPlanItemsToCalendar()를 통해 같은 목표일이 인쇄탭·기록탭 달력에도 일정으로 표시됩니다.
-  function collectAllCatPlanItems(){
-    const byCat = {};
-    PLAN_CATS.forEach(c => { byCat[c.key] = []; });
-    ['daily','weekly','monthly','yearly'].forEach(period => {
-      const store = allPlans[period] || {};
-      Object.keys(store).forEach(key => {
-        const pl = normalizePlanTargets(store[key]);
-        PLAN_CATS.forEach(c => {
-          (pl.catPlans[c.key] || []).forEach(item => {
-            if((item.content||'').trim()) byCat[c.key].push({ content:item.content, due:item.due||'', done:!!item.done });
-          });
-        });
-      });
-    });
-    return byCat;
-  }
-  function renderReportCatPlans(){
-    const byCat = collectAllCatPlanItems();
-    const groups = PLAN_CATS.map(c => {
-      const items = byCat[c.key];
-      if(!items.length) return '';
-      return `<div class="ls-group-title">${escapeAttr(c.label)}</div>` + items.map(it => `
-        <div class="rc-row">
-          <div class="row-check ${it.done?'done':''}"></div>
-          <div class="rc-text ${it.done?'done':''}">${escapeAttr(it.content)}</div>
-          ${it.due ? `<span class="rd-date dday-badge">${ddayLabel(it.due)}</span>` : ''}
-        </div>`).join('');
-    }).filter(Boolean).join('');
-    if(!groups) return `<div class="report-empty">계획 배너 "카테고리별 목표"에 등록된 계획 항목이 아직 없어요.</div>`;
-    return `<div class="report-checklist">${groups}</div>`;
-  }
+  // (카테고리별 계획 목록 배너는 인쇄탭에서 제거되었습니다 — 목표일은 이제 달력에서 확인합니다.)
 
   function reportHeroShapes(){
     // 시인성을 위한 장식용 도형(순수 SVG, 외부 이미지 없음) — 테마 accent 색을 그대로 사용
@@ -3958,7 +3884,7 @@
   };
   // 배너 기본 규격: 인쇄탭의 모든 배너는 "중형(medium)"이 기본값이고, 달력과 마인드맵만
   // 예외적으로 기존 그대로(소형)를 유지합니다.
-  const REPORT_DEFAULT_SIZE = { todayplan:'medium', todayhabit:'medium', todaytodo:'medium', goalchart:'medium', todaychecklist:'medium', ongoingplan:'medium', catplans:'medium', condition:'medium', health:'medium', dailysummary:'medium', relationships:'medium', assets:'medium', career:'medium', hobby:'medium', timetable:'medium', diary:'medium', mindmap:'small', calendar:'small' };
+  const REPORT_DEFAULT_SIZE = { todayplan:'medium', todayhabit:'medium', todaytodo:'medium', goalchart:'medium', todaychecklist:'medium', ongoingplan:'medium', condition:'medium', health:'medium', dailysummary:'medium', relationships:'medium', assets:'medium', career:'medium', hobby:'medium', timetable:'medium', diary:'medium', mindmap:'small', calendar:'small' };
   function reportBlock(pid, innerHtml, size){
     size = size || REPORT_DEFAULT_SIZE[pid] || 'small';
     const sizeButtons = Object.keys(REPORT_SIZE_PRESETS).map(key => {
@@ -4039,15 +3965,6 @@
               </div>
               <div id="reportOngoingPlanList"></div>
             </div>`, sizeFor('ongoingplan'))}
-
-            ${reportBlock('catplans', `
-            <div class="report-panel">
-              ${reportPanelShape(2)}
-              <div class="rp-head">
-                <div class="rp-title"><svg class="micon" viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg"><rect x="3.5" y="4.5" width="13" height="11.5" rx="1.5" stroke="currentColor" stroke-width="1.4"/><path d="M3.5 8h13M7 3v3M13 3v3" stroke="currentColor" stroke-width="1.4" stroke-linecap="round"/></svg> 카테고리별 계획 목록 <span class="title-note">— 계획 배너 "카테고리별 목표"와 연동, 목표일은 달력에도 표시</span></div>
-              </div>
-              ${renderReportCatPlans()}
-            </div>`, sizeFor('catplans'))}
 
             ${reportBlock('todaychecklist', `
             <div class="report-panel">
