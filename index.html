@@ -52,6 +52,12 @@
   }
   .mono{ font-family:'JetBrains Mono', monospace; }
 
+  /* ---------- 단색(모노크롬) 아이콘 공통 스타일 ---------- */
+  /* 사이트 전체에서 이모지 대신 사용하는 line-icon(SVG)은 항상 currentColor(글자색)를 따라가서
+     테마가 바뀌어도 자연스럽게 단색으로 표시됩니다. */
+  .micon{ width:14px; height:14px; flex-shrink:0; vertical-align:-2.5px; display:inline-block; color:currentColor; }
+  .ws-icon .micon{ width:19px; height:19px; vertical-align:-4px; }
+
   /* ---------- Shell / side tabs ---------- */
   .app-shell{ max-width:1080px; margin:0 auto; display:flex; align-items:flex-start; }
   .side-tabs{
@@ -151,7 +157,9 @@
     margin-bottom:10px; box-shadow:2px 3px 0 rgba(27,36,48,0.05); padding:12px 13px;
   }
   .cat-title{ font-family:'JetBrains Mono', monospace; font-weight:700; font-size:13px; margin-bottom:8px; display:flex; align-items:center; gap:6px; }
-  .cat-title .cnt{ font-weight:400; font-size:10px; color:var(--ink-soft); }
+  /* 배너(기록탭 .cat-title / 인쇄탭 .rp-title) 제목 옆의 보조 설명 텍스트는
+     항상 같은 폰트·크기·색상을 쓰도록 통일합니다. */
+  .cat-title .cnt, .rp-title .title-note{ font-weight:400; font-size:10px; color:var(--ink-soft); }
   .field input:disabled{ background:var(--paper-2); color:var(--ink-soft); cursor:not-allowed; }
 
   /* ---------- Log view: 2-column banner layout ---------- */
@@ -406,13 +414,13 @@
   .ongoing-plan-section .report-empty{ padding:2px 0; }
   /* ---------- 계획: 연간 현황 세로막대 그래프 (목표일 배너 상단, 오늘이 속한 달 강조) ---------- */
   .year-grid-head{ display:flex; align-items:center; justify-content:space-between; margin-bottom:8px; flex-wrap:wrap; gap:4px; }
-  .year-grid-head .yg-title{ font-family:'JetBrains Mono', monospace; font-size:11.5px; font-weight:700; color:var(--ink); }
+  .year-grid-head .yg-title{ font-family:'JetBrains Mono', monospace; font-size:11.5px; font-weight:700; color:var(--ink); display:inline-flex; align-items:center; gap:4px; }
   .year-grid-head .yg-today{ font-family:'JetBrains Mono', monospace; font-size:10.5px; font-weight:700; color:var(--safety-dark); background:var(--accent-soft); padding:2px 8px; border-radius:20px; }
   .year-grid{
     display:flex; align-items:flex-end; gap:6px; height:150px;
     margin-bottom:12px; padding:10px 4px 0; border-bottom:1.5px dashed var(--line);
   }
-  .year-bar-col{ flex:1; min-width:0; height:100%; display:flex; flex-direction:column; align-items:center; gap:5px; }
+  .year-bar-col{ flex:1; min-width:0; height:100%; display:flex; flex-direction:column; align-items:center; gap:5px; cursor:pointer; }
   .year-bar-track{
     flex:1; width:100%; max-width:22px; background:var(--paper-2); border:1px solid var(--line);
     border-radius:5px 5px 3px 3px; display:flex; flex-direction:column-reverse; overflow:hidden; box-sizing:border-box;
@@ -975,7 +983,7 @@
         <button class="nav-btn" id="nextDay">▶</button>
         <button class="nav-btn" id="todayBtn">오늘</button>
         <button class="nav-btn" id="exportCsvBtn">⬇ CSV</button>
-        <button class="nav-btn ghost" id="templateCsvBtn">📄 양식</button>
+        <button class="nav-btn ghost" id="templateCsvBtn"><svg class="micon" viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M5 3.5h7l3 3V16a.5.5 0 0 1-.5.5h-9A.5.5 0 0 1 5 16V4a.5.5 0 0 1 0-.5Z" stroke="currentColor" stroke-width="1.4" stroke-linejoin="round"/><path d="M12 3.5V6a1 1 0 0 0 1 1h2.5M7.3 11h5.4M7.3 13.3h5.4" stroke="currentColor" stroke-width="1.3" stroke-linecap="round"/></svg> 양식</button>
         <button class="nav-btn ghost" id="uploadCsvBtn">⬆ 업로드</button>
         <input type="file" id="uploadCsvInput" class="upload-input" accept=".csv,text/csv" />
         <div class="recent-tags" id="recentTags"></div>
@@ -984,7 +992,7 @@
 
       <!-- 계획: 타임라인(연/분기/월/주 탭 전환)과 계획입력을 한 배너에 통합해서 계획 관련 확인·수정을 모두 여기서 처리 -->
       <div class="cat-section ongoing-plan-section" id="planOngoingSection">
-        <div class="cat-title">🗓 계획 <span class="cnt">— 기간을 골라 이동하고, 아래에서 바로 계획을 확인·수정하세요</span></div>
+        <div class="cat-title"><svg class="micon" viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg"><rect x="3.5" y="4.5" width="13" height="11.5" rx="1.5" stroke="currentColor" stroke-width="1.4"/><path d="M3.5 8h13M7 3v3M13 3v3" stroke="currentColor" stroke-width="1.4" stroke-linecap="round"/></svg> 계획 <span class="cnt">— 기간을 골라 이동하고, 아래에서 바로 계획을 확인·수정하세요</span></div>
 
         <div class="timeline-period-tabs" id="timelinePeriodTabs">
           <button type="button" class="tp-tab" data-period="yearly">연도별</button>
@@ -1000,6 +1008,14 @@
         <div id="planOngoingList"></div>
 
         <div class="plan-divider"></div>
+        <!-- 연간 한눈에 보기: 1년(12개월)을 한번에 볼 수 있는 월별 기록 현황 막대 차트 -->
+        <div class="year-grid-head">
+          <span class="yg-title"><svg class="micon" viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg"><rect x="3.5" y="4.5" width="13" height="11.5" rx="1.5" stroke="currentColor" stroke-width="1.4"/><path d="M3.5 8h13M7 3v3M13 3v3" stroke="currentColor" stroke-width="1.4" stroke-linecap="round"/></svg> 연간 한눈에 보기</span>
+          <span class="yg-today" id="ygTodayBadge">--</span>
+        </div>
+        <div class="year-grid" id="yearGlanceGrid"></div>
+
+        <div class="plan-divider"></div>
         <div class="plan-cat-grid" id="planCatGrid"></div>
       </div>
 
@@ -1008,7 +1024,7 @@
         <div class="log-col" id="logColLeft">
           <!-- 마인드맵 기록: 떠오르는 생각을 단어로 자유롭게 적으면 인쇄탭 머리모양 마인드맵에 하나씩 추가됩니다 -->
           <div class="cat-section" id="logMindmapSection" data-cat="mindmap" draggable="true">
-            <div class="cat-title">🧠 마인드맵 기록 <span class="cnt">— 여기 적은 단어가 인쇄탭 마인드맵(머리모양)에 하나씩 추가돼요</span><span class="drag-handle" title="끌어서 이동">⠿</span></div>
+            <div class="cat-title"><svg class="micon" viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M10 3.5a4.3 4.3 0 0 0-2.6 7.7c.4.3.6.8.6 1.3v.5h4v-.5c0-.5.2-1 .6-1.3A4.3 4.3 0 0 0 10 3.5Z" stroke="currentColor" stroke-width="1.4" stroke-linejoin="round"/><path d="M8 15.5h4M8.6 17h2.8" stroke="currentColor" stroke-width="1.4" stroke-linecap="round"/></svg> 마인드맵 기록 <span class="cnt">— 여기 적은 단어가 인쇄탭 마인드맵(머리모양)에 하나씩 추가돼요</span><span class="drag-handle" title="끌어서 이동">⠿</span></div>
             <div class="mindmap-add-row">
               <input type="text" id="mindmapWordInput" placeholder="떠오르는 생각을 단어/짧은 문장으로 (예: 여행, 이직 고민)" />
               <select id="mindmapWordRatio" class="mindmap-ratio-select" title="인쇄탭 마인드맵에서 이 단어가 표시될 크기 비율"></select>
@@ -1019,11 +1035,11 @@
           <div class="log-dashed-group" data-cat="thoughts" draggable="true">
             <!-- 시간계획 입력 (구분을 먼저 고르고 내용을 적습니다) -->
             <div class="cat-section" data-cat="schedule">
-              <div class="cat-title">⏱ 시간계획 <span class="cnt">— 구분을 먼저 고르고 내용을 적어보세요</span><span class="drag-handle" title="끌어서 이동">⠿</span></div>
+              <div class="cat-title"><svg class="micon" viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg"><circle cx="10" cy="11" r="6.2" stroke="currentColor" stroke-width="1.4"/><path d="M10 8v3.2l2.4 1.4" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"/><path d="M8 2.5h4M10 4.5V2.5" stroke="currentColor" stroke-width="1.4" stroke-linecap="round"/></svg> 시간계획 <span class="cnt">— 구분을 먼저 고르고 내용을 적어보세요</span><span class="drag-handle" title="끌어서 이동">⠿</span></div>
 
               <!-- 시간계획: hh:mm ~ hh:mm 범위에 "구분 → 내용" 순서로 한번에 채워넣기 -->
               <div class="time-range-row">
-                <span class="tr-label">⏱ 계획</span>
+                <span class="tr-label"><svg class="micon" viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg"><circle cx="10" cy="11" r="6.2" stroke="currentColor" stroke-width="1.4"/><path d="M10 8v3.2l2.4 1.4" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"/><path d="M8 2.5h4M10 4.5V2.5" stroke="currentColor" stroke-width="1.4" stroke-linecap="round"/></svg> 계획</span>
                 <select id="tpRangePlanCategory">
                   <option value="">구분 선택</option>
                   <option value="수면">수면</option><option value="업무">업무</option><option value="이동">이동</option>
@@ -1050,9 +1066,9 @@
 
             <!-- 시간실천 입력: 계획과는 별도 배너에서 "실천 체크"만 반영합니다 -->
             <div class="cat-section" data-cat="schedule">
-              <div class="cat-title">✅ 시간실천 <span class="cnt">— 실제로 실천한 시간대를 체크</span></div>
+              <div class="cat-title"><svg class="micon" viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg"><circle cx="10" cy="10" r="6.5" stroke="currentColor" stroke-width="1.4"/><path d="M7 10.2l2 2 4-4.4" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg> 시간실천 <span class="cnt">— 실제로 실천한 시간대를 체크</span></div>
               <div class="time-range-row">
-                <span class="tr-label">✅ 실천</span>
+                <span class="tr-label"><svg class="micon" viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg"><circle cx="10" cy="10" r="6.5" stroke="currentColor" stroke-width="1.4"/><path d="M7 10.2l2 2 4-4.4" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg> 실천</span>
                 <input type="time" id="tpRangeDoneStart" step="1800" />
                 <span class="tr-tilde">~</span>
                 <input type="time" id="tpRangeDoneEnd" step="1800" />
@@ -1062,7 +1078,7 @@
 
             <!-- 시간표 전체보기: 계획/실천이 함께 반영된 결과를 확인·수정하는 표 -->
             <div class="cat-section" data-cat="schedule">
-              <div class="cat-title">🗓 오늘 시간표</div>
+              <div class="cat-title"><svg class="micon" viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg"><rect x="3.5" y="4.5" width="13" height="11.5" rx="1.5" stroke="currentColor" stroke-width="1.4"/><path d="M3.5 8h13M7 3v3M13 3v3" stroke="currentColor" stroke-width="1.4" stroke-linecap="round"/></svg> 오늘 시간표</div>
               <div class="time-scroll">
                 <table class="timeplan">
                   <thead><tr><th>시간 (00:00~24:00, 30분 단위)</th><th>구분</th><th>계획내용</th><th>실천여부</th><th></th></tr></thead>
@@ -1073,7 +1089,7 @@
 
             <!-- 일기 -->
             <div class="cat-section" data-cat="thoughts">
-              <div class="cat-title">📔 일기
+              <div class="cat-title"><svg class="micon" viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg"><rect x="4.5" y="3" width="11" height="14" rx="1.3" stroke="currentColor" stroke-width="1.4"/><path d="M7.3 3v14M9.6 6.3h3M9.6 9.3h3M9.6 12.3h2" stroke="currentColor" stroke-width="1.2" stroke-linecap="round"/></svg> 일기
                 <div class="banner-date-nav">
                   <button type="button" class="nav-btn" id="diaryPrevDay">◀</button>
                   <span class="bd-label" id="diaryDateLabel">--</span>
@@ -1084,35 +1100,35 @@
               <div class="field"><label>주제</label><input type="text" id="referenceTopic" placeholder="오늘 일기의 주제 (예: 하루 마무리)" /></div>
               <div class="field"><label>오늘 일기 작성</label><textarea id="referenceNote" rows="4" placeholder="오늘 하루 자유롭게 적어보세요"></textarea></div>
             </div>
+          </div>
 
-            <!-- 생각: 주제+생각 / 주제+질문 / 주제+감상 / 키워드 네 가지로 통일된 카드 형태로 구분 -->
-            <div class="cat-section" data-cat="thoughts">
-              <div class="cat-title">💭 생각</div>
-              <div class="thought-subcard" data-kind="thought">
-                <div class="ts-badge">생각</div>
-                <div class="field"><label>주제</label><input type="text" id="diaryThoughtsTopic" placeholder="이 생각의 주제 (예: 오늘의 고민)" /></div>
-                <div class="field"><label>생각</label><textarea id="diaryThoughts" rows="2" placeholder="오늘 든 생각을 적어보세요"></textarea></div>
-              </div>
-              <div class="thought-subcard" data-kind="question">
-                <div class="ts-badge">질문</div>
-                <div class="field"><label>주제</label><input type="text" id="diaryQuestionsTopic" placeholder="이 질문의 주제 (예: 진로, 관계)" /></div>
-                <div class="field"><label>질문</label><textarea id="diaryQuestions" rows="2" placeholder="스스로에게 던지는 질문"></textarea></div>
-              </div>
-              <div class="thought-subcard" data-kind="impression">
-                <div class="ts-badge">감상</div>
-                <div class="field"><label>주제</label><input type="text" id="diaryImpressionTopic" placeholder="이 감상의 주제 (예: 하루 마무리)" /></div>
-                <div class="field"><label>감상</label><textarea id="diaryImpression" rows="2" placeholder="오늘 하루에 대한 감상"></textarea></div>
-              </div>
-              <div class="thought-subcard" data-kind="keyword">
-                <div class="ts-badge">키워드</div>
-                <div class="field"><label>키워드</label><input type="text" id="diaryKeywords" placeholder="쉼표로 구분 (예: 성장, 피로, 뿌듯함)" /></div>
-              </div>
+          <!-- 생각: 주제+생각 / 주제+질문 / 주제+감상 / 키워드 네 가지로 통일된 카드 형태로 구분. 다른 항목들과 묶이지 않고 독립된 배너로 분리 -->
+          <div class="cat-section" data-cat="thoughts-note" draggable="true">
+            <div class="cat-title"><svg class="micon" viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M6.3 5.8c-2.4 0-4.1 1.7-4.1 3.8 0 1.6 1 2.9 2.5 3.5-.1.7-.4 1.4-.9 2 .9-.1 1.8-.5 2.6-1.1.4.1.9.1 1.3.1 3.5 0 5.8-2.1 5.8-4.5S10.1 5.8 6.7 5.8c-.2 0-.3 0-.4 0Z" stroke="currentColor" stroke-width="1.3" stroke-linejoin="round"/><circle cx="15.4" cy="15.3" r="1" fill="currentColor"/><circle cx="17.3" cy="17.2" r="0.6" fill="currentColor"/></svg> 생각<span class="drag-handle" title="끌어서 이동">⠿</span></div>
+            <div class="thought-subcard" data-kind="thought">
+              <div class="ts-badge">생각</div>
+              <div class="field"><label>주제</label><input type="text" id="diaryThoughtsTopic" placeholder="이 생각의 주제 (예: 오늘의 고민)" /></div>
+              <div class="field"><label>생각</label><textarea id="diaryThoughts" rows="2" placeholder="오늘 든 생각을 적어보세요"></textarea></div>
+            </div>
+            <div class="thought-subcard" data-kind="question">
+              <div class="ts-badge">질문</div>
+              <div class="field"><label>주제</label><input type="text" id="diaryQuestionsTopic" placeholder="이 질문의 주제 (예: 진로, 관계)" /></div>
+              <div class="field"><label>질문</label><textarea id="diaryQuestions" rows="2" placeholder="스스로에게 던지는 질문"></textarea></div>
+            </div>
+            <div class="thought-subcard" data-kind="impression">
+              <div class="ts-badge">감상</div>
+              <div class="field"><label>주제</label><input type="text" id="diaryImpressionTopic" placeholder="이 감상의 주제 (예: 하루 마무리)" /></div>
+              <div class="field"><label>감상</label><textarea id="diaryImpression" rows="2" placeholder="오늘 하루에 대한 감상"></textarea></div>
+            </div>
+            <div class="thought-subcard" data-kind="keyword">
+              <div class="ts-badge">키워드</div>
+              <div class="field"><label>키워드</label><input type="text" id="diaryKeywords" placeholder="쉼표로 구분 (예: 성장, 피로, 뿌듯함)" /></div>
             </div>
           </div>
 
           <!-- 인간관계 -->
           <div class="cat-section" data-cat="relationships" draggable="true">
-            <div class="cat-title">🤝 인간관계<span class="drag-handle" title="끌어서 이동">⠿</span></div>
+            <div class="cat-title"><svg class="micon" viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg"><circle cx="7.3" cy="7.5" r="2.3" stroke="currentColor" stroke-width="1.4"/><circle cx="12.7" cy="7.5" r="2.3" stroke="currentColor" stroke-width="1.4"/><path d="M3 16c.4-2.6 2.1-4 4.3-4s3.9 1.4 4.3 4M8.4 16c.4-2.6 2.1-4 4.3-4s3.9 1.4 4.3 4" stroke="currentColor" stroke-width="1.3" stroke-linecap="round"/></svg> 인간관계<span class="drag-handle" title="끌어서 이동">⠿</span></div>
             <div class="field"><label>만난 / 연락한 사람</label><input type="text" id="relPeople" placeholder="예: 팀장님, 친구 OO" /></div>
             <div class="field"><label>관계 메모</label><textarea id="relMemo" rows="2" placeholder="오늘 있었던 대화, 갈등, 배려 등"></textarea></div>
             <div class="field"><label>감사 표현</label><input type="text" id="relGratitude" placeholder="고마움을 느끼거나 표현한 것" /></div>
@@ -1124,7 +1140,7 @@
 
           <!-- 직업 -->
           <div class="cat-section" data-cat="career" draggable="true">
-            <div class="cat-title">💼 직업<span class="drag-handle" title="끌어서 이동">⠿</span></div>
+            <div class="cat-title"><svg class="micon" viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg"><rect x="3" y="7" width="14" height="9" rx="1.3" stroke="currentColor" stroke-width="1.4"/><path d="M7.3 7V5.3a1.3 1.3 0 0 1 1.3-1.3h2.8a1.3 1.3 0 0 1 1.3 1.3V7M3 11h14" stroke="currentColor" stroke-width="1.4" stroke-linecap="round"/></svg> 직업<span class="drag-handle" title="끌어서 이동">⠿</span></div>
             <div class="field"><label>업무 요약</label><textarea id="careerSummary" rows="2" placeholder="오늘 한 업무 요약"></textarea></div>
             <div class="field"><label>성과 / 이슈</label><textarea id="careerAchievements" rows="2" placeholder="잘된 점, 막힌 점"></textarea></div>
             <div class="field"><label>배운점</label><input type="text" id="careerLearned" placeholder="오늘 배운 것" /></div>
@@ -1137,10 +1153,10 @@
           <!-- 건강: 컨디션 / 운동 / 식사 / 영양제 / 체성분·총평 각각 별도 배너로 분리 -->
           <div class="log-dashed-group" data-cat="health" draggable="true">
             <div class="cat-section" data-cat="health">
-              <div class="cat-title">🌤 컨디션<span class="drag-handle" title="끌어서 이동">⠿</span></div>
+              <div class="cat-title"><svg class="micon" viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg"><circle cx="10" cy="10.5" r="3.4" stroke="currentColor" stroke-width="1.4"/><path d="M10 3.8v1.6M10 15.6v1.6M3.8 10h1.6M14.6 10h1.6M5.8 5.8l1.1 1.1M13.1 13.1l1.1 1.1M5.8 14.2l1.1-1.1M13.1 6.9l1.1-1.1" stroke="currentColor" stroke-width="1.3" stroke-linecap="round"/></svg> 컨디션<span class="drag-handle" title="끌어서 이동">⠿</span></div>
               <div class="wake-sleep-row">
-                <div class="ws-box"><span class="ws-icon">🌅</span><div style="flex:1;"><div class="ws-label">기상시간</div><input type="time" id="wakeTime" /></div></div>
-                <div class="ws-box"><span class="ws-icon">🌙</span><div style="flex:1;"><div class="ws-label">취침시간</div><input type="time" id="sleepTime" /></div></div>
+                <div class="ws-box"><span class="ws-icon"><svg class="micon" viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M4 13.5h12M6.5 13.5a3.5 3.5 0 0 1 7 0" stroke="currentColor" stroke-width="1.4" stroke-linecap="round"/><path d="M10 6v1.6M6 8.6l1.1 1.1M14 8.6l-1.1 1.1" stroke="currentColor" stroke-width="1.3" stroke-linecap="round"/></svg></span><div style="flex:1;"><div class="ws-label">기상시간</div><input type="time" id="wakeTime" /></div></div>
+                <div class="ws-box"><span class="ws-icon"><svg class="micon" viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M13.5 12.3A5.6 5.6 0 1 1 8 4.7a4.6 4.6 0 0 0 5.5 7.6Z" stroke="currentColor" stroke-width="1.4" stroke-linejoin="round"/></svg></span><div style="flex:1;"><div class="ws-label">취침시간</div><input type="time" id="sleepTime" /></div></div>
               </div>
               <div class="field-grid" style="margin-bottom:8px;">
                 <div class="field"><label>전일점수</label><input type="number" id="scoreYesterday" min="0" max="100" placeholder="0-100" /></div>
@@ -1153,7 +1169,7 @@
             </div>
 
             <div class="cat-section" data-cat="health">
-              <div class="cat-title">🏋️ 운동</div>
+              <div class="cat-title"><svg class="micon" viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M4 10h12" stroke="currentColor" stroke-width="1.4" stroke-linecap="round"/><rect x="1.8" y="7.5" width="2.4" height="5" rx="0.7" stroke="currentColor" stroke-width="1.3"/><rect x="15.8" y="7.5" width="2.4" height="5" rx="0.7" stroke="currentColor" stroke-width="1.3"/></svg> 운동</div>
               <div class="field-grid" style="margin-bottom:8px;">
                 <div class="field">
                   <label>운동여부</label>
@@ -1170,28 +1186,28 @@
                   </select>
                 </div>
               </div>
-              <div class="sub-title">🏋️ 운동루틴</div>
+              <div class="sub-title"><svg class="micon" viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M4 10h12" stroke="currentColor" stroke-width="1.4" stroke-linecap="round"/><rect x="1.8" y="7.5" width="2.4" height="5" rx="0.7" stroke="currentColor" stroke-width="1.3"/><rect x="15.8" y="7.5" width="2.4" height="5" rx="0.7" stroke="currentColor" stroke-width="1.3"/></svg> 운동루틴</div>
               <div class="row-hint">루틴 / 자극부위 / 방법 / 중량 / 회수 / 비고(추가 기입)</div>
               <div class="field-rows" id="healthExerciseRows"></div>
               <button type="button" class="add-row-btn" id="healthExerciseAdd">+ 운동루틴 추가</button>
             </div>
 
             <div class="cat-section" data-cat="health">
-              <div class="cat-title">🍽 식사</div>
+              <div class="cat-title"><svg class="micon" viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg"><circle cx="10" cy="10" r="6.5" stroke="currentColor" stroke-width="1.4"/><circle cx="10" cy="10" r="3" stroke="currentColor" stroke-width="1.2"/></svg> 식사</div>
               <div class="row-hint">식사루틴 / 내용 / 탄수화물 / 단백질 / 지방 / 당 을 한 줄씩 기록</div>
               <div class="field-rows" id="healthMealRows"></div>
               <button type="button" class="add-row-btn" id="healthMealAdd">+ 식사 추가</button>
             </div>
 
             <div class="cat-section" data-cat="health">
-              <div class="cat-title">💊 영양제</div>
+              <div class="cat-title"><svg class="micon" viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg"><rect x="3.5" y="8.6" width="13" height="4.8" rx="2.4" stroke="currentColor" stroke-width="1.4" transform="rotate(-28 10 11)"/><path d="M10 8.7v4.8" stroke="currentColor" stroke-width="1.2" transform="rotate(-28 10 11)"/></svg> 영양제</div>
               <div class="row-hint">조제 날짜 / 영양성분 / 브랜드 / 영양제 명칭</div>
               <div class="field-rows" id="healthSuppRows"></div>
               <button type="button" class="add-row-btn" id="healthSuppAdd">+ 영양제 추가</button>
             </div>
 
             <div class="cat-section" data-cat="health">
-              <div class="cat-title">📏 체성분 · 총평</div>
+              <div class="cat-title"><svg class="micon" viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg"><rect x="3" y="8" width="14" height="4" rx="0.8" stroke="currentColor" stroke-width="1.3" transform="rotate(-20 10 10)"/><path d="M6 8v2M9 8v2.6M12 8v2M15 8v2.6" stroke="currentColor" stroke-width="1.1" stroke-linecap="round" transform="rotate(-20 10 10)"/></svg> 체성분 · 총평</div>
               <div class="field-grid" style="margin-bottom:8px;">
                 <div class="field"><label>체지방(%)</label><input type="text" id="bodyFat" placeholder="예: 18.5" /></div>
                 <div class="field"><label>골격근량(kg)</label><input type="text" id="bodyMuscle" placeholder="예: 31.2" /></div>
@@ -1206,7 +1222,7 @@
 
           <!-- 자산·투자 -->
           <div class="cat-section" data-cat="assets" draggable="true">
-            <div class="cat-title">💰 자산·투자<span class="drag-handle" title="끌어서 이동">⠿</span></div>
+            <div class="cat-title"><svg class="micon" viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg"><circle cx="10" cy="10" r="6.3" stroke="currentColor" stroke-width="1.4"/><path d="M10 6.8v6.4M12 8c-.3-.8-1-1.2-2-1.2-1.2 0-2 .6-2 1.5 0 2 4 .8 4 2.7 0 .9-.9 1.5-2 1.5-1 0-1.8-.4-2.1-1.2" stroke="currentColor" stroke-width="1.2" stroke-linecap="round"/></svg> 자산·투자<span class="drag-handle" title="끌어서 이동">⠿</span></div>
             <div class="field-grid">
               <div class="field"><label>오늘 지출</label><input type="text" id="assetExpense" placeholder="예: 32,000" /></div>
               <div class="field"><label>오늘 수입</label><input type="text" id="assetIncome" placeholder="예: 0" /></div>
@@ -1218,7 +1234,7 @@
 
           <!-- 취미 -->
           <div class="cat-section" data-cat="hobby" draggable="true">
-            <div class="cat-title">🎨 취미<span class="drag-handle" title="끌어서 이동">⠿</span></div>
+            <div class="cat-title"><svg class="micon" viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M10 3.5a6.5 6.5 0 1 0 0 13c1 0 1.5-.6 1.5-1.3 0-.4-.2-.7-.2-1.1 0-.7.6-1.1 1.3-1.1H14a3 3 0 0 0 3-3c0-3.6-3.1-6.5-7-6.5Z" stroke="currentColor" stroke-width="1.3" stroke-linejoin="round"/><circle cx="7.3" cy="8.6" r="0.9" fill="currentColor"/><circle cx="10" cy="7" r="0.9" fill="currentColor"/><circle cx="12.7" cy="8.6" r="0.9" fill="currentColor"/></svg> 취미<span class="drag-handle" title="끌어서 이동">⠿</span></div>
             <div class="field-grid">
               <div class="field"><label>오늘 활동</label><input type="text" id="hobbyActivity" placeholder="예: 독서, 기타 연습" /></div>
               <div class="field"><label>소요시간</label><input type="text" id="hobbyDuration" placeholder="예: 1시간" /></div>
@@ -1232,7 +1248,7 @@
 
           <!-- 할일 (편집) — 위 배너들과 동일한 카드 크기/스타일로 통일 -->
           <div class="cat-section" data-cat="todos" draggable="true">
-            <div class="cat-title">✅ 할일<span class="drag-handle" title="끌어서 이동">⠿</span></div>
+            <div class="cat-title"><svg class="micon" viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg"><circle cx="10" cy="10" r="6.5" stroke="currentColor" stroke-width="1.4"/><path d="M7 10.2l2 2 4-4.4" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg> 할일<span class="drag-handle" title="끌어서 이동">⠿</span></div>
             <div class="row-hint">⇒ 버튼으로 다음날로 이월 · 계획일정/실행일정을 연월일로 각각 기입할 수 있어요</div>
             <div class="list-rows" id="todoRows"></div>
             <button class="add-row-btn" id="addTodoRow">+ 할일 추가</button>
@@ -1240,7 +1256,7 @@
 
           <!-- 습관 (편집) — 위 배너들과 동일한 카드 크기/스타일로 통일 -->
           <div class="cat-section" data-cat="habits" draggable="true">
-            <div class="cat-title">🔁 습관<span class="drag-handle" title="끌어서 이동">⠿</span></div>
+            <div class="cat-title"><svg class="micon" viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M5 8a5 5 0 0 1 8.5-3.5L15 6M15 6V3.3M15 6h-2.7" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"/><path d="M15 12a5 5 0 0 1-8.5 3.5L5 14M5 14v2.7M5 14h2.7" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"/></svg> 습관<span class="drag-handle" title="끌어서 이동">⠿</span></div>
             <div class="row-hint">⇒ 버튼으로 다음날로 이월 · 계획일정/실행일정을 연월일로 각각 기입할 수 있어요</div>
             <div class="list-rows" id="habitRows"></div>
             <button class="add-row-btn" id="addHabitRow">+ 습관 추가</button>
@@ -1382,12 +1398,12 @@
 
   // 목록(리스트) 탭: 카테고리별로 지금까지 작성한 내용을 엑셀형식 표로 모아봅니다.
   const LIST_CATS = [
-    {key:'thoughts', label:'💭 생각'},
-    {key:'health', label:'❤️ 건강'},
-    {key:'relationships', label:'🤝 인간'},
-    {key:'assets', label:'💰 자산'},
-    {key:'career', label:'💼 직업'},
-    {key:'hobby', label:'🎨 취미'}
+    {key:'thoughts', label:'<svg class="micon" viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M6.3 5.8c-2.4 0-4.1 1.7-4.1 3.8 0 1.6 1 2.9 2.5 3.5-.1.7-.4 1.4-.9 2 .9-.1 1.8-.5 2.6-1.1.4.1.9.1 1.3.1 3.5 0 5.8-2.1 5.8-4.5S10.1 5.8 6.7 5.8c-.2 0-.3 0-.4 0Z" stroke="currentColor" stroke-width="1.3" stroke-linejoin="round"/><circle cx="15.4" cy="15.3" r="1" fill="currentColor"/><circle cx="17.3" cy="17.2" r="0.6" fill="currentColor"/></svg> 생각'},
+    {key:'health', label:'<svg class="micon" viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M10 16.3s-6-3.6-6-7.9c0-2.1 1.7-3.6 3.6-3.6 1.1 0 2.1.5 2.4 1.4.3-.9 1.3-1.4 2.4-1.4 1.9 0 3.6 1.5 3.6 3.6 0 4.3-6 7.9-6 7.9Z" stroke="currentColor" stroke-width="1.4" stroke-linejoin="round"/></svg> 건강'},
+    {key:'relationships', label:'<svg class="micon" viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg"><circle cx="7.3" cy="7.5" r="2.3" stroke="currentColor" stroke-width="1.4"/><circle cx="12.7" cy="7.5" r="2.3" stroke="currentColor" stroke-width="1.4"/><path d="M3 16c.4-2.6 2.1-4 4.3-4s3.9 1.4 4.3 4M8.4 16c.4-2.6 2.1-4 4.3-4s3.9 1.4 4.3 4" stroke="currentColor" stroke-width="1.3" stroke-linecap="round"/></svg> 인간'},
+    {key:'assets', label:'<svg class="micon" viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg"><circle cx="10" cy="10" r="6.3" stroke="currentColor" stroke-width="1.4"/><path d="M10 6.8v6.4M12 8c-.3-.8-1-1.2-2-1.2-1.2 0-2 .6-2 1.5 0 2 4 .8 4 2.7 0 .9-.9 1.5-2 1.5-1 0-1.8-.4-2.1-1.2" stroke="currentColor" stroke-width="1.2" stroke-linecap="round"/></svg> 자산'},
+    {key:'career', label:'<svg class="micon" viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg"><rect x="3" y="7" width="14" height="9" rx="1.3" stroke="currentColor" stroke-width="1.4"/><path d="M7.3 7V5.3a1.3 1.3 0 0 1 1.3-1.3h2.8a1.3 1.3 0 0 1 1.3 1.3V7M3 11h14" stroke="currentColor" stroke-width="1.4" stroke-linecap="round"/></svg> 직업'},
+    {key:'hobby', label:'<svg class="micon" viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M10 3.5a6.5 6.5 0 1 0 0 13c1 0 1.5-.6 1.5-1.3 0-.4-.2-.7-.2-1.1 0-.7.6-1.1 1.3-1.1H14a3 3 0 0 0 3-3c0-3.6-3.1-6.5-7-6.5Z" stroke="currentColor" stroke-width="1.3" stroke-linejoin="round"/><circle cx="7.3" cy="8.6" r="0.9" fill="currentColor"/><circle cx="10" cy="7" r="0.9" fill="currentColor"/><circle cx="12.7" cy="8.6" r="0.9" fill="currentColor"/></svg> 취미'}
   ];
   let currentListCat = 'thoughts';
   // 카테고리별로 표에 보여줄 (열 이름, 값 추출 함수) 목록
@@ -1449,7 +1465,7 @@
     LIST_CATS.forEach(c => {
       const btn = document.createElement('div');
       btn.className = 'cat-tab' + (currentListCat === c.key ? ' active' : '');
-      btn.textContent = c.label;
+      btn.innerHTML = c.label;
       btn.addEventListener('click', () => {
         currentListCat = c.key;
         renderListSubTabs();
@@ -1486,7 +1502,7 @@
     wrap.innerHTML = html;
   }
 
-  // ================= 인간관계 탭 (기록탭 "🤝 인간관계"와 연동) =================
+  // ================= 인간관계 탭 (기록탭 "<svg class="micon" viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg"><circle cx="7.3" cy="7.5" r="2.3" stroke="currentColor" stroke-width="1.4"/><circle cx="12.7" cy="7.5" r="2.3" stroke="currentColor" stroke-width="1.4"/><path d="M3 16c.4-2.6 2.1-4 4.3-4s3.9 1.4 4.3 4M8.4 16c.4-2.6 2.1-4 4.3-4s3.9 1.4 4.3 4" stroke="currentColor" stroke-width="1.3" stroke-linecap="round"/></svg> 인간관계"와 연동) =================
   function renderRelationshipsTable(wrapId){
     const wrap = $(wrapId || 'relTableWrap');
     if(!wrap) return;
@@ -1514,13 +1530,15 @@
     html += `</tbody></table></div>`;
     wrap.innerHTML = html;
   }
+  // 이 배열의 label은 <option>, 차트 라벨, 달력 일정 제목 등 순수 텍스트로 쓰이는 곳이 많아
+  // 아이콘 없이 텍스트만 유지합니다 (아이콘은 TIMELINE_CATS.icon 쪽에서 별도로 사용).
   const PLAN_CATS = [
-    {key:'thoughts', label:'💭 생각'},
-    {key:'health', label:'❤️ 건강'},
-    {key:'relationships', label:'🤝 인간관계'},
-    {key:'assets', label:'💰 자산·투자'},
-    {key:'career', label:'💼 직업'},
-    {key:'hobby', label:'🎨 취미'}
+    {key:'thoughts', label:'생각'},
+    {key:'health', label:'건강'},
+    {key:'relationships', label:'인간관계'},
+    {key:'assets', label:'자산·투자'},
+    {key:'career', label:'직업'},
+    {key:'hobby', label:'취미'}
   ];
   // 카테고리별 목표 카드에서 현재 select로 선택된 카테고리(단일 통합 카드용)
   let planCatSelectedKey = PLAN_CATS[0].key;
@@ -1534,14 +1552,14 @@
 
   // 계획창 타임라인에서 확인하는 8개 항목: 생각/건강/인간관계/자산투자/직업/취미/할일/습관
   const TIMELINE_CATS = [
-    {key:'thoughts', label:'생각', icon:'💭'},
-    {key:'health', label:'건강', icon:'❤️'},
-    {key:'relationships', label:'인간관계', icon:'🤝'},
-    {key:'assets', label:'자산투자', icon:'💰'},
-    {key:'career', label:'직업', icon:'💼'},
-    {key:'hobby', label:'취미', icon:'🎨'},
-    {key:'todos', label:'할일', icon:'✅'},
-    {key:'habits', label:'습관', icon:'🔁'}
+    {key:'thoughts', label:'생각', icon:'<svg class="micon" viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M6.3 5.8c-2.4 0-4.1 1.7-4.1 3.8 0 1.6 1 2.9 2.5 3.5-.1.7-.4 1.4-.9 2 .9-.1 1.8-.5 2.6-1.1.4.1.9.1 1.3.1 3.5 0 5.8-2.1 5.8-4.5S10.1 5.8 6.7 5.8c-.2 0-.3 0-.4 0Z" stroke="currentColor" stroke-width="1.3" stroke-linejoin="round"/><circle cx="15.4" cy="15.3" r="1" fill="currentColor"/><circle cx="17.3" cy="17.2" r="0.6" fill="currentColor"/></svg>'},
+    {key:'health', label:'건강', icon:'<svg class="micon" viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M10 16.3s-6-3.6-6-7.9c0-2.1 1.7-3.6 3.6-3.6 1.1 0 2.1.5 2.4 1.4.3-.9 1.3-1.4 2.4-1.4 1.9 0 3.6 1.5 3.6 3.6 0 4.3-6 7.9-6 7.9Z" stroke="currentColor" stroke-width="1.4" stroke-linejoin="round"/></svg>'},
+    {key:'relationships', label:'인간관계', icon:'<svg class="micon" viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg"><circle cx="7.3" cy="7.5" r="2.3" stroke="currentColor" stroke-width="1.4"/><circle cx="12.7" cy="7.5" r="2.3" stroke="currentColor" stroke-width="1.4"/><path d="M3 16c.4-2.6 2.1-4 4.3-4s3.9 1.4 4.3 4M8.4 16c.4-2.6 2.1-4 4.3-4s3.9 1.4 4.3 4" stroke="currentColor" stroke-width="1.3" stroke-linecap="round"/></svg>'},
+    {key:'assets', label:'자산투자', icon:'<svg class="micon" viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg"><circle cx="10" cy="10" r="6.3" stroke="currentColor" stroke-width="1.4"/><path d="M10 6.8v6.4M12 8c-.3-.8-1-1.2-2-1.2-1.2 0-2 .6-2 1.5 0 2 4 .8 4 2.7 0 .9-.9 1.5-2 1.5-1 0-1.8-.4-2.1-1.2" stroke="currentColor" stroke-width="1.2" stroke-linecap="round"/></svg>'},
+    {key:'career', label:'직업', icon:'<svg class="micon" viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg"><rect x="3" y="7" width="14" height="9" rx="1.3" stroke="currentColor" stroke-width="1.4"/><path d="M7.3 7V5.3a1.3 1.3 0 0 1 1.3-1.3h2.8a1.3 1.3 0 0 1 1.3 1.3V7M3 11h14" stroke="currentColor" stroke-width="1.4" stroke-linecap="round"/></svg>'},
+    {key:'hobby', label:'취미', icon:'<svg class="micon" viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M10 3.5a6.5 6.5 0 1 0 0 13c1 0 1.5-.6 1.5-1.3 0-.4-.2-.7-.2-1.1 0-.7.6-1.1 1.3-1.1H14a3 3 0 0 0 3-3c0-3.6-3.1-6.5-7-6.5Z" stroke="currentColor" stroke-width="1.3" stroke-linejoin="round"/><circle cx="7.3" cy="8.6" r="0.9" fill="currentColor"/><circle cx="10" cy="7" r="0.9" fill="currentColor"/><circle cx="12.7" cy="8.6" r="0.9" fill="currentColor"/></svg>'},
+    {key:'todos', label:'할일', icon:'<svg class="micon" viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg"><circle cx="10" cy="10" r="6.5" stroke="currentColor" stroke-width="1.4"/><path d="M7 10.2l2 2 4-4.4" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>'},
+    {key:'habits', label:'습관', icon:'<svg class="micon" viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M5 8a5 5 0 0 1 8.5-3.5L15 6M15 6V3.3M15 6h-2.7" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"/><path d="M15 12a5 5 0 0 1-8.5 3.5L5 14M5 14v2.7M5 14h2.7" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"/></svg>'}
   ];
   function categoryHasContent(e, catKey){
     if(!e) return false;
@@ -2190,7 +2208,7 @@
     $('dopaPct').textContent = done + ' / ' + total + ' 완료 (' + pct + '%)';
     let state = 'idle', title = '오늘의 체크리스트', sub = '할일 · 습관을 체크하면 여기서 응원해줄게요';
     if(total > 0 && done === total){
-      state = 'ecstatic'; title = '올클리어! 🎉'; sub = '오늘 목록을 모두 해냈어요, 최고예요!';
+      state = 'ecstatic'; title = '올클리어! <svg class="micon" viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M10 3l1.4 4.3H16l-3.6 2.6 1.4 4.3L10 11.6 6.2 14.2l1.4-4.3L4 7.3h4.6L10 3Z" stroke="currentColor" stroke-width="1.2" stroke-linejoin="round"/></svg>'; sub = '오늘 목록을 모두 해냈어요, 최고예요!';
     } else if(done > 0){
       state = 'happy'; title = '좋아요, 계속 가봐요!'; sub = (total-done) + '개 남았어요';
     } else if(total > 0){
@@ -2227,7 +2245,7 @@
     const todos = plan ? plan.todos || [] : [];
     const habits = plan ? plan.habits || [] : [];
 
-    let html = `<div class="mw-head"><div class="mw-title">🎯 오늘의 계획</div><button type="button" class="mw-link" id="mwGoToPlan">계획 전체보기 →</button></div>`;
+    let html = `<div class="mw-head"><div class="mw-title"><svg class="micon" viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg"><circle cx="10" cy="10" r="6.3" stroke="currentColor" stroke-width="1.3"/><circle cx="10" cy="10" r="3.6" stroke="currentColor" stroke-width="1.3"/><circle cx="10" cy="10" r="1" fill="currentColor"/></svg> 오늘의 계획</div><button type="button" class="mw-link" id="mwGoToPlan">계획 전체보기 →</button></div>`;
 
     if(!plan || (goals.length === 0 && todos.length === 0 && habits.length === 0)){
       html += `<div class="mw-empty">아직 오늘의 계획이 없어요. '계획 전체보기'에서 오늘의 목표를 적어보세요.</div>`;
@@ -2674,7 +2692,7 @@
     if(!wrap) return;
     const list = eventsFor(currentDate).slice().sort((a,b) => (a.time||'').localeCompare(b.time||''));
     const titleEl = $('dayEventsTitle'+suffix);
-    if(titleEl) titleEl.textContent = '🗓 ' + fmtDateShort(currentDate) + ' 일정 · ' + ddayLabel(currentDate);
+    if(titleEl) titleEl.textContent = '<svg class="micon" viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg"><rect x="3.5" y="4.5" width="13" height="11.5" rx="1.5" stroke="currentColor" stroke-width="1.4"/><path d="M3.5 8h13M7 3v3M13 3v3" stroke="currentColor" stroke-width="1.4" stroke-linecap="round"/></svg> ' + fmtDateShort(currentDate) + ' 일정 · ' + ddayLabel(currentDate);
     wrap.innerHTML = '';
     if(list.length === 0){ wrap.innerHTML = '<div class="de-empty">등록된 일정이 없습니다</div>'; }
     list.forEach(ev => {
@@ -2750,7 +2768,7 @@
     if(!wrap) return;
     const ranges = collectGoalRanges();
     if(ranges.length === 0){
-      wrap.innerHTML = `<div class="rp-head"><div class="rp-title">🎯 목표 진행 차트</div></div>
+      wrap.innerHTML = `<div class="rp-head"><div class="rp-title"><svg class="micon" viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg"><circle cx="10" cy="10" r="6.3" stroke="currentColor" stroke-width="1.3"/><circle cx="10" cy="10" r="3.6" stroke="currentColor" stroke-width="1.3"/><circle cx="10" cy="10" r="1" fill="currentColor"/></svg> 목표 진행 차트</div></div>
         <div class="report-empty">계획 탭에서 카테고리별 시작일·목표일을 정하면, 그 기간만큼 진행률 차트가 여기 나타납니다.</div>`;
       return;
     }
@@ -2780,7 +2798,7 @@
 
     wrap.innerHTML = `
       <div class="rp-head">
-        <div class="rp-title">🎯 목표 진행 차트</div>
+        <div class="rp-title"><svg class="micon" viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg"><circle cx="10" cy="10" r="6.3" stroke="currentColor" stroke-width="1.3"/><circle cx="10" cy="10" r="3.6" stroke="currentColor" stroke-width="1.3"/><circle cx="10" cy="10" r="1" fill="currentColor"/></svg> 목표 진행 차트</div>
         <span class="dday-badge">${ddayLabel(chosen.end)}</span>
       </div>
       <div class="goal-chart-select-row">
@@ -3017,7 +3035,7 @@
 
   // 단기(일간·주간) / 장기(월간·연간) 진행률 배너는 제거되었습니다.
   // 계획탭 하단의 할일 계획 / 습관 계획 배너와 상단 날짜이동 배너는 제거되었습니다
-  // (할일/습관은 기록탭의 ✅할일·🔁습관 배너에서 계속 입력할 수 있습니다).
+  // (할일/습관은 기록탭의 <svg class="micon" viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg"><circle cx="10" cy="10" r="6.5" stroke="currentColor" stroke-width="1.4"/><path d="M7 10.2l2 2 4-4.4" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>할일·<svg class="micon" viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M5 8a5 5 0 0 1 8.5-3.5L15 6M15 6V3.3M15 6h-2.7" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"/><path d="M15 12a5 5 0 0 1-8.5 3.5L5 14M5 14v2.7M5 14h2.7" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"/></svg>습관 배너에서 계속 입력할 수 있습니다).
 
   // ---------- 타임라인: 연도별/분기별/월간별/주간별 각각 고정된 단위로 오늘 위치를 확인하며, 클릭으로 날짜 이동 ----------
   function quarterStartMonth(mo){
@@ -3081,7 +3099,7 @@
       el.className = 'timeline-unit' + (u.isToday?' is-today':'') + (u.isSelected?' is-selected':'');
       const dots = TIMELINE_CATS.map(c => {
         const on = rangeHasCategory(u.start, u.end, c.key);
-        return `<div class="t-dot ${on?'on':''}" title="${c.icon} ${c.label}"></div>`;
+        return `<div class="t-dot ${on?'on':''}" title="${c.label}"></div>`;
       }).join('');
       el.innerHTML = `<div class="tu-label">${u.label}</div>` + (u.sub?`<div class="tu-sub">${u.sub}</div>`:'') + `<div class="timeline-dots">${dots}</div>`;
       el.addEventListener('click', u.onClick);
@@ -3117,6 +3135,45 @@
     renderPlanCatGrid();
     renderPlanTimelines();
     renderOngoingPlanList('planOngoingList');
+    renderYearGlance();
+  }
+
+  // ---------- 계획 배너의 날짜(기간) 영역: 1년을 한번에 볼 수 있는 월별 현황 차트 ----------
+  // currentDate가 속한 연도의 1~12월을 막대로 보여주고, 각 달의 막대 높이는
+  // "그 달에서 기록이 있는 날 수 / (지난 달이면 전체 일수, 이번 달이면 오늘까지의 일수)" 비율입니다.
+  // 아직 오지 않은 달은 빈 막대(is-future)로, 오늘이 속한 달은 강조(is-current) 표시합니다.
+  function renderYearGlance(){
+    const grid = $('yearGlanceGrid');
+    if(!grid) return;
+    const cy = Number(currentDate.slice(0,4));
+    const todayD = todayStr();
+    const ty = Number(todayD.slice(0,4));
+    const tm = Number(todayD.slice(5,7));
+    const tDay = Number(todayD.slice(8,10));
+    const badge = $('ygTodayBadge');
+    if(badge) badge.textContent = '오늘 ' + fmtDateShort(todayD);
+    grid.innerHTML = '';
+    for(let m = 1; m <= 12; m++){
+      const mm = String(m).padStart(2,'0');
+      const daysInMonth = new Date(cy, m, 0).getDate();
+      const isFuture = (cy > ty) || (cy === ty && m > tm);
+      const isCurrent = (cy === ty && m === tm);
+      const upto = isCurrent ? tDay : daysInMonth;
+      let filled = 0;
+      if(!isFuture){
+        for(let d = 1; d <= upto; d++){
+          const ds = cy + '-' + mm + '-' + String(d).padStart(2,'0');
+          if(hasContent(allLogs[ds])) filled++;
+        }
+      }
+      const pct = (!isFuture && upto > 0) ? Math.round(filled / upto * 100) : 0;
+      const col = document.createElement('div');
+      col.className = 'year-bar-col' + (isFuture ? ' is-future' : '') + (isCurrent ? ' is-current' : '');
+      col.title = m + '월 — 기록 ' + filled + '/' + upto + '일 (' + pct + '%)';
+      col.innerHTML = `<div class="year-bar-track"><div class="year-bar-fill" style="height:${pct}%"></div></div><div class="year-bar-mlabel">${m}월</div>`;
+      col.addEventListener('click', () => { setDate(cy + '-' + mm + '-01'); });
+      grid.appendChild(col);
+    }
   }
 
   // ---------- 목표일(D-day)이 지정된 할일/습관: 그 날짜가 지나기 전까지 계속 누적해서 보여줍니다 ----------
@@ -3432,7 +3489,7 @@
     const todayEntry = allLogs[today];
     const habits = (todayEntry && todayEntry.habits) || [];
     if(habits.length === 0){
-      return `<div class="report-empty">오늘 등록된 습관이 없어요 — 기록탭의 "🔁 습관"에서 추가해보세요</div>`;
+      return `<div class="report-empty">오늘 등록된 습관이 없어요 — 기록탭의 "<svg class="micon" viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M5 8a5 5 0 0 1 8.5-3.5L15 6M15 6V3.3M15 6h-2.7" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"/><path d="M15 12a5 5 0 0 1-8.5 3.5L5 14M5 14v2.7M5 14h2.7" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"/></svg> 습관"에서 추가해보세요</div>`;
     }
     return `<div class="report-checklist" id="reportTodayHabitList">` + habits.map((h, i) => `
       <div class="rc-row">
@@ -3558,7 +3615,7 @@
       `<button type="button" class="rmm-period-tab${period===p.key?' active':''}" data-period="${p.key}">${p.label}</button>`
     ).join('')}</div>`;
     if(!words.length){
-      return `${tabsHtml}<div class="report-empty">기록탭의 "🧠 마인드맵 기록"에서 단어를 적어보세요</div>`;
+      return `${tabsHtml}<div class="report-empty">기록탭의 "<svg class="micon" viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M10 3.5a4.3 4.3 0 0 0-2.6 7.7c.4.3.6.8.6 1.3v.5h4v-.5c0-.5.2-1 .6-1.3A4.3 4.3 0 0 0 10 3.5Z" stroke="currentColor" stroke-width="1.4" stroke-linejoin="round"/><path d="M8 15.5h4M8.6 17h2.8" stroke="currentColor" stroke-width="1.4" stroke-linecap="round"/></svg> 마인드맵 기록"에서 단어를 적어보세요</div>`;
     }
     const chips = words.map((w, i) => {
       const color = REPORT_MINDMAP_COLORS[i % REPORT_MINDMAP_COLORS.length];
@@ -3665,7 +3722,7 @@
   function renderReportTimetable(e){
     const filledSlots = e ? (e.timePlan||[]).filter(s => s.content || s.category).slice().sort((a,b) => a.time.localeCompare(b.time)) : [];
     if(!filledSlots.length){
-      return `<div class="report-empty">오늘 기록탭 "⏱ 시간계획"에 입력된 내용이 아직 없어요.</div>`;
+      return `<div class="report-empty">오늘 기록탭 "<svg class="micon" viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg"><circle cx="10" cy="11" r="6.2" stroke="currentColor" stroke-width="1.4"/><path d="M10 8v3.2l2.4 1.4" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"/><path d="M8 2.5h4M10 4.5V2.5" stroke="currentColor" stroke-width="1.4" stroke-linecap="round"/></svg> 시간계획"에 입력된 내용이 아직 없어요.</div>`;
     }
     const groups = groupTimetableSlots(filledSlots);
     return `<div class="ls-items">` + groups.map(g => `<div class="ls-timeplan-row${g.done?' done':''}">
@@ -3675,10 +3732,10 @@
       </div>`).join('') + `</div>`;
   }
 
-  // ---------- 인쇄창: 일기 배너 (기록탭 "📔 일기"와 연동) ----------
+  // ---------- 인쇄창: 일기 배너 (기록탭 "<svg class="micon" viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg"><rect x="4.5" y="3" width="11" height="14" rx="1.3" stroke="currentColor" stroke-width="1.4"/><path d="M7.3 3v14M9.6 6.3h3M9.6 9.3h3M9.6 12.3h2" stroke="currentColor" stroke-width="1.2" stroke-linecap="round"/></svg> 일기"와 연동) ----------
   function renderReportDiary(e){
     if(!e || (!e.referenceTopic && !e.reference)){
-      return `<div class="report-empty">오늘 기록탭 "📔 일기"에 작성한 내용이 아직 없어요.</div>`;
+      return `<div class="report-empty">오늘 기록탭 "<svg class="micon" viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg"><rect x="4.5" y="3" width="11" height="14" rx="1.3" stroke="currentColor" stroke-width="1.4"/><path d="M7.3 3v14M9.6 6.3h3M9.6 9.3h3M9.6 12.3h2" stroke="currentColor" stroke-width="1.2" stroke-linecap="round"/></svg> 일기"에 작성한 내용이 아직 없어요.</div>`;
     }
     return `<div class="log-summary">
       ${e.referenceTopic ? `<div class="ls-group-title">${escapeAttr(e.referenceTopic)}</div>` : ''}
@@ -3740,19 +3797,19 @@
     const dayPct = timePlanDayPercent(todayEntry);
     return `<div class="day24-pct-wrap">
       <div class="day24-pct-row">
-        <span class="d24-label">📝 계획 (하루 24시간 중)</span>
+        <span class="d24-label"><svg class="micon" viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M12.3 3.3a1.2 1.2 0 0 1 1.7 0l1.7 1.7a1.2 1.2 0 0 1 0 1.7L7.3 15.1l-3.6.6.6-3.6 8-8Z" stroke="currentColor" stroke-width="1.4" stroke-linejoin="round"/><path d="M10.8 4.8l2.4 2.4" stroke="currentColor" stroke-width="1.4" stroke-linecap="round"/></svg> 계획 (하루 24시간 중)</span>
         <div class="progress-track"><div class="progress-fill" style="width:${dayPct.plannedPct}%"></div></div>
         <span class="d24-pct">${dayPct.plannedPct}%</span>
       </div>
       <div class="day24-pct-row">
-        <span class="d24-label">✅ 실천 (하루 24시간 중)</span>
+        <span class="d24-label"><svg class="micon" viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg"><circle cx="10" cy="10" r="6.5" stroke="currentColor" stroke-width="1.4"/><path d="M7 10.2l2 2 4-4.4" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg> 실천 (하루 24시간 중)</span>
         <div class="progress-track"><div class="progress-fill" style="width:${dayPct.donePct}%"></div></div>
         <span class="d24-pct">${dayPct.donePct}%</span>
       </div>
     </div>
     <div class="donut-panel">
-      <div class="donut-block"><div class="db-title">📝 계획</div>${renderDonut(planned)}</div>
-      <div class="donut-block"><div class="db-title">✅ 실제(실천)</div>${renderDonut(actual)}</div>
+      <div class="donut-block"><div class="db-title"><svg class="micon" viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M12.3 3.3a1.2 1.2 0 0 1 1.7 0l1.7 1.7a1.2 1.2 0 0 1 0 1.7L7.3 15.1l-3.6.6.6-3.6 8-8Z" stroke="currentColor" stroke-width="1.4" stroke-linejoin="round"/><path d="M10.8 4.8l2.4 2.4" stroke="currentColor" stroke-width="1.4" stroke-linecap="round"/></svg> 계획</div>${renderDonut(planned)}</div>
+      <div class="donut-block"><div class="db-title"><svg class="micon" viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg"><circle cx="10" cy="10" r="6.5" stroke="currentColor" stroke-width="1.4"/><path d="M7 10.2l2 2 4-4.4" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg> 실제(실천)</div>${renderDonut(actual)}</div>
     </div>`;
   }
 
@@ -3798,7 +3855,7 @@
       </div>
 
       <div class="report-layout-toolbar">
-        <button type="button" class="report-print-btn" id="rPrintBtn">🖨 인쇄</button>
+        <button type="button" class="report-print-btn" id="rPrintBtn"><svg class="micon" viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg"><rect x="4.5" y="7" width="11" height="6" rx="1" stroke="currentColor" stroke-width="1.4"/><path d="M6.5 7V4.2a.6.6 0 0 1 .6-.6h5.8a.6.6 0 0 1 .6.6V7M6.5 13v2.8a.6.6 0 0 0 .6.6h5.8a.6.6 0 0 0 .6-.6V13" stroke="currentColor" stroke-width="1.3" stroke-linejoin="round"/></svg> 인쇄</button>
         <span class="report-size-legend">배너 크기·배치는 설정 탭에서 관리해요</span>
         <span class="rlt-status" id="rLayoutStatus"></span>
       </div>
@@ -3809,7 +3866,7 @@
             ${reportBlock('todayplan', `
             <div class="report-stat">
               ${reportStatShape(0)}
-              <div class="rs-label">📝 오늘 계획</div>
+              <div class="rs-label"><svg class="micon" viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M12.3 3.3a1.2 1.2 0 0 1 1.7 0l1.7 1.7a1.2 1.2 0 0 1 0 1.7L7.3 15.1l-3.6.6.6-3.6 8-8Z" stroke="currentColor" stroke-width="1.4" stroke-linejoin="round"/><path d="M10.8 4.8l2.4 2.4" stroke="currentColor" stroke-width="1.4" stroke-linecap="round"/></svg> 오늘 계획</div>
               <div class="rs-value">${dStats.done}/${dStats.total}</div>
               <div class="rs-sub">일간 할일·습관 달성</div>
             </div>`, sizeFor('todayplan'))}
@@ -3818,7 +3875,7 @@
             <div class="report-panel">
               ${reportPanelShape(1)}
               <div class="rp-head">
-                <div class="rp-title">🔁 오늘 습관 <span style="font-weight:400;color:var(--ink-soft);font-size:10.5px;">— 기록탭 습관과 연동</span></div>
+                <div class="rp-title"><svg class="micon" viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M5 8a5 5 0 0 1 8.5-3.5L15 6M15 6V3.3M15 6h-2.7" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"/><path d="M15 12a5 5 0 0 1-8.5 3.5L5 14M5 14v2.7M5 14h2.7" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"/></svg> 오늘 습관 <span class="title-note">— 기록탭 습관과 연동</span></div>
               </div>
               ${renderReportTodayHabit()}
             </div>`, sizeFor('todayhabit'))}
@@ -3833,7 +3890,7 @@
             <div class="report-panel">
               ${reportPanelShape(2)}
               <div class="rp-head">
-                <div class="rp-title">📅 계획 체크리스트</div>
+                <div class="rp-title"><svg class="micon" viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg"><rect x="3.5" y="4.5" width="13" height="11.5" rx="1.5" stroke="currentColor" stroke-width="1.4"/><path d="M3.5 8h13M7 3v3M13 3v3" stroke="currentColor" stroke-width="1.4" stroke-linecap="round"/></svg> 계획 체크리스트</div>
                 <span class="rp-pct-pill">${dStats.pct}%</span>
               </div>
               ${renderReportChecklist(allPlans.daily && allPlans.daily[todayStr()])}
@@ -3843,7 +3900,7 @@
             <div class="report-panel">
               ${reportPanelShape(0)}
               <div class="rp-head">
-                <div class="rp-title">🌤 컨디션 <span style="font-weight:400;color:var(--ink-soft);font-size:10.5px;">— 기록 탭에 입력한 내용</span></div>
+                <div class="rp-title"><svg class="micon" viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg"><circle cx="10" cy="10.5" r="3.4" stroke="currentColor" stroke-width="1.4"/><path d="M10 3.8v1.6M10 15.6v1.6M3.8 10h1.6M14.6 10h1.6M5.8 5.8l1.1 1.1M13.1 13.1l1.1 1.1M5.8 14.2l1.1-1.1M13.1 6.9l1.1-1.1" stroke="currentColor" stroke-width="1.3" stroke-linecap="round"/></svg> 컨디션 <span class="title-note">— 기록 탭에 입력한 내용</span></div>
               </div>
               ${renderReportCondition(allLogs[todayStr()])}
             </div>`, sizeFor('condition'))}
@@ -3852,7 +3909,7 @@
             <div class="report-panel">
               ${reportPanelShape(1)}
               <div class="rp-head">
-                <div class="rp-title">🍽 건강·식단 <span style="font-weight:400;color:var(--ink-soft);font-size:10.5px;">— 기록 탭에 입력한 내용</span></div>
+                <div class="rp-title"><svg class="micon" viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg"><circle cx="10" cy="10" r="6.5" stroke="currentColor" stroke-width="1.4"/><circle cx="10" cy="10" r="3" stroke="currentColor" stroke-width="1.2"/></svg> 건강·식단 <span class="title-note">— 기록 탭에 입력한 내용</span></div>
               </div>
               ${renderReportHealth(allLogs[todayStr()])}
             </div>`, sizeFor('health'))}
@@ -3861,7 +3918,7 @@
             <div class="report-panel">
               ${reportPanelShape(2)}
               <div class="rp-head">
-                <div class="rp-title">📔 하루 정리 <span style="font-weight:400;color:var(--ink-soft);font-size:10.5px;">— 기록 탭에 입력한 내용</span></div>
+                <div class="rp-title"><svg class="micon" viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg"><rect x="4.5" y="3" width="11" height="14" rx="1.3" stroke="currentColor" stroke-width="1.4"/><path d="M7.3 3v14M9.6 6.3h3M9.6 9.3h3M9.6 12.3h2" stroke="currentColor" stroke-width="1.2" stroke-linecap="round"/></svg> 하루 정리 <span class="title-note">— 기록 탭에 입력한 내용</span></div>
               </div>
               ${renderReportDailySummary(allLogs[todayStr()])}
             </div>`, sizeFor('dailysummary'))}
@@ -3870,7 +3927,7 @@
             <div class="report-panel">
               ${reportPanelShape(0)}
               <div class="rp-head">
-                <div class="rp-title">🤝 인간관계 <span style="font-weight:400;color:var(--ink-soft);font-size:10.5px;">— 기록 탭에 입력한 내용</span></div>
+                <div class="rp-title"><svg class="micon" viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg"><circle cx="7.3" cy="7.5" r="2.3" stroke="currentColor" stroke-width="1.4"/><circle cx="12.7" cy="7.5" r="2.3" stroke="currentColor" stroke-width="1.4"/><path d="M3 16c.4-2.6 2.1-4 4.3-4s3.9 1.4 4.3 4M8.4 16c.4-2.6 2.1-4 4.3-4s3.9 1.4 4.3 4" stroke="currentColor" stroke-width="1.3" stroke-linecap="round"/></svg> 인간관계 <span class="title-note">— 기록 탭에 입력한 내용</span></div>
               </div>
               ${renderReportRelationshipsToday(allLogs[todayStr()])}
             </div>`, sizeFor('relationships'))}
@@ -3879,7 +3936,7 @@
             <div class="report-panel">
               ${reportPanelShape(1)}
               <div class="rp-head">
-                <div class="rp-title">💰 자산·투자 <span style="font-weight:400;color:var(--ink-soft);font-size:10.5px;">— 기록 탭에 입력한 내용</span></div>
+                <div class="rp-title"><svg class="micon" viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg"><circle cx="10" cy="10" r="6.3" stroke="currentColor" stroke-width="1.4"/><path d="M10 6.8v6.4M12 8c-.3-.8-1-1.2-2-1.2-1.2 0-2 .6-2 1.5 0 2 4 .8 4 2.7 0 .9-.9 1.5-2 1.5-1 0-1.8-.4-2.1-1.2" stroke="currentColor" stroke-width="1.2" stroke-linecap="round"/></svg> 자산·투자 <span class="title-note">— 기록 탭에 입력한 내용</span></div>
               </div>
               ${renderReportAssets(allLogs[todayStr()])}
             </div>`, sizeFor('assets'))}
@@ -3888,7 +3945,7 @@
             <div class="report-panel">
               ${reportPanelShape(2)}
               <div class="rp-head">
-                <div class="rp-title">💼 직업 <span style="font-weight:400;color:var(--ink-soft);font-size:10.5px;">— 기록 탭에 입력한 내용</span></div>
+                <div class="rp-title"><svg class="micon" viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg"><rect x="3" y="7" width="14" height="9" rx="1.3" stroke="currentColor" stroke-width="1.4"/><path d="M7.3 7V5.3a1.3 1.3 0 0 1 1.3-1.3h2.8a1.3 1.3 0 0 1 1.3 1.3V7M3 11h14" stroke="currentColor" stroke-width="1.4" stroke-linecap="round"/></svg> 직업 <span class="title-note">— 기록 탭에 입력한 내용</span></div>
               </div>
               ${renderReportCareer(allLogs[todayStr()])}
             </div>`, sizeFor('career'))}
@@ -3897,7 +3954,7 @@
             <div class="report-panel">
               ${reportPanelShape(0)}
               <div class="rp-head">
-                <div class="rp-title">🎨 취미 <span style="font-weight:400;color:var(--ink-soft);font-size:10.5px;">— 기록 탭에 입력한 내용</span></div>
+                <div class="rp-title"><svg class="micon" viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M10 3.5a6.5 6.5 0 1 0 0 13c1 0 1.5-.6 1.5-1.3 0-.4-.2-.7-.2-1.1 0-.7.6-1.1 1.3-1.1H14a3 3 0 0 0 3-3c0-3.6-3.1-6.5-7-6.5Z" stroke="currentColor" stroke-width="1.3" stroke-linejoin="round"/><circle cx="7.3" cy="8.6" r="0.9" fill="currentColor"/><circle cx="10" cy="7" r="0.9" fill="currentColor"/><circle cx="12.7" cy="8.6" r="0.9" fill="currentColor"/></svg> 취미 <span class="title-note">— 기록 탭에 입력한 내용</span></div>
               </div>
               ${renderReportHobby(allLogs[todayStr()])}
             </div>`, sizeFor('hobby'))}
@@ -3906,7 +3963,7 @@
             <div class="report-panel">
               ${reportPanelShape(1)}
               <div class="rp-head">
-                <div class="rp-title">⏱ 오늘 시간계획표 <span style="font-weight:400;color:var(--ink-soft);font-size:10.5px;">— 기록탭 시간계획과 연동</span></div>
+                <div class="rp-title"><svg class="micon" viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg"><circle cx="10" cy="11" r="6.2" stroke="currentColor" stroke-width="1.4"/><path d="M10 8v3.2l2.4 1.4" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"/><path d="M8 2.5h4M10 4.5V2.5" stroke="currentColor" stroke-width="1.4" stroke-linecap="round"/></svg> 오늘 시간계획표 <span class="title-note">— 기록탭 시간계획과 연동</span></div>
               </div>
               ${renderReportTimetable(allLogs[todayStr()])}
             </div>`, sizeFor('timetable'))}
@@ -3915,7 +3972,7 @@
             <div class="report-panel">
               ${reportPanelShape(2)}
               <div class="rp-head">
-                <div class="rp-title">📔 일기 <span style="font-weight:400;color:var(--ink-soft);font-size:10.5px;">— 기록탭 일기와 연동</span></div>
+                <div class="rp-title"><svg class="micon" viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg"><rect x="4.5" y="3" width="11" height="14" rx="1.3" stroke="currentColor" stroke-width="1.4"/><path d="M7.3 3v14M9.6 6.3h3M9.6 9.3h3M9.6 12.3h2" stroke="currentColor" stroke-width="1.2" stroke-linecap="round"/></svg> 일기 <span class="title-note">— 기록탭 일기와 연동</span></div>
               </div>
               ${renderReportDiary(allLogs[todayStr()])}
             </div>`, sizeFor('diary'))}
@@ -3927,7 +3984,7 @@
             <div class="report-panel">
               ${reportPanelShape(1)}
               <div class="rp-head">
-                <div class="rp-title">🗓 달력</div>
+                <div class="rp-title"><svg class="micon" viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg"><rect x="3.5" y="4.5" width="13" height="11.5" rx="1.5" stroke="currentColor" stroke-width="1.4"/><path d="M3.5 8h13M7 3v3M13 3v3" stroke="currentColor" stroke-width="1.4" stroke-linecap="round"/></svg> 달력</div>
                 <div class="rp-nav">
                   <button class="nav-btn" id="calPrevMonthReport">◀</button>
                   <div class="cal-title mono" id="calTitleReport"></div>
@@ -3944,7 +4001,7 @@
             <div class="report-panel">
               ${reportPanelShape(2)}
               <div class="rp-head">
-                <div class="rp-title">🧠 기록 마인드맵</div>
+                <div class="rp-title"><svg class="micon" viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M10 3.5a4.3 4.3 0 0 0-2.6 7.7c.4.3.6.8.6 1.3v.5h4v-.5c0-.5.2-1 .6-1.3A4.3 4.3 0 0 0 10 3.5Z" stroke="currentColor" stroke-width="1.4" stroke-linejoin="round"/><path d="M8 15.5h4M8.6 17h2.8" stroke="currentColor" stroke-width="1.4" stroke-linecap="round"/></svg> 기록 마인드맵</div>
               </div>
               ${renderReportMindmap(reportMindmapPeriod)}
             </div>`, sizeFor('mindmap'))}
@@ -3994,7 +4051,7 @@
       </div>
 
       <div class="cat-section" style="max-width:360px;">
-        <div class="cat-title">🎨 테마</div>
+        <div class="cat-title"><svg class="micon" viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M10 3.5a6.5 6.5 0 1 0 0 13c1 0 1.5-.6 1.5-1.3 0-.4-.2-.7-.2-1.1 0-.7.6-1.1 1.3-1.1H14a3 3 0 0 0 3-3c0-3.6-3.1-6.5-7-6.5Z" stroke="currentColor" stroke-width="1.3" stroke-linejoin="round"/><circle cx="7.3" cy="8.6" r="0.9" fill="currentColor"/><circle cx="10" cy="7" r="0.9" fill="currentColor"/><circle cx="12.7" cy="8.6" r="0.9" fill="currentColor"/></svg> 테마</div>
         <div class="theme-picker" id="themePicker">
           <span class="tp-label">테마</span>
         </div>
