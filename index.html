@@ -70,8 +70,8 @@
      탭 개수가 늘어난 만큼(인쇄/기록/계획/목록/설정) 한 탭당 크기를 더 키워서
      눌러야 할 영역이 넉넉하도록 합니다. */
   .side-tab{
-    display:flex; flex-direction:column; align-items:center; gap:5px;
-    padding:16px 6px; border:1.5px solid transparent; border-right:none;
+    display:flex; flex-direction:column; align-items:center; justify-content:center; gap:7px;
+    padding:28px 6px; min-height:96px; border:1.5px solid transparent; border-right:none;
     border-radius:10px 0 0 10px; background:var(--paper-2); cursor:pointer;
     font-family:'JetBrains Mono', monospace; font-size:12px; font-weight:700; color:var(--ink-soft);
     box-sizing:border-box; position:relative;
@@ -96,7 +96,7 @@
   @media (max-width:700px){
     .app-shell{ flex-direction:column; }
     .side-tabs{ flex-direction:row; width:100%; padding:10px 10px 0; position:static; overflow-x:auto; }
-    .side-tab{ flex-direction:row; border-radius:8px 8px 0 0; border:1.5px solid transparent; border-bottom:none; padding:12px 14px; }
+    .side-tab{ flex-direction:row; border-radius:8px 8px 0 0; border:1.5px solid transparent; border-bottom:none; padding:20px 16px; min-height:auto; }
     .side-tab.active{ border-color:var(--ink-soft); border-bottom-color:var(--card); box-shadow:0 -2px 0 rgba(27,36,48,0.05); }
     .side-tab.active::before{ left:-1.5px; right:-1.5px; top:-1.5px; bottom:auto; width:auto; height:3px; border-radius:8px 8px 0 0; }
   }
@@ -1840,6 +1840,16 @@
     if(e.diary.impressionTopic === undefined) e.diary.impressionTopic = '';
     if(e.diary.keywordsTopic === undefined) e.diary.keywordsTopic = '';
     if(e.referenceTopic === undefined) e.referenceTopic = '';
+    // 예전 기록에는 아래 카테고리들이 아예 없을 수 있습니다(스키마 추가 이전 데이터).
+    // 기록탭(reportView) 배너들이 allLogs를 마이그레이션 없이 직접 읽기 때문에,
+    // 여기서 채워두지 않으면 실제 데이터가 있어도 "기록이 없어요"로 잘못 표시되거나
+    // undefined 참조로 렌더링이 중간에 깨질 수 있습니다.
+    if(!e.todos) e.todos = [];
+    if(!e.habits) e.habits = [];
+    if(!e.relationships) e.relationships = { people:'', memo:'', gratitude:'', score:0 };
+    if(!e.assets) e.assets = { expense:'', income:'', total:'', memo:'', nextAction:'' };
+    if(!e.career) e.career = { summary:'', achievements:'', learned:'', priority:'' };
+    if(!e.hobby) e.hobby = { activity:'', duration:'', satisfaction:0, memo:'' };
     return e;
   }
   function hasContent(e){
@@ -1877,6 +1887,11 @@
       const res = await window.storage.get('daily-logs', false);
       allLogs = res ? JSON.parse(res.value) : {};
     }catch(e){ allLogs = {}; }
+    // 예전 형식으로 저장된 날짜별 기록을 여기서 한 번에 새 스키마로 보정해둡니다.
+    // (이전에는 setDate()에서 복사본(entry)에만 마이그레이션이 적용되고 allLogs 원본은
+    //  그대로 남아있어서, 기록탭 배너처럼 allLogs를 직접 읽는 화면에서는 오늘 기록이
+    //  실제로 있어도 "아직 기록이 없어요"로 나오거나 렌더링이 깨지는 문제가 있었습니다.)
+    Object.keys(allLogs).forEach(d => { allLogs[d] = migrateEntry(allLogs[d]); });
     const [y,m] = currentDate.split('-').map(Number);
     calYear = y; calMonth = m-1;
     setDate(currentDate);
@@ -4077,6 +4092,9 @@
     const wrap = $('reportView');
     const todayPct = dayCompletionPct(todayStr());
     const dStats = planStatsFor('daily', todayStr());
+    // allLogs[todayStr()]는 loadAll()에서 이미 마이그레이션되지만, 혹시 다른 경로로
+    // 예전 형식 데이터가 들어와 있어도 배너 렌더링이 깨지지 않도록 여기서 한 번 더 보정합니다.
+    const todayEntryForReport = migrateEntry(allLogs[todayStr()]);
     // 저장된 배너 규격(소/중/대)이 있으면 그대로 쓰고, 없으면 전체 기본값(소형)을 씁니다.
     const savedSizes = getReportSizes();
     const sizeFor = pid => (savedSizes && savedSizes[pid]) || REPORT_DEFAULT_SIZE[pid] || 'small';
@@ -4166,7 +4184,7 @@
                 <div class="rp-title"><svg class="micon" viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg"><circle cx="10" cy="10.5" r="3.4" stroke="currentColor" stroke-width="1.4"/><path d="M10 3.8v1.6M10 15.6v1.6M3.8 10h1.6M14.6 10h1.6M5.8 5.8l1.1 1.1M13.1 13.1l1.1 1.1M5.8 14.2l1.1-1.1M13.1 6.9l1.1-1.1" stroke="currentColor" stroke-width="1.3" stroke-linecap="round"/></svg> 컨디션</div>
                 ${editToggleBtn('condition')}
               </div>
-              ${renderReportCondition(allLogs[todayStr()])}
+              ${renderReportCondition(todayEntryForReport)}
               ${editSlot('condition')}
             </div>`, sizeFor('condition'))}
 
@@ -4177,7 +4195,7 @@
                 <div class="rp-title"><svg class="micon" viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg"><circle cx="10" cy="10" r="6.5" stroke="currentColor" stroke-width="1.4"/><circle cx="10" cy="10" r="3" stroke="currentColor" stroke-width="1.2"/></svg> 건강·식단</div>
                 ${editToggleBtn('health')}
               </div>
-              ${renderReportHealth(allLogs[todayStr()])}
+              ${renderReportHealth(todayEntryForReport)}
               ${editSlot('health')}
             </div>`, sizeFor('health'))}
 
@@ -4188,7 +4206,7 @@
                 <div class="rp-title"><svg class="micon" viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg"><rect x="4.5" y="3" width="11" height="14" rx="1.3" stroke="currentColor" stroke-width="1.4"/><path d="M7.3 3v14M9.6 6.3h3M9.6 9.3h3M9.6 12.3h2" stroke="currentColor" stroke-width="1.2" stroke-linecap="round"/></svg> 하루 정리</div>
                 ${editToggleBtn('dailysummary')}
               </div>
-              ${renderReportDailySummary(allLogs[todayStr()])}
+              ${renderReportDailySummary(todayEntryForReport)}
               ${editSlot('dailysummary')}
             </div>`, sizeFor('dailysummary'))}
 
@@ -4199,7 +4217,7 @@
                 <div class="rp-title"><svg class="micon" viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg"><circle cx="7.3" cy="7.5" r="2.3" stroke="currentColor" stroke-width="1.4"/><circle cx="12.7" cy="7.5" r="2.3" stroke="currentColor" stroke-width="1.4"/><path d="M3 16c.4-2.6 2.1-4 4.3-4s3.9 1.4 4.3 4M8.4 16c.4-2.6 2.1-4 4.3-4s3.9 1.4 4.3 4" stroke="currentColor" stroke-width="1.3" stroke-linecap="round"/></svg> 인간관계</div>
                 ${editToggleBtn('relationships')}
               </div>
-              ${renderReportRelationshipsToday(allLogs[todayStr()])}
+              ${renderReportRelationshipsToday(todayEntryForReport)}
               ${editSlot('relationships')}
             </div>`, sizeFor('relationships'))}
 
@@ -4210,7 +4228,7 @@
                 <div class="rp-title"><svg class="micon" viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg"><circle cx="10" cy="10" r="6.3" stroke="currentColor" stroke-width="1.4"/><path d="M10 6.8v6.4M12 8c-.3-.8-1-1.2-2-1.2-1.2 0-2 .6-2 1.5 0 2 4 .8 4 2.7 0 .9-.9 1.5-2 1.5-1 0-1.8-.4-2.1-1.2" stroke="currentColor" stroke-width="1.2" stroke-linecap="round"/></svg> 자산·투자</div>
                 ${editToggleBtn('assets')}
               </div>
-              ${renderReportAssets(allLogs[todayStr()])}
+              ${renderReportAssets(todayEntryForReport)}
               ${editSlot('assets')}
             </div>`, sizeFor('assets'))}
 
@@ -4221,7 +4239,7 @@
                 <div class="rp-title"><svg class="micon" viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg"><rect x="3" y="7" width="14" height="9" rx="1.3" stroke="currentColor" stroke-width="1.4"/><path d="M7.3 7V5.3a1.3 1.3 0 0 1 1.3-1.3h2.8a1.3 1.3 0 0 1 1.3 1.3V7M3 11h14" stroke="currentColor" stroke-width="1.4" stroke-linecap="round"/></svg> 직업</div>
                 ${editToggleBtn('career')}
               </div>
-              ${renderReportCareer(allLogs[todayStr()])}
+              ${renderReportCareer(todayEntryForReport)}
               ${editSlot('career')}
             </div>`, sizeFor('career'))}
 
@@ -4232,7 +4250,7 @@
                 <div class="rp-title"><svg class="micon" viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M10 3.5a6.5 6.5 0 1 0 0 13c1 0 1.5-.6 1.5-1.3 0-.4-.2-.7-.2-1.1 0-.7.6-1.1 1.3-1.1H14a3 3 0 0 0 3-3c0-3.6-3.1-6.5-7-6.5Z" stroke="currentColor" stroke-width="1.3" stroke-linejoin="round"/><circle cx="7.3" cy="8.6" r="0.9" fill="currentColor"/><circle cx="10" cy="7" r="0.9" fill="currentColor"/><circle cx="12.7" cy="8.6" r="0.9" fill="currentColor"/></svg> 취미</div>
                 ${editToggleBtn('hobby')}
               </div>
-              ${renderReportHobby(allLogs[todayStr()])}
+              ${renderReportHobby(todayEntryForReport)}
               ${editSlot('hobby')}
             </div>`, sizeFor('hobby'))}
 
@@ -4243,7 +4261,7 @@
                 <div class="rp-title"><svg class="micon" viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg"><circle cx="10" cy="11" r="6.2" stroke="currentColor" stroke-width="1.4"/><path d="M10 8v3.2l2.4 1.4" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"/><path d="M8 2.5h4M10 4.5V2.5" stroke="currentColor" stroke-width="1.4" stroke-linecap="round"/></svg> 오늘 시간계획표</div>
                 ${editToggleBtn('timetable')}
               </div>
-              ${renderReportTimetable(allLogs[todayStr()])}
+              ${renderReportTimetable(todayEntryForReport)}
               ${editSlot('timetable')}
             </div>`, sizeFor('timetable'))}
 
@@ -4254,7 +4272,7 @@
                 <div class="rp-title"><svg class="micon" viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg"><rect x="4.5" y="3" width="11" height="14" rx="1.3" stroke="currentColor" stroke-width="1.4"/><path d="M7.3 3v14M9.6 6.3h3M9.6 9.3h3M9.6 12.3h2" stroke="currentColor" stroke-width="1.2" stroke-linecap="round"/></svg> 일기</div>
                 ${editToggleBtn('diary')}
               </div>
-              ${renderReportDiary(allLogs[todayStr()])}
+              ${renderReportDiary(todayEntryForReport)}
               ${editSlot('diary')}
             </div>`, sizeFor('diary'))}
           </div>
