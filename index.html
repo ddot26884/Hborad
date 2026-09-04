@@ -201,6 +201,20 @@
     color:var(--accent-dark); padding:0; width:100%;
   }
   .ws-box input[type=time]:focus{ outline:none; }
+  /* 기상/취침시간 박스가 부모(예: 컨디션 배너의 '기록' 펼침 슬롯)보다 좁아질 때
+     글자가 잘리거나 넘치지 않고, 두 박스가 항상 나란히 다 보이도록 유연하게 줄어듭니다. */
+  .ws-box{ min-width:0; }
+  .ws-box > div{ min-width:0; }
+  .ws-box input[type=time]{ min-width:0; }
+  .ws-box .ws-label{ white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+  /* 배너 규격이 소형(한 줄에 3개)일 때는 폭이 가장 좁으므로, 기상/취침시간 박스 자체를
+     한 단계 더 작게 줄여서(아이콘·글자·여백 축소) 두 박스가 잘리지 않고 전부 보이게 합니다. */
+  .report-block[data-size="small"] .wake-sleep-row{ gap:5px; }
+  .report-block[data-size="small"] .ws-box{ padding:6px 7px; gap:5px; }
+  .report-block[data-size="small"] .ws-box .ws-icon{ font-size:14px; }
+  .report-block[data-size="small"] .ws-box .ws-icon .micon{ width:14px; height:14px; }
+  .report-block[data-size="small"] .ws-box .ws-label{ font-size:7.5px; }
+  .report-block[data-size="small"] .ws-box input[type=time]{ font-size:11px; }
 
   /* ---------- 다중 필드 리스트 로우 (섭식/영양제/운동루틴) ---------- */
   .field-rows{ display:flex; flex-direction:column; gap:6px; margin-bottom:8px; }
@@ -668,11 +682,15 @@
     gap:var(--report-gap);
   }
   .report-side{
-    width:300px; flex-shrink:0; display:flex; flex-direction:column;
+    width:190px; flex-shrink:0; display:flex; flex-direction:column;
     gap:var(--report-gap); position:sticky; top:12px;
   }
-  /* 달력·마인드맵은 이제 오른쪽 사이드에 단독 배치되므로 항상 전체 폭을 씁니다. */
+  /* 사이드 칸(달력·마인드맵 자리)은 폭은 좁게, 높이는 길게 세로로 길쭉하게 표현합니다.
+     이 칸에 다른 배너를 끌어다 놓아도 같은 규격(좁은 폭·긴 높이)으로 맞춰집니다.
+     #reportSidePanels(id)를 함께 써서 소/중/대 규격별 min-height보다 항상 우선하도록 합니다. */
   .report-side .report-block{ width:100% !important; flex:0 0 100% !important; }
+  #reportSidePanels .report-block{ min-height:340px; }
+  #reportSidePanels .report-block[data-pid="calendar"]{ min-height:300px; }
   .report-side .rb-size-toggle{ display:none; }
   .report-block{
     box-sizing:border-box; overflow:visible; border-radius:14px;
@@ -721,6 +739,9 @@
   .report-print-btn:hover{ background:var(--accent-dark); border-color:var(--accent-dark); }
   .report-save-btn{ background:var(--teal); border-color:var(--teal); }
   .report-save-btn:hover{ background:var(--teal-soft); color:var(--teal); border-color:var(--teal); }
+  .report-save-btn:disabled{ opacity:0.6; cursor:default; }
+  .report-reset-btn{ background:var(--card); color:var(--ink-soft); border-color:var(--line); }
+  .report-reset-btn:hover{ background:var(--accent-soft); color:var(--accent-dark); border-color:var(--accent); }
   .report-size-legend{
     font-family:'JetBrains Mono', monospace; font-size:9.5px; color:var(--ink-soft);
     display:flex; align-items:center; gap:2px; flex-wrap:wrap;
@@ -4044,6 +4065,45 @@
   function editSlot(key){
     return `<div class="rp-edit-slot" id="rpEdit_${key}" style="display:none;"></div>`;
   }
+  // ---------- 버그 수정: renderReportView()가 reportView.innerHTML을 통째로 새로 그릴 때마다,
+  // '기록' 버튼으로 펼쳐서 rpEdit_* 슬롯 안으로 옮겨져 있던 실제 입력폼(예: 컨디션의 기상/취침시간,
+  // 습관·할일 목록 등)이 통째로 파괴되던 문제가 있었습니다(원래 있던 #logView로도 돌아가지 못하고
+  // 그대로 사라짐 → 다음에 같은 '기록' 버튼을 눌러도 옮겨올 DOM 자체가 없어 아무 반응이 없는 것처럼 보였습니다.
+  // 테마를 바꾸거나 날짜를 옮기는 등 화면이 다시 그려질 때마다 이 문제가 발생했습니다).
+  // 지금 펼쳐져 있는 항목의 key를 기억해뒀다가, 다시 그리기 직전엔 안전하게 #logView로 되돌리고
+  // 다시 그린 직후엔 자동으로 재펼침해서 이 문제를 근본적으로 막습니다.
+  const openReportEditKeys = new Set();
+  // renderReportView()가 wrap.innerHTML을 덮어쓰기 직전에 호출: 현재 어떤 rpEdit_* 슬롯 안에
+  // 들어가 있는 실제 입력폼 DOM이 있다면, 파괴되기 전에 안전한 #logView로 되돌려 놓습니다.
+  function stashOpenReportEditSections(){
+    const logView = $('logView');
+    if(!logView) return;
+    Object.keys(REPORT_EDIT_SOURCE_MAP).forEach(key => {
+      const slotId = 'rpEdit_' + key;
+      REPORT_EDIT_SOURCE_MAP[key].forEach(id => {
+        const el = $(id);
+        if(el && el.parentElement && el.parentElement.id === slotId){
+          logView.appendChild(el);
+        }
+      });
+    });
+  }
+  // renderReportView()가 새 HTML을 다 그리고 이벤트 바인딩까지 마친 직후에 호출: 다시 그리기 전에
+  // 열려 있던 항목들을 새 슬롯으로 다시 옮겨와 펼쳐서, 사용자가 보기엔 계속 펼쳐진 상태로 유지되게 합니다.
+  function restoreOpenReportEditSections(){
+    openReportEditKeys.forEach(key => {
+      const slot = $('rpEdit_' + key);
+      const srcIds = REPORT_EDIT_SOURCE_MAP[key];
+      if(!slot || !srcIds) return;
+      srcIds.forEach(id => {
+        const el = $(id);
+        if(el && el.parentElement !== slot) slot.appendChild(el);
+      });
+      slot.style.display = '';
+      const btn = document.querySelector(`.rp-edit-toggle[data-edit="${key}"]`);
+      if(btn) btn.classList.add('open');
+    });
+  }
   // 배너의 '기록' 버튼을 눌렀을 때: 해당 항목의 실제 입력폼 DOM을 그 배너의 펼침 슬롯으로
   // 옮겨오고(값·이벤트 유지), 이미 펼쳐져 있으면 접습니다. 같은 입력폼을 다른 배너에서도
   // 참조하는 경우(예: 계획), 가장 최근에 연 배너 쪽에 나타납니다.
@@ -4056,6 +4116,7 @@
     if(isOpen){
       slot.style.display = 'none';
       if(btn) btn.classList.remove('open');
+      openReportEditKeys.delete(key);
       return;
     }
     srcIds.forEach(id => {
@@ -4064,6 +4125,7 @@
     });
     slot.style.display = '';
     if(btn) btn.classList.add('open');
+    openReportEditKeys.add(key);
     // 펼친 직후 최신 값으로 다시 그려서(다른 배너에서 옮겨온 경우 등) 어긋남이 없게 합니다.
     if(key === 'timetable') renderTimePlan();
     if(key === 'health') renderHealthMeals();
@@ -4099,6 +4161,10 @@
     const savedSizes = getReportSizes();
     const sizeFor = pid => (savedSizes && savedSizes[pid]) || REPORT_DEFAULT_SIZE[pid] || 'small';
 
+    // 아래 wrap.innerHTML을 새로 그리기 직전에, 지금 펼쳐져 있는 '기록' 입력폼이 있다면
+    // 파괴되지 않도록 먼저 안전한 곳(#logView)으로 되돌려 둡니다.
+    stashOpenReportEditSections();
+
     wrap.innerHTML = `
       <div class="header">
         <div class="brand">
@@ -4109,7 +4175,9 @@
 
       <div class="report-layout-toolbar">
         <button type="button" class="report-print-btn" id="rPrintBtn"><svg class="micon" viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg"><rect x="4.5" y="7" width="11" height="6" rx="1" stroke="currentColor" stroke-width="1.4"/><path d="M6.5 7V4.2a.6.6 0 0 1 .6-.6h5.8a.6.6 0 0 1 .6.6V7M6.5 13v2.8a.6.6 0 0 0 .6.6h5.8a.6.6 0 0 0 .6-.6V13" stroke="currentColor" stroke-width="1.3" stroke-linejoin="round"/></svg> 인쇄</button>
-        <span class="report-size-legend">배너 크기·배치는 설정 탭에서 관리해요 · 각 배너의 '기록' 버튼을 누르면 입력폼이 펼쳐져요</span>
+        <button type="button" class="report-print-btn report-save-btn" id="rSaveLayoutBtn" title="지금의 배너 크기·배치·위치(본문/사이드)를 저장합니다"><svg class="micon" viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M4.5 4.2A1.2 1.2 0 0 1 5.7 3h7l2.8 2.8v9a1.2 1.2 0 0 1-1.2 1.2H5.7a1.2 1.2 0 0 1-1.2-1.2V4.2Z" stroke="currentColor" stroke-width="1.4" stroke-linejoin="round"/><path d="M7 3v3.6h5V3M7 11h6v5H7z" stroke="currentColor" stroke-width="1.3" stroke-linejoin="round"/></svg> 배치 저장</button>
+        <button type="button" class="report-print-btn report-reset-btn" id="rResetLayoutBtn" title="배너 크기·배치·위치를 기본값으로 되돌립니다"><svg class="micon" viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M15.5 10a5.5 5.5 0 1 1-1.7-4" stroke="currentColor" stroke-width="1.4" stroke-linecap="round"/><path d="M15.5 4.5V8h-3.5" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"/></svg> 배치 초기화</button>
+        <span class="report-size-legend">배너를 끌어서 옮기면 본문·사이드(달력·마인드맵 자리) 어디로든 배치할 수 있어요 · 각 배너의 '기록' 버튼을 누르면 입력폼이 펼쳐져요</span>
         <span class="rlt-status" id="rLayoutStatus"></span>
       </div>
 
@@ -4313,8 +4381,8 @@
       <div class="footer-note">draft v0.8 · 인쇄창은 읽기 전용 요약이며, 실제 입력은 기록·계획 탭에서 합니다 · 인쇄 버튼(또는 Ctrl/Cmd+P) 클릭 시 이 화면 전체가 A4 기준으로 인쇄됩니다</div>
     `;
 
-    // 저장된 배너 순서가 있으면 먼저 적용한 뒤 나머지를 초기화합니다.
-    applyReportOrder();
+    // 저장된 배너 위치(본문/사이드)와 순서가 있으면 먼저 적용한 뒤 나머지를 초기화합니다.
+    applyReportPlacement();
     renderGoalChartPanel();
     renderOngoingPlanList('reportOngoingPlanList');
     bindCalNav('Report');
@@ -4337,7 +4405,20 @@
       btn.addEventListener('click', () => toggleReportEdit(btn.dataset.edit));
     });
 
+    // 새로 그린 직후, 아까 펼쳐져 있던 '기록' 입력폼들을 다시 펼쳐서 그대로 이어서 볼 수 있게 합니다.
+    restoreOpenReportEditSections();
+
     $('rPrintBtn').addEventListener('click', () => window.print());
+    const saveLayoutBtn = $('rSaveLayoutBtn');
+    if(saveLayoutBtn) saveLayoutBtn.addEventListener('click', async () => {
+      saveLayoutBtn.disabled = true;
+      await saveReportLayoutAll();
+      saveLayoutBtn.disabled = false;
+    });
+    const resetLayoutBtn = $('rResetLayoutBtn');
+    if(resetLayoutBtn) resetLayoutBtn.addEventListener('click', () => {
+      if(confirm('배너 배치와 크기를 초기값으로 되돌릴까요?')) resetReportLayout();
+    });
     wrap.querySelectorAll('.rmm-period-tab').forEach(btn => {
       btn.addEventListener('click', () => {
         if(btn.dataset.period === reportMindmapPeriod) return;
@@ -4412,35 +4493,48 @@
     });
     try{ localStorage.setItem('hb-report-sizes-v1', JSON.stringify(sizes)); }catch(e){}
   }
-  // 배치 저장 버튼: localStorage(이 브라우저용)뿐 아니라 서버(window.storage)에도 함께 저장해서
-  // 다른 기기/브라우저에서 열어도 저장해둔 배치가 그대로 불러와지도록 합니다.
-  async function saveReportLayoutToServer(){
-    try{
-      const payload = JSON.stringify({ sizes: getReportSizes(), order: getReportOrder() });
-      await window.storage.set('report-layout-v1', payload, false);
-    }catch(e){ console.error(e); hbToast('배치 서버 저장 실패: ' + ((e && e.message) || '알 수 없는 오류'), true); }
-  }
-  // 이 기기에 저장된 배치(localStorage)가 없을 때만 서버에 저장된 배치를 가져와 채웁니다.
-  async function loadReportLayoutFromServer(){
-    try{
-      if(getReportSizes() || getReportOrder()) return; // 이미 이 기기에 배치가 있으면 그대로 사용
-      const res = await window.storage.get('report-layout-v1', false);
-      if(!res || !res.value) return;
-      const data = JSON.parse(res.value);
-      if(data && data.sizes) localStorage.setItem('hb-report-sizes-v1', JSON.stringify(data.sizes));
-      if(data && data.order) localStorage.setItem('hb-report-order-v1', JSON.stringify(data.order));
-    }catch(e){ /* 서버에 저장된 배치가 없으면 조용히 무시 */ }
-  }
   function showReportLayoutStatus(msg){
     const el = $('rLayoutStatus');
     if(!el) return;
     el.textContent = msg;
     setTimeout(() => { if(el.textContent === msg) el.textContent = ''; }, 2200);
   }
-  function resetReportSizes(){
-    try{ localStorage.removeItem('hb-report-sizes-v1'); }catch(e){}
+  // 배치 저장 버튼: 지금 화면의 배너 크기·순서·위치(본문/사이드)를 localStorage(이 브라우저용)뿐
+  // 아니라 서버(window.storage)에도 함께 저장해서, 다른 기기/브라우저에서 열어도 그대로 불러와지도록 합니다.
+  async function saveReportLayoutAll(){
+    saveReportSizes();
+    saveReportPlacement();
+    showReportLayoutStatus('저장 중...');
+    await saveReportLayoutToServer();
+  }
+  async function saveReportLayoutToServer(){
+    try{
+      const payload = JSON.stringify({ sizes: getReportSizes(), placement: getReportPlacement() });
+      await window.storage.set('report-layout-v1', payload, false);
+      showReportLayoutStatus('배치를 저장했습니다');
+    }catch(e){ console.error(e); showReportLayoutStatus('서버 저장 실패'); hbToast('배치 서버 저장 실패: ' + ((e && e.message) || '알 수 없는 오류'), true); }
+  }
+  // 이 기기에 저장된 배치(localStorage)가 없을 때만 서버에 저장된 배치를 가져와 채웁니다.
+  async function loadReportLayoutFromServer(){
+    try{
+      if(getReportSizes() || getReportPlacement()) return; // 이미 이 기기에 배치가 있으면 그대로 사용
+      const res = await window.storage.get('report-layout-v1', false);
+      if(!res || !res.value) return;
+      const data = JSON.parse(res.value);
+      if(data && data.sizes) localStorage.setItem('hb-report-sizes-v1', JSON.stringify(data.sizes));
+      if(data && data.placement) localStorage.setItem('hb-report-placement-v1', JSON.stringify(data.placement));
+    }catch(e){ /* 서버에 저장된 배치가 없으면 조용히 무시 */ }
+  }
+  // 배치 초기화 버튼: 배너 크기·순서·본문/사이드 위치를 모두 기본값으로 되돌립니다(이 기기 저장분만 지움 —
+  // 서버에 저장해둔 배치를 함께 지우고 싶으면 초기화 후 '배치 저장'을 다시 눌러주세요).
+  function resetReportLayout(){
+    try{
+      localStorage.removeItem('hb-report-sizes-v1');
+      localStorage.removeItem('hb-report-order-v1'); // 예전 버전 호환용 키(더 이상 사용하지 않음)
+      localStorage.removeItem('hb-report-placement-v1');
+    }catch(e){}
     renderReportView();
-    showReportLayoutStatus('모든 배너를 소형으로 되돌렸습니다');
+    showReportLayoutStatus('배치를 기본값으로 되돌렸습니다');
   }
   // ---------- 배너 규격 높이: 이제 내용 길이에 따라 매번 다시 재는 대신,
   // 규격(소/중/대)별로 CSS(--report-h-*)에 고정된 높이를 그대로 씁니다.
@@ -4468,53 +4562,76 @@
   }
   // ---------- 인쇄창 배너: 끌어서 위치 이동(드래그 정렬) ----------
   // 배너 규격(소/중/대)과는 별개로, 각 배너를 원하는 순서로 옮길 수 있습니다.
-  // 순서는 배너 pid 배열로 저장해두고, 다음에 열 때도 그대로 복원합니다.
-  function getReportOrder(){
+  // 이제 본문(#reportMainPanels)과 사이드(#reportSidePanels, 원래 달력·마인드맵 자리) 사이를
+  // 자유롭게 오가며 옮길 수 있어서, 위치(어느 칸에 있는지)와 그 칸 안에서의 순서를 함께 저장합니다.
+  function getReportPlacement(){
     try{
-      const raw = localStorage.getItem('hb-report-order-v1');
+      const raw = localStorage.getItem('hb-report-placement-v1');
       return raw ? JSON.parse(raw) : null;
     }catch(e){ return null; }
   }
-  // 달력·마인드맵은 오른쪽 사이드에 고정 배치되므로, 순서 저장/드래그 정렬은
-  // 본문 흐름(#reportMainPanels)의 배너에만 적용됩니다.
-  function saveReportOrder(){
-    const wrap = $('reportMainPanels');
-    if(!wrap) return;
-    const order = Array.from(wrap.querySelectorAll(':scope > .report-block')).map(b => b.dataset.pid);
-    try{ localStorage.setItem('hb-report-order-v1', JSON.stringify(order)); }catch(e){}
+  function saveReportPlacement(){
+    const mainWrap = $('reportMainPanels');
+    const sideWrap = $('reportSidePanels');
+    if(!mainWrap || !sideWrap) return;
+    const placement = {
+      main: Array.from(mainWrap.querySelectorAll(':scope > .report-block')).map(b => b.dataset.pid),
+      side: Array.from(sideWrap.querySelectorAll(':scope > .report-block')).map(b => b.dataset.pid)
+    };
+    try{ localStorage.setItem('hb-report-placement-v1', JSON.stringify(placement)); }catch(e){}
   }
-  function applyReportOrder(){
-    const wrap = $('reportMainPanels');
-    if(!wrap) return;
-    const order = getReportOrder();
-    if(!order || !order.length) return;
-    order.forEach(pid => {
-      const node = wrap.querySelector(`:scope > .report-block[data-pid="${pid}"]`);
-      if(node) wrap.appendChild(node);
-    });
+  function applyReportPlacement(){
+    const mainWrap = $('reportMainPanels');
+    const sideWrap = $('reportSidePanels');
+    if(!mainWrap || !sideWrap) return;
+    const placement = getReportPlacement();
+    if(!placement) return;
+    const findNode = pid => mainWrap.querySelector(`:scope > [data-pid="${pid}"]`) || sideWrap.querySelector(`:scope > [data-pid="${pid}"]`);
+    (placement.side || []).forEach(pid => { const node = findNode(pid); if(node) sideWrap.appendChild(node); });
+    (placement.main || []).forEach(pid => { const node = findNode(pid); if(node) mainWrap.appendChild(node); });
   }
+  // 본문·사이드 두 컨테이너를 함께 다루는 드래그 정렬: 같은 칸 안에서 순서만 바꾸는 것도,
+  // 다른 칸(본문 ↔ 사이드)으로 아예 옮기는 것도 모두 됩니다.
   function initReportBannerDrag(){
-    const wrap = $('reportMainPanels');
-    if(!wrap) return;
+    const containers = [$('reportMainPanels'), $('reportSidePanels')].filter(Boolean);
+    if(!containers.length) return;
     let dragEl = null;
-    wrap.querySelectorAll(':scope > .report-block').forEach(node => {
-      node.addEventListener('dragstart', () => { dragEl = node; node.classList.add('dragging'); });
-      node.addEventListener('dragend', () => {
-        node.classList.remove('dragging');
-        wrap.querySelectorAll(':scope > .report-block').forEach(n => n.classList.remove('drag-over'));
-        saveReportOrder();
-        equalizeReportBannerHeights();
+    function clearDragOver(){
+      containers.forEach(w => w.querySelectorAll(':scope > .report-block').forEach(n => n.classList.remove('drag-over')));
+    }
+    containers.forEach(wrap => {
+      wrap.querySelectorAll(':scope > .report-block').forEach(node => {
+        node.addEventListener('dragstart', () => { dragEl = node; node.classList.add('dragging'); });
+        node.addEventListener('dragend', () => {
+          node.classList.remove('dragging');
+          clearDragOver();
+          dragEl = null;
+          saveReportPlacement();
+          equalizeReportBannerHeights();
+        });
+        node.addEventListener('dragover', (e) => {
+          e.preventDefault();
+          if(!dragEl || dragEl === node) return;
+          node.classList.add('drag-over');
+          const rect = node.getBoundingClientRect();
+          // 사이드 칸은 세로로 쌓이고, 본문 칸은 가로로 줄바꿈되므로 기준 축을 다르게 씁니다.
+          const vertical = wrap.id === 'reportSidePanels';
+          const before = vertical ? (e.clientY - rect.top) < rect.height / 2 : (e.clientX - rect.left) < rect.width / 2;
+          wrap.insertBefore(dragEl, before ? node : node.nextSibling);
+        });
+        node.addEventListener('dragleave', () => node.classList.remove('drag-over'));
+        node.addEventListener('drop', (e) => e.preventDefault());
       });
-      node.addEventListener('dragover', (e) => {
+      // 배너가 하나도 없는 빈 칸이나 배너 사이 여백에 놓아도(정확히 배너 위가 아니어도)
+      // 그 칸으로 옮겨질 수 있게 컨테이너 자체에도 드롭을 허용합니다.
+      wrap.addEventListener('dragover', (e) => {
+        if(!dragEl) return;
         e.preventDefault();
-        if(!dragEl || dragEl === node) return;
-        node.classList.add('drag-over');
-        const rect = node.getBoundingClientRect();
-        const before = (e.clientX - rect.left) < rect.width / 2;
-        wrap.insertBefore(dragEl, before ? node : node.nextSibling);
+        if(e.target === wrap && dragEl.parentElement !== wrap){
+          wrap.appendChild(dragEl);
+        }
       });
-      node.addEventListener('dragleave', () => node.classList.remove('drag-over'));
-      node.addEventListener('drop', (e) => e.preventDefault());
+      wrap.addEventListener('drop', (e) => e.preventDefault());
     });
   }
 
