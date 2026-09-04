@@ -969,6 +969,121 @@
   .report-panel .rp-shape{ position:absolute; right:-14px; top:-16px; width:60px; height:60px; opacity:0.5; pointer-events:none; z-index:0; }
   .report-panel > *{ position:relative; z-index:1; }
 
+  /* ================= 카테고리별 전용 디자인 (배너마다 다른 분위기) ================= */
+  /* 목표 진행 차트 + 계획 체크리스트 통합 배너: 안쪽에서 두 영역을 점선으로만 구분합니다 */
+  .goalchecklist-panel .gc-divider{ border-top:1.5px dashed var(--line); margin:12px 0 10px; }
+
+  /* 오늘 시간계획표 — 타임라인/시계 느낌 */
+  .report-block[data-pid="timetable"] .report-panel{
+    border-color:var(--teal);
+    background:
+      repeating-conic-gradient(from 0deg, var(--teal-soft) 0deg 4deg, transparent 4deg 30deg) -30px -30px/160px 160px,
+      var(--card);
+  }
+  .report-block[data-pid="timetable"] .rp-title{ color:var(--teal); }
+  .report-block[data-pid="timetable"] .rp-head{ border-bottom:1.5px dashed var(--teal); padding-bottom:8px; }
+
+  /* 오늘 습관 — 체크 그리드 느낌 */
+  .report-block[data-pid="todayhabit"] .report-panel{
+    border-color:var(--purple);
+    background-image: radial-gradient(var(--purple-soft) 1.7px, transparent 1.7px);
+    background-size:14px 14px;
+    background-color:var(--card);
+  }
+  .report-block[data-pid="todayhabit"] .rp-title{ color:var(--purple); }
+
+  /* 오늘 할일 — 체크리스트 라인 느낌 */
+  .report-block[data-pid="todaytodo"] .report-panel{
+    border-color:var(--accent);
+    background-image: repeating-linear-gradient(180deg, var(--accent-soft) 0 2px, transparent 2px 27px);
+    background-color:var(--card);
+  }
+  .report-block[data-pid="todaytodo"] .rp-title{ color:var(--accent-dark); }
+
+  /* 컨디션 — 부드러운 무드 그라데이션 */
+  .report-block[data-pid="condition"] .report-panel{
+    border-color:var(--purple);
+    background:
+      radial-gradient(circle at 90% -10%, var(--purple-soft) 0%, transparent 55%),
+      radial-gradient(circle at -10% 110%, var(--pink-soft) 0%, transparent 50%),
+      var(--card);
+  }
+  .report-block[data-pid="condition"] .rp-title{ color:var(--purple); }
+
+  /* 하루 정리 — 줄노트(다이어리) 느낌 */
+  .report-block[data-pid="dailysummary"] .report-panel{
+    border-color:var(--ink-soft);
+    background:repeating-linear-gradient(var(--card) 0 22px, var(--line) 22px 23.5px), var(--card);
+  }
+  .report-block[data-pid="dailysummary"] .rp-title{ color:var(--ink); }
+
+  /* 건강·식단 — 십자(헬스) 모눈 느낌 */
+  .report-block[data-pid="health"] .report-panel{
+    border-color:var(--pink);
+    background-image:
+      linear-gradient(var(--pink-soft) 1.5px, transparent 1.5px),
+      linear-gradient(90deg, var(--pink-soft) 1.5px, transparent 1.5px);
+    background-size:22px 22px; background-position:-1px -1px;
+    background-color:var(--card);
+  }
+  .report-block[data-pid="health"] .rp-title{ color:var(--pink); }
+
+  /* 인간관계 — 사람·연결점 느낌 */
+  .report-block[data-pid="relationships"] .report-panel{
+    border-color:var(--yellow);
+    background-image: radial-gradient(var(--accent-soft) 2px, transparent 2px);
+    background-size:22px 22px;
+    background-color:var(--card);
+  }
+  .report-block[data-pid="relationships"] .rp-title{ color:var(--accent-dark); }
+
+  /* 자산·투자 — 상승 그래프 느낌 */
+  .report-block[data-pid="assets"] .report-panel{
+    border-color:var(--green);
+    background-image: linear-gradient(135deg, transparent 46%, var(--green-soft) 46% 54%, transparent 54%);
+    background-size:16px 16px;
+    background-color:var(--card);
+  }
+  .report-block[data-pid="assets"] .rp-title{ color:var(--green); }
+
+  /* 직업 — 자격증/배지 느낌 */
+  .report-block[data-pid="career"] .report-panel{ border-color:var(--ink); background:var(--card); }
+  .report-block[data-pid="career"] .rp-title{ color:var(--ink); }
+  .report-block[data-pid="career"] .report-panel::before{
+    content:""; position:absolute; right:-18px; top:-20px; width:90px; height:90px; border-radius:50%;
+    background:conic-gradient(var(--yellow) 0deg 300deg, var(--accent-soft) 300deg 360deg);
+    opacity:0.28; z-index:0;
+  }
+
+  /* 취미 — 알록달록 도트 느낌 */
+  .report-block[data-pid="hobby"] .report-panel{
+    border-color:var(--pink);
+    background:
+      radial-gradient(var(--pink-soft) 3px, transparent 3px) 0 0/22px 22px,
+      radial-gradient(var(--purple-soft) 3px, transparent 3px) 11px 11px/22px 22px,
+      var(--card);
+  }
+  .report-block[data-pid="hobby"] .rp-title{ color:var(--pink); }
+
+  /* 일기 — 다이어리 용지 느낌 + '전체' 펼치기 */
+  .report-block[data-pid="diary"] .report-panel{
+    border-color:var(--ink-soft);
+    background:repeating-linear-gradient(var(--card) 0 22px, var(--line) 22px 23.5px), var(--card);
+    padding-left:26px;
+  }
+  .report-block[data-pid="diary"] .report-panel::before{
+    content:""; position:absolute; left:18px; top:0; bottom:0; width:1.5px; background:var(--pink); opacity:0.5; z-index:0;
+  }
+  .report-block[data-pid="diary"] .rp-head{ margin-left:-8px; }
+  .rd-diary-body{ max-height:92px; overflow:hidden; position:relative; }
+  .rd-diary-body::after{
+    content:""; position:absolute; left:0; right:0; bottom:0; height:26px;
+    background:linear-gradient(transparent, var(--card));
+  }
+  .report-block[data-pid="diary"].diary-expanded .rd-diary-body{ max-height:none; overflow:visible; }
+  .report-block[data-pid="diary"].diary-expanded .rd-diary-body::after{ display:none; }
+  .rb-full-btn.active{ background:var(--ink); color:#fff; border-color:var(--ink); }
+
   /* ---------- 인쇄창: 오늘 기록 전체 요약 ---------- */
   .log-summary{ display:flex; flex-direction:column; gap:12px; }
   .ls-group-title{
@@ -4093,14 +4208,14 @@
   };
   // 배너 기본 규격: 인쇄탭의 모든 배너는 "중형(medium)"이 기본값이고, 달력과 마인드맵만
   // 예외적으로 기존 그대로(소형)를 유지합니다.
-  const REPORT_DEFAULT_SIZE = { todayhabit:'medium', todaytodo:'medium', goalchart:'medium', todaychecklist:'medium', condition:'medium', health:'medium', dailysummary:'medium', relationships:'medium', assets:'medium', career:'medium', hobby:'medium', timetable:'medium', diary:'medium', mindmap:'small', calendar:'small' };
+  const REPORT_DEFAULT_SIZE = { todayhabit:'medium', todaytodo:'medium', goalchecklist:'large', condition:'medium', health:'medium', dailysummary:'medium', relationships:'medium', assets:'medium', career:'medium', hobby:'medium', timetable:'medium', diary:'medium', mindmap:'small', calendar:'small' };
   // ---------- 인쇄+기록 통합: 배너별 '기록' 토글 버튼 ----------
   // 각 배너 우측의 '기록' 버튼을 누르면, 기존 기록탭에 있던 해당 항목의 입력폼(살아있는 DOM,
   // 값·이벤트가 그대로 유지됨)을 이 배너 자리로 옮겨와 펼쳐 보여줍니다. 다시 누르면 접습니다.
   const REPORT_EDIT_SOURCE_MAP = {
     todayhabit: ['editHabitsSection'],
     todaytodo: ['editTodosSection'],
-    todaychecklist: ['planOngoingSection'],
+    goalchecklist: ['planOngoingSection'],
     condition: ['editConditionSection'],
     health: ['editHealthDietGroup'],
     dailysummary: ['editDailySummarySection'],
@@ -4186,7 +4301,7 @@
     if(key === 'health') renderHealthMeals();
     if(key === 'todayhabit') renderListRows('habitRows', 'habits');
     if(key === 'todaytodo') renderListRows('todoRows', 'todos');
-    if(key === 'todaychecklist') renderPlanView();
+    if(key === 'goalchecklist') renderPlanView();
     if(key === 'mindmap') renderMindmapRecordList();
   }
   // ---------- 일기 A4 팝업 ----------
@@ -4240,10 +4355,12 @@
       const p = REPORT_SIZE_PRESETS[key];
       return `<button type="button" class="rb-size-btn${size===key?' active':''}" data-pid="${pid}" data-size="${key}" title="${p.label} — ${p.desc}">${p.short}</button>`;
     }).join('');
+    // 일기 배너만 소/중/대 옆에 '전체' 버튼을 추가로 둡니다 — 누르면 잘려있던 일기 본문 전체를 펼쳐 보여줍니다.
+    const fullBtn = pid === 'diary' ? `<button type="button" class="rb-size-btn rb-full-btn" data-pid="diary" title="일기 본문 전체 보기/접기">전체</button>` : '';
     return `<div class="report-block" data-pid="${pid}" data-size="${size}" draggable="true">
       <div class="rb-toolbar">
         <span class="rb-drag-handle" title="끌어서 배너 위치를 옮길 수 있어요">⠿ 이동</span>
-        <div class="rb-size-toggle">${sizeButtons}</div>
+        <div class="rb-size-toggle">${sizeButtons}${fullBtn}</div>
       </div>
       ${innerHtml}
     </div>`;
@@ -4309,23 +4426,19 @@
               ${editSlot('todaytodo')}
             </div>`, sizeFor('todaytodo'))}
 
-            ${reportBlock('goalchart', `
-            <div class="report-panel">
+            ${reportBlock('goalchecklist', `
+            <div class="report-panel goalchecklist-panel">
               ${reportPanelShape(0)}
               <div id="goalChartPanel"></div>
-            </div>`, sizeFor('goalchart'))}
-
-            ${reportBlock('todaychecklist', `
-            <div class="report-panel">
-              ${reportPanelShape(2)}
+              <div class="gc-divider"></div>
               <div class="rp-head">
                 <div class="rp-title"><svg class="micon" viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg"><rect x="3.5" y="4.5" width="13" height="11.5" rx="1.5" stroke="currentColor" stroke-width="1.4"/><path d="M3.5 8h13M7 3v3M13 3v3" stroke="currentColor" stroke-width="1.4" stroke-linecap="round"/></svg> 계획 체크리스트</div>
                 <span class="rp-pct-pill">${dStats.pct}%</span>
-                ${editToggleBtn('todaychecklist')}
+                ${editToggleBtn('goalchecklist')}
               </div>
               ${renderReportChecklist(allPlans.daily && allPlans.daily[todayStr()])}
-              ${editSlot('todaychecklist')}
-            </div>`, sizeFor('todaychecklist'))}
+              ${editSlot('goalchecklist')}
+            </div>`, sizeFor('goalchecklist'))}
 
             ${reportBlock('condition', `
             <div class="report-panel">
@@ -4759,11 +4872,20 @@
     const wrap = $('reportPanels');
     if(!wrap) return;
     wrap.querySelectorAll('.report-block').forEach(block => {
-      block.querySelectorAll('.rb-size-btn').forEach(btn => {
+      block.querySelectorAll('.rb-size-btn:not(.rb-full-btn)').forEach(btn => {
         btn.addEventListener('click', (e) => {
           e.preventDefault();
           e.stopPropagation();
           applyReportBlockSize(block.dataset.pid, btn.dataset.size);
+        });
+      });
+      // '전체' 버튼: 일기 본문을 잘라 보여주던 상태를 펼치거나 다시 접습니다.
+      block.querySelectorAll('.rb-full-btn').forEach(btn => {
+        btn.addEventListener('click', (e) => {
+          e.preventDefault();
+          e.stopPropagation();
+          block.classList.toggle('diary-expanded');
+          btn.classList.toggle('active', block.classList.contains('diary-expanded'));
         });
       });
       // 콘텐츠가 이후에 바뀌어(예: 달력 월 이동 등) 배너 높이가 자연스럽게 변할 때도
