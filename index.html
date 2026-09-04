@@ -216,6 +216,51 @@
   .report-block[data-size="small"] .ws-box .ws-label{ font-size:7.5px; }
   .report-block[data-size="small"] .ws-box input[type=time]{ font-size:11px; }
 
+  /* ---------- 일기 A4 팝업: 다이어리 느낌의 팝업 용지 ---------- */
+  .diary-a4-modal{
+    position:fixed; inset:0; z-index:2000; display:flex; align-items:center; justify-content:center; padding:24px;
+  }
+  .diary-a4-backdrop{ position:absolute; inset:0; background:rgba(30,26,20,0.58); backdrop-filter:blur(1.5px); }
+  .diary-a4-paper{
+    position:relative; width:min(794px, 94vw); height:min(1123px, 92vh);
+    background:#fbf7ef; border-radius:6px; box-shadow:0 24px 60px rgba(0,0,0,0.35), 0 2px 0 rgba(0,0,0,0.06);
+    display:flex; flex-direction:column; overflow:hidden;
+  }
+  .diary-a4-topbar{
+    display:flex; align-items:center; justify-content:space-between; padding:10px 16px;
+    background:#f1ead9; border-bottom:1px solid #e4d9c1; flex-shrink:0;
+  }
+  .diary-a4-hint{ font-family:'JetBrains Mono', monospace; font-size:10.5px; color:#8a7a5c; letter-spacing:0.3px; }
+  .diary-a4-close{
+    width:26px; height:26px; border-radius:50%; border:1px solid #e4d9c1; background:#fff; color:#8a7a5c;
+    font-size:13px; cursor:pointer; display:flex; align-items:center; justify-content:center;
+  }
+  .diary-a4-close:hover{ background:#f1ead9; color:#5c4d30; }
+  .diary-a4-sheet{
+    flex:1; overflow-y:auto; padding:40px 46px 46px 58px; position:relative;
+    /* 다이어리 노트 느낌: 은은한 가로 줄 + 왼쪽 여백선 */
+    background-color:#fbf7ef;
+    background-image:
+      linear-gradient(90deg, transparent 0, transparent 34px, #e9c3c3 34px, #e9c3c3 35px, transparent 35px),
+      repeating-linear-gradient(#fbf7ef 0, #fbf7ef 27px, #e9dfc9 28px);
+    background-repeat:repeat, repeat;
+  }
+  .diary-a4-sheet .cat-section{ background:transparent; border:none; padding:0; box-shadow:none; }
+  .diary-a4-sheet .cat-title{ font-family:'JetBrains Mono', monospace; font-size:12px; color:#8a7a5c; margin-bottom:14px; }
+  .diary-a4-sheet .cat-title .banner-date-nav{ font-family:'Pretendard','Malgun Gothic',sans-serif; }
+  .diary-a4-sheet .field{ margin-bottom:14px; }
+  .diary-a4-sheet .field label{ font-family:'JetBrains Mono', monospace; font-size:10px; color:#a3906a; }
+  .diary-a4-sheet #referenceTopic{
+    font-family:'맑은 고딕','Malgun Gothic',sans-serif; font-size:11pt; line-height:1.0; color:#3a3226;
+    background:transparent; border:none; border-bottom:1px solid #e4d9c1; padding:4px 2px; width:100%;
+  }
+  .diary-a4-sheet #referenceNote{
+    font-family:'맑은 고딕','Malgun Gothic',sans-serif; font-size:11pt; line-height:1.0; color:#3a3226;
+    background:transparent; border:none; width:100%; min-height:640px; resize:vertical; padding:2px;
+  }
+  .diary-a4-sheet #referenceTopic:focus, .diary-a4-sheet #referenceNote:focus{ outline:none; }
+  body.diary-modal-open{ overflow:hidden; }
+
   /* ---------- 다중 필드 리스트 로우 (섭식/영양제/운동루틴) ---------- */
   .field-rows{ display:flex; flex-direction:column; gap:6px; margin-bottom:8px; }
   .field-row{
@@ -1023,6 +1068,20 @@
     <!-- ===== REPORT VIEW (인쇄창 · 완료 현황판, 첫 화면) ===== -->
     <div id="reportView"></div>
 
+    <!-- 일기 A4 팝업: '일기' 배너의 '기록' 버튼을 누르면 여기에 실제 일기 입력폼(#editDiarySection)이
+         옮겨와 A4 용지 느낌의 팝업으로 펼쳐집니다. reportView와 별도 위치에 고정해 두어,
+         기록 탭이 다시 그려져도(테마 변경, 탭 전환 등) 파괴되지 않고 그대로 유지됩니다. -->
+    <div id="diaryA4Modal" class="diary-a4-modal" style="display:none;">
+      <div class="diary-a4-backdrop" id="diaryA4Backdrop"></div>
+      <div class="diary-a4-paper">
+        <div class="diary-a4-topbar">
+          <span class="diary-a4-hint">A4 · 11pt · 줄간격 1.0 · 맑은 고딕</span>
+          <button type="button" class="diary-a4-close" id="diaryA4CloseBtn" title="닫기">✕</button>
+        </div>
+        <div class="diary-a4-sheet" id="diaryA4Content"></div>
+      </div>
+    </div>
+
     <!-- ===== LOG VIEW (기입창) ===== -->
     <div id="logView" style="display:none;">
       <div class="header">
@@ -1180,9 +1239,6 @@
             <div class="diary-subfield">
               <div class="field"><label>감상 주제</label><input type="text" id="diaryImpressionTopic" placeholder="이 감상의 주제 (예: 하루 마무리)" /></div>
               <div class="field"><label>감상</label><textarea id="diaryImpression" rows="2" placeholder="오늘 하루에 대한 감상"></textarea></div>
-            </div>
-            <div class="diary-subfield">
-              <div class="field"><label>키워드</label><input type="text" id="diaryKeywords" placeholder="쉼표로 구분 (예: 성장, 피로, 뿌듯함)" /></div>
             </div>
           </div>
 
@@ -2015,7 +2071,6 @@
     $('diaryQuestionsTopic').value = entry.diary.questionsTopic || '';
     $('diaryImpression').value = entry.diary.impression;
     $('diaryImpressionTopic').value = entry.diary.impressionTopic || '';
-    $('diaryKeywords').value = entry.diary.keywords;
     $('referenceNote').value = entry.reference;
     $('referenceTopic').value = entry.referenceTopic || '';
     $('relPeople').value = entry.relationships.people;
@@ -2613,7 +2668,6 @@
   $('diaryQuestionsTopic').addEventListener('input', e => { entry.diary.questionsTopic = e.target.value; queueSave(); });
   $('diaryImpression').addEventListener('input', e => { entry.diary.impression = e.target.value; queueSave(); });
   $('diaryImpressionTopic').addEventListener('input', e => { entry.diary.impressionTopic = e.target.value; queueSave(); });
-  $('diaryKeywords').addEventListener('input', e => { entry.diary.keywords = e.target.value; queueSave(); });
   $('referenceTopic').addEventListener('input', e => { entry.referenceTopic = e.target.value; queueSave(); });
   $('referenceNote').addEventListener('input', e => { entry.reference = e.target.value; queueSave(); });
 
@@ -3886,8 +3940,7 @@
     const diaryLines = [
       lsItem(diaryLabel('생각', e.diary.thoughtsTopic), e.diary.thoughts),
       lsItem(diaryLabel('질문', e.diary.questionsTopic), e.diary.questions),
-      lsItem(diaryLabel('소감', e.diary.impressionTopic), e.diary.impression),
-      lsItem(diaryLabel('키워드', e.diary.keywordsTopic), e.diary.keywords)
+      lsItem(diaryLabel('소감', e.diary.impressionTopic), e.diary.impression)
     ].join('');
     if(!diaryLines) return `<div class="report-empty">오늘 기록탭 "하루 정리"에 입력된 내용이 아직 없어요.</div>`;
     return `<div class="log-summary"><div class="ls-items">${diaryLines}</div></div>`;
@@ -4040,7 +4093,7 @@
   };
   // 배너 기본 규격: 인쇄탭의 모든 배너는 "중형(medium)"이 기본값이고, 달력과 마인드맵만
   // 예외적으로 기존 그대로(소형)를 유지합니다.
-  const REPORT_DEFAULT_SIZE = { todayplan:'medium', todayhabit:'medium', todaytodo:'medium', goalchart:'medium', todaychecklist:'medium', ongoingplan:'medium', condition:'medium', health:'medium', dailysummary:'medium', relationships:'medium', assets:'medium', career:'medium', hobby:'medium', timetable:'medium', diary:'medium', mindmap:'small', calendar:'small' };
+  const REPORT_DEFAULT_SIZE = { todayhabit:'medium', todaytodo:'medium', goalchart:'medium', todaychecklist:'medium', condition:'medium', health:'medium', dailysummary:'medium', relationships:'medium', assets:'medium', career:'medium', hobby:'medium', timetable:'medium', diary:'medium', mindmap:'small', calendar:'small' };
   // ---------- 인쇄+기록 통합: 배너별 '기록' 토글 버튼 ----------
   // 각 배너 우측의 '기록' 버튼을 누르면, 기존 기록탭에 있던 해당 항목의 입력폼(살아있는 DOM,
   // 값·이벤트가 그대로 유지됨)을 이 배너 자리로 옮겨와 펼쳐 보여줍니다. 다시 누르면 접습니다.
@@ -4108,6 +4161,8 @@
   // 옮겨오고(값·이벤트 유지), 이미 펼쳐져 있으면 접습니다. 같은 입력폼을 다른 배너에서도
   // 참조하는 경우(예: 계획), 가장 최근에 연 배너 쪽에 나타납니다.
   function toggleReportEdit(key){
+    // '일기'는 인라인 슬롯 대신 A4 용지 느낌의 팝업으로 펼칩니다.
+    if(key === 'diary'){ toggleDiaryA4Modal(); return; }
     const slot = $('rpEdit_' + key);
     const srcIds = REPORT_EDIT_SOURCE_MAP[key];
     if(!slot || !srcIds) return;
@@ -4134,6 +4189,50 @@
     if(key === 'todaychecklist') renderPlanView();
     if(key === 'mindmap') renderMindmapRecordList();
   }
+  // ---------- 일기 A4 팝업 ----------
+  // '일기' 배너의 '기록' 버튼을 누르면, 원래 숨겨진 곳에 있던 실제 일기 입력폼(#editDiarySection,
+  // 값·이벤트가 그대로 유지됨)을 A4 용지 느낌의 팝업(#diaryA4Modal)으로 옮겨와 펼쳐 보여줍니다.
+  // 이 팝업은 reportView 바깥의 고정된 위치에 있어서, 기록 탭이 다시 그려져도(테마 변경 등) 유지됩니다.
+  function openDiaryA4Modal(){
+    const modal = $('diaryA4Modal');
+    const content = $('diaryA4Content');
+    const section = $('editDiarySection');
+    if(!modal || !content || !section) return;
+    content.appendChild(section);
+    modal.style.display = 'flex';
+    document.body.classList.add('diary-modal-open');
+    const btn = document.querySelector('.rp-edit-toggle[data-edit="diary"]');
+    if(btn) btn.classList.add('open');
+    const note = $('referenceNote');
+    if(note) note.focus();
+  }
+  function closeDiaryA4Modal(){
+    const modal = $('diaryA4Modal');
+    const section = $('editDiarySection');
+    const slot = $('rpEdit_diary');
+    if(section){
+      // 팝업을 닫을 때는 값을 유지한 채, 배너의 원래 펼침 슬롯(없으면 #logView)으로 되돌려 둡니다.
+      (slot || $('logView') || document.body).appendChild(section);
+    }
+    if(modal) modal.style.display = 'none';
+    document.body.classList.remove('diary-modal-open');
+    const btn = document.querySelector('.rp-edit-toggle[data-edit="diary"]');
+    if(btn) btn.classList.remove('open');
+  }
+  function toggleDiaryA4Modal(){
+    const content = $('diaryA4Content');
+    const section = $('editDiarySection');
+    if(content && section && section.parentElement === content){
+      closeDiaryA4Modal();
+    }else{
+      openDiaryA4Modal();
+    }
+  }
+  $('diaryA4CloseBtn').addEventListener('click', closeDiaryA4Modal);
+  $('diaryA4Backdrop').addEventListener('click', closeDiaryA4Modal);
+  document.addEventListener('keydown', e => {
+    if(e.key === 'Escape' && $('diaryA4Modal').style.display !== 'none') closeDiaryA4Modal();
+  });
 
   function reportBlock(pid, innerHtml, size){
     size = size || REPORT_DEFAULT_SIZE[pid] || 'small';
@@ -4188,14 +4287,6 @@
       <div class="report-panels" id="reportPanels">
         <div class="report-layout">
           <div class="report-main" id="reportMainPanels">
-            ${reportBlock('todayplan', `
-            <div class="report-stat">
-              ${reportStatShape(0)}
-              <div class="rs-label"><svg class="micon" viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M12.3 3.3a1.2 1.2 0 0 1 1.7 0l1.7 1.7a1.2 1.2 0 0 1 0 1.7L7.3 15.1l-3.6.6.6-3.6 8-8Z" stroke="currentColor" stroke-width="1.4" stroke-linejoin="round"/><path d="M10.8 4.8l2.4 2.4" stroke="currentColor" stroke-width="1.4" stroke-linecap="round"/></svg> 오늘 계획</div>
-              <div class="rs-value">${dStats.done}/${dStats.total}</div>
-              <div class="rs-sub">일간 할일·습관 달성</div>
-            </div>`, sizeFor('todayplan'))}
-
             ${reportBlock('todayhabit', `
             <div class="report-panel">
               ${reportPanelShape(1)}
@@ -4223,15 +4314,6 @@
               ${reportPanelShape(0)}
               <div id="goalChartPanel"></div>
             </div>`, sizeFor('goalchart'))}
-
-            ${reportBlock('ongoingplan', `
-            <div class="report-panel">
-              ${reportPanelShape(1)}
-              <div class="rp-head">
-                <div class="rp-title"><svg class="micon" viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg"><rect x="3.5" y="4.5" width="13" height="11.5" rx="1.5" stroke="currentColor" stroke-width="1.4"/><path d="M3.5 8h13M7 3v3M13 3v3" stroke="currentColor" stroke-width="1.4" stroke-linecap="round"/></svg> 진행중인 계획·습관 <span class="title-note">— 계획 배너와 연동</span></div>
-              </div>
-              <div id="reportOngoingPlanList"></div>
-            </div>`, sizeFor('ongoingplan'))}
 
             ${reportBlock('todaychecklist', `
             <div class="report-panel">
@@ -4384,7 +4466,6 @@
     // 저장된 배너 위치(본문/사이드)와 순서가 있으면 먼저 적용한 뒤 나머지를 초기화합니다.
     applyReportPlacement();
     renderGoalChartPanel();
-    renderOngoingPlanList('reportOngoingPlanList');
     bindCalNav('Report');
     bindDayEventAdd('Report');
     renderCalendar('Report');
